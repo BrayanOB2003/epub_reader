@@ -1,0 +1,145 @@
+PODS:
+  - CryptoSwift (1.8.4)
+  - DifferenceKit (1.3.0):
+    - DifferenceKit/Core (= 1.3.0)
+    - DifferenceKit/UIKitExtension (= 1.3.0)
+  - DifferenceKit/Core (1.3.0)
+  - DifferenceKit/UIKitExtension (1.3.0):
+    - DifferenceKit/Core
+  - file_picker_darwin (1.0.0):
+    - Flutter
+    - FlutterMacOS
+  - Flutter (1.0.0)
+  - flutter_readium (0.0.1):
+    - Flutter
+    - ReadiumNavigator (~> 3.9.0)
+    - ReadiumOPDS (~> 3.9.0)
+    - ReadiumShared (~> 3.9.0)
+    - ReadiumStreamer (~> 3.9.0)
+  - Minizip (1.0.0)
+  - package_info_plus (0.4.5):
+    - Flutter
+  - ReadiumFuzi (4.0.0)
+  - ReadiumInternal (3.9.0)
+  - ReadiumNavigator (3.9.0):
+    - DifferenceKit (~> 1.0)
+    - ReadiumInternal (~> 3.9.0)
+    - ReadiumShared (~> 3.9.0)
+    - SwiftSoup (~> 2.11.0)
+  - ReadiumOPDS (3.9.0):
+    - ReadiumFuzi (~> 4.0.0)
+    - ReadiumInternal (~> 3.9.0)
+    - ReadiumShared (~> 3.9.0)
+  - ReadiumShared (3.9.0):
+    - Minizip (~> 1.0.0)
+    - ReadiumFuzi (~> 4.0.0)
+    - ReadiumInternal (~> 3.9.0)
+    - ReadiumZIPFoundation (~> 3.0.1)
+    - SwiftSoup (~> 2.11.0)
+  - ReadiumStreamer (3.9.0):
+    - CryptoSwift (~> 1.8.0)
+    - ReadiumFuzi (~> 4.0.0)
+    - ReadiumInternal (~> 3.9.0)
+    - ReadiumShared (~> 3.9.0)
+  - ReadiumZIPFoundation (3.0.1)
+  - sqlite3 (3.52.0):
+    - sqlite3/common (= 3.52.0)
+  - sqlite3/common (3.52.0)
+  - sqlite3/dbstatvtab (3.52.0):
+    - sqlite3/common
+  - sqlite3/fts5 (3.52.0):
+    - sqlite3/common
+  - sqlite3/math (3.52.0):
+    - sqlite3/common
+  - sqlite3/perf-threadsafe (3.52.0):
+    - sqlite3/common
+  - sqlite3/rtree (3.52.0):
+    - sqlite3/common
+  - sqlite3/session (3.52.0):
+    - sqlite3/common
+  - sqlite3_flutter_libs (0.0.1):
+    - Flutter
+    - FlutterMacOS
+    - sqlite3 (~> 3.52.0)
+    - sqlite3/dbstatvtab
+    - sqlite3/fts5
+    - sqlite3/math
+    - sqlite3/perf-threadsafe
+    - sqlite3/rtree
+    - sqlite3/session
+  - SwiftSoup (2.11.3)
+  - wakelock_plus (0.0.1):
+    - Flutter
+
+DEPENDENCIES:
+  - file_picker_darwin (from `.symlinks/plugins/file_picker_darwin/darwin`)
+  - Flutter (from `Flutter`)
+  - flutter_readium (from `.symlinks/plugins/flutter_readium/ios`)
+  - package_info_plus (from `.symlinks/plugins/package_info_plus/ios`)
+  - ReadiumInternal (from `https://raw.githubusercontent.com/readium/swift-toolkit/3.9.0/Support/CocoaPods/ReadiumInternal.podspec`)
+  - ReadiumNavigator (from `https://raw.githubusercontent.com/readium/swift-toolkit/3.9.0/Support/CocoaPods/ReadiumNavigator.podspec`)
+  - ReadiumOPDS (from `https://raw.githubusercontent.com/readium/swift-toolkit/3.9.0/Support/CocoaPods/ReadiumOPDS.podspec`)
+  - ReadiumShared (from `https://raw.githubusercontent.com/readium/swift-toolkit/3.9.0/Support/CocoaPods/ReadiumShared.podspec`)
+  - ReadiumStreamer (from `https://raw.githubusercontent.com/readium/swift-toolkit/3.9.0/Support/CocoaPods/ReadiumStreamer.podspec`)
+  - ReadiumZIPFoundation (from `https://raw.githubusercontent.com/readium/podspecs/refs/heads/main/ReadiumZIPFoundation/3.0.1/ReadiumZIPFoundation.podspec`)
+  - sqlite3_flutter_libs (from `.symlinks/plugins/sqlite3_flutter_libs/darwin`)
+  - wakelock_plus (from `.symlinks/plugins/wakelock_plus/ios`)
+
+SPEC REPOS:
+  trunk:
+    - CryptoSwift
+    - DifferenceKit
+    - Minizip
+    - ReadiumFuzi
+    - sqlite3
+    - SwiftSoup
+
+EXTERNAL SOURCES:
+  file_picker_darwin:
+    :path: ".symlinks/plugins/file_picker_darwin/darwin"
+  Flutter:
+    :path: Flutter
+  flutter_readium:
+    :path: ".symlinks/plugins/flutter_readium/ios"
+  package_info_plus:
+    :path: ".symlinks/plugins/package_info_plus/ios"
+  ReadiumInternal:
+    :podspec: https://raw.githubusercontent.com/readium/swift-toolkit/3.9.0/Support/CocoaPods/ReadiumInternal.podspec
+  ReadiumNavigator:
+    :podspec: https://raw.githubusercontent.com/readium/swift-toolkit/3.9.0/Support/CocoaPods/ReadiumNavigator.podspec
+  ReadiumOPDS:
+    :podspec: https://raw.githubusercontent.com/readium/swift-toolkit/3.9.0/Support/CocoaPods/ReadiumOPDS.podspec
+  ReadiumShared:
+    :podspec: https://raw.githubusercontent.com/readium/swift-toolkit/3.9.0/Support/CocoaPods/ReadiumShared.podspec
+  ReadiumStreamer:
+    :podspec: https://raw.githubusercontent.com/readium/swift-toolkit/3.9.0/Support/CocoaPods/ReadiumStreamer.podspec
+  ReadiumZIPFoundation:
+    :podspec: https://raw.githubusercontent.com/readium/podspecs/refs/heads/main/ReadiumZIPFoundation/3.0.1/ReadiumZIPFoundation.podspec
+  sqlite3_flutter_libs:
+    :path: ".symlinks/plugins/sqlite3_flutter_libs/darwin"
+  wakelock_plus:
+    :path: ".symlinks/plugins/wakelock_plus/ios"
+
+SPEC CHECKSUMS:
+  CryptoSwift: e64e11850ede528a02a0f3e768cec8e9d92ecb90
+  DifferenceKit: ab185c4d7f9cef8af3fcf593e5b387fb81e999ca
+  file_picker_darwin: 4c2b9a50ea44cb3b071381ea0cf48591bdd80251
+  Flutter: cabc95a1d2626b1b06e7179b784ebcf0c0cde467
+  flutter_readium: 8de113dbcb83268e6d978750cc9cb3cb24034732
+  Minizip: 188cb3e39a1195c283ae03bf673d182596fefd0b
+  package_info_plus: af8e2ca6888548050f16fa2f1938db7b5a5df499
+  ReadiumFuzi: 888d023b862f524e314f85925c94768a501f05c0
+  ReadiumInternal: 44ae41c0487eb56cd5bbeded3d8a6c86351fa0a0
+  ReadiumNavigator: 3bac1f518748845913a9fbcf292cb8204aa460e5
+  ReadiumOPDS: dc15e9a5d68cf54b4e9c1f1f1a11184d83b51208
+  ReadiumShared: a5b262285fc06e8eb45db23c64c485fae5e7a54b
+  ReadiumStreamer: cddfb21ed01a48a4c6dccfc133aefaea78630e4d
+  ReadiumZIPFoundation: 2f3e19e361f1b7751ecf37a88c754287692c12c2
+  sqlite3: a51c07cf16e023d6c48abd5e5791a61a47354921
+  sqlite3_flutter_libs: b3e120efe9a82017e5552a620f696589ed4f62ab
+  SwiftSoup: 959c9ac70d7053fbf476341bfac90ab228523f2a
+  wakelock_plus: e29112ab3ef0b318e58cfa5c32326458be66b556
+
+PODFILE CHECKSUM: 0bc3788eb95f059131b7a0a498f7a88c00ee63ba
+
+COCOAPODS: 1.16.2
