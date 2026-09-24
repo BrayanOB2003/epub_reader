@@ -5,6 +5,7 @@ import 'package:epub_reader/app/providers.dart';
 import 'package:epub_reader/core/database/app_database.dart';
 import 'package:epub_reader/core/reading/readium_reading_engine.dart';
 import 'package:epub_reader/features/library/data/book_repository.dart';
+import 'package:epub_reader/features/reader/reader_pages.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter_readium/flutter_readium.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
@@ -29,6 +30,9 @@ class _ReaderPageState extends ConsumerState<ReaderPage> {
   StreamSubscription<Locator>? _locatorSubscription;
   Timer? _saveTimer;
   var _progress = 0.0;
+  var _page = 1;
+  int? _totalPages;
+  int? _dragPage;
   var _loading = true;
   var _chromeVisible = false;
   DateTime? _lastPageTurn;
@@ -61,11 +65,13 @@ class _ReaderPageState extends ConsumerState<ReaderPage> {
         await _engine.close();
         return;
       }
+      final saved = _savedLocator(book);
       setState(() {
         _book = book;
         _publication = publication;
         _progress = book.progress;
         _loading = false;
+        if (saved != null) _rememberPage(saved);
       });
     } catch (error) {
       if (!mounted) return;
@@ -79,11 +85,36 @@ class _ReaderPageState extends ConsumerState<ReaderPage> {
   void _onLocator(Locator locator) {
     _latestLocator = locator;
     final progression = locator.locations?.totalProgression;
-    if (progression != null && mounted) {
-      setState(() => _progress = progression);
+    if (mounted) {
+      setState(() {
+        if (progression != null) _progress = progression;
+        if (_dragPage == null) _rememberPage(locator);
+      });
     }
     _saveTimer?.cancel();
     _saveTimer = Timer(const Duration(milliseconds: 400), _persist);
+  }
+
+  void _rememberPage(Locator locator) {
+    final page = bookPage(locator);
+    if (page != null) {
+      _page = page;
+      final known = _totalPages;
+      if (known != null && page > known) _totalPages = page;
+    }
+    _totalPages ??= estimatedTotalPages(position: page, totalProgression: locator.locations?.totalProgression);
+  }
+
+  Future<void> _goToPage(int page) async {
+    final publication = _publication;
+    final total = _totalPages;
+    if (publication == null || total == null || total < 2 || page == _page) return;
+    final order = publication.readingOrder;
+    final target = spineTarget(page: page, total: total, chapterCount: order.length);
+    if (order.isEmpty) return;
+    final locator = publication.locatorFromLink(order[target.index]);
+    if (locator == null) return;
+    await _engine.goToLocator(locator.copyWithLocations(progression: target.progression));
   }
 
   Future<void> _persist() async {
@@ -220,6 +251,7 @@ class _ReaderPageState extends ConsumerState<ReaderPage> {
           ),
         ),
         Positioned(top: 0, left: 0, right: 0, child: _readerChrome()),
+        Positioned(left: 0, right: 0, bottom: 0, child: _pageChrome()),
       ],
     );
   }
@@ -274,6 +306,46 @@ class _ReaderPageState extends ConsumerState<ReaderPage> {
           ),
         ),
       ],
+    );
+  }
+
+  Widget _pageChrome() {
+    final total = _totalPages ?? _page;
+    final page = (_dragPage ?? _page).clamp(1, total);
+    return ClipRect(
+      child: AnimatedAlign(
+        alignment: Alignment.bottomCenter,
+        heightFactor: _chromeVisible ? 1 : 0,
+        duration: const Duration(milliseconds: 180),
+        curve: Curves.easeOut,
+        child: Material(
+          color: const Color(0xF2F7F1E8),
+          child: Padding(
+            padding: const EdgeInsets.fromLTRB(12, 8, 12, 4),
+            child: Column(
+              mainAxisSize: MainAxisSize.min,
+              children: [
+                Text('Página $page de $total', style: Theme.of(context).textTheme.labelLarge),
+                Slider(
+                  value: page.toDouble(),
+                  min: 1,
+                  max: total > 1 ? total.toDouble() : 2,
+                  activeColor: const Color(0xFF6B4F3A),
+                  label: '$page',
+                  onChanged: total < 2
+                      ? null
+                      : (value) => setState(() => _dragPage = value.round().clamp(1, total).toInt()),
+                  onChangeEnd: (value) {
+                    final target = value.round().clamp(1, total).toInt();
+                    setState(() => _dragPage = null);
+                    _goToPage(target);
+                  },
+                ),
+              ],
+            ),
+          ),
+        ),
+      ),
     );
   }
 }
