@@ -1,4 +1,5 @@
 import 'package:drift/native.dart';
+import 'package:epub_reader/app/app.dart';
 import 'package:epub_reader/app/providers.dart';
 import 'package:epub_reader/core/database/app_database.dart';
 import 'package:epub_reader/features/library/home_page.dart';
@@ -25,6 +26,34 @@ void main() {
     expect(find.text('Biblioteca'), findsOneWidget);
     expect(find.text('Todavía no hay libros'), findsOneWidget);
     expect(find.text('Importar'), findsOneWidget);
+
+    await tester.pumpWidget(const SizedBox.shrink());
+    await tester.pump(Duration.zero);
+  });
+
+  testWidgets('navbar switches between discovery and library', (tester) async {
+    await tester.pumpWidget(
+      ProviderScope(
+        overrides: [
+          databaseProvider.overrideWith((ref) {
+            final database = AppDatabase(NativeDatabase.memory());
+            ref.onDispose(database.close);
+            return database;
+          }),
+        ],
+        child: const EpubReaderApp(),
+      ),
+    );
+    await tester.pumpAndSettle();
+
+    expect(find.text('Biblioteca'), findsWidgets);
+    expect(find.text('Descubrimiento'), findsOneWidget);
+    expect(find.text('Todavía no hay libros'), findsOneWidget);
+
+    await tester.tap(find.text('Descubrimiento'));
+    await tester.pumpAndSettle();
+
+    expect(find.text('Todavía no hay lecturas nuevas'), findsOneWidget);
 
     await tester.pumpWidget(const SizedBox.shrink());
     await tester.pump(Duration.zero);
