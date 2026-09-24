@@ -6,10 +6,11 @@ import 'package:path/path.dart' as p;
 import 'package:xml/xml.dart';
 
 class EpubMetadata {
-  const EpubMetadata({required this.title, this.author, this.coverBytes, this.coverExtension});
+  const EpubMetadata({required this.title, this.author, this.bookUid, this.coverBytes, this.coverExtension});
 
   final String title;
   final String? author;
+  final String? bookUid;
   final Uint8List? coverBytes;
   final String? coverExtension;
 }
@@ -45,11 +46,13 @@ EpubMetadata readEpubMetadata(Uint8List bytes, {String fallbackTitle = 'Sin tít
   final opf = XmlDocument.parse(utf8.decode(opfFile.content));
   final title = _textOf(opf, 'title')?.trim();
   final authors = _textsOf(opf, 'creator').map((value) => value.trim()).where((value) => value.isNotEmpty).toList();
+  final bookUid = _textOf(opf, 'identifier')?.trim();
   final cover = _readCover(archive, opf, opfPath);
 
   return EpubMetadata(
     title: (title == null || title.isEmpty) ? fallbackTitle : title,
     author: authors.isEmpty ? null : authors.join(', '),
+    bookUid: (bookUid == null || bookUid.isEmpty) ? null : bookUid,
     coverBytes: cover?.bytes,
     coverExtension: cover?.extension,
   );
@@ -91,13 +94,52 @@ _Cover? _readCover(Archive archive, XmlDocument opf, String opfPath) {
   final href = coverItem?.getAttribute('href');
   if (href == null || href.isEmpty) return null;
 
-  final opfDir = p.posix.dirname(opfPath.replaceAll('\\', '/'));
-  final coverPath = p.posix.normalize(p.posix.join(opfDir == '.' ? '' : opfDir, Uri.decodeFull(href)));
-  final file = _findEntry(archive, coverPath);
-  if (file == null || file.content.isEmpty) return null;
+  return _imageAt(archive, opfPath, href, coverItem?.getAttribute('media-type') ?? '');
+}
 
-  final mediaType = coverItem?.getAttribute('media-type') ?? '';
-  return _Cover(file.content, _extensionFor(coverPath, mediaType));
+_Cover? _imageAt(Archive archive, String basePath, String href, String mediaType) {
+  final baseDir = p.posix.dirname(basePath.replaceAll('\\', '/'));
+  final entryPath = p.posix.normalize(p.posix.join(baseDir == '.' ? '' : baseDir, Uri.decodeFull(href)));
+  final file = _findEntry(archive, entryPath);
+  if (file == null || file.content.isEmpty) return null;
+  if (_isImage(file.content)) {
+    return _Cover(file.content, _extensionFor(entryPath, mediaType));
+  }
+
+  if (!_looksLikeMarkup(mediaType, entryPath)) return null;
+  final markup = utf8.decode(file.content, allowMalformed: true);
+  final XmlDocument document;
+  try {
+    document = XmlDocument.parse(markup);
+  } on XmlException {
+    return null;
+  }
+  for (final image in document.descendants.whereType<XmlElement>()) {
+    if (image.name.local != 'img' && image.name.local != 'image') continue;
+    final source = image.getAttribute('src') ?? image.getAttribute('href');
+    if (source == null || source.isEmpty) continue;
+    final nested = _imageAt(archive, entryPath, source, '');
+    if (nested != null) return nested;
+  }
+  return null;
+}
+
+bool _looksLikeMarkup(String mediaType, String path) {
+  final extension = p.posix.extension(path).toLowerCase();
+  return mediaType.contains('html') ||
+      mediaType.contains('xml') ||
+      extension == '.xhtml' ||
+      extension == '.html' ||
+      extension == '.xml';
+}
+
+bool _isImage(Uint8List bytes) {
+  if (bytes.length >= 3 && bytes[0] == 0xFF && bytes[1] == 0xD8 && bytes[2] == 0xFF) return true;
+  if (bytes.length >= 8 && bytes[0] == 0x89 && bytes[1] == 0x50 && bytes[2] == 0x4E && bytes[3] == 0x47) return true;
+  if (bytes.length >= 6 && bytes[0] == 0x47 && bytes[1] == 0x49 && bytes[2] == 0x46) return true;
+  return bytes.length >= 12 &&
+      String.fromCharCodes(bytes.sublist(0, 4)) == 'RIFF' &&
+      String.fromCharCodes(bytes.sublist(8, 12)) == 'WEBP';
 }
 
 String _extensionFor(String path, String mediaType) {

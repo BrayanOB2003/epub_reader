@@ -18,6 +18,12 @@ class Books extends Table {
 
   TextColumn get coverPath => text().nullable()();
 
+  BlobColumn get coverBytes => blob().nullable()();
+
+  TextColumn get contentHash => text().nullable().unique()();
+
+  TextColumn get bookUid => text().nullable()();
+
   TextColumn get locatorJson => text().nullable()();
 
   RealColumn get progress => real().withDefault(const Constant(0))();
@@ -30,7 +36,20 @@ class AppDatabase extends _$AppDatabase {
   AppDatabase(super.e);
 
   @override
-  int get schemaVersion => 1;
+  int get schemaVersion => 2;
+
+  @override
+  MigrationStrategy get migration {
+    return MigrationStrategy(
+      onUpgrade: (migrator, from, to) async {
+        if (from < 2) {
+          await migrator.addColumn(books, books.coverBytes);
+          await migrator.addColumn(books, books.contentHash);
+          await migrator.addColumn(books, books.bookUid);
+        }
+      },
+    );
+  }
 
   static QueryExecutor openConnection() {
     return LazyDatabase(() async {

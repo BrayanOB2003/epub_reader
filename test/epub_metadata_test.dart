@@ -6,12 +6,13 @@ import 'package:flutter_test/flutter_test.dart';
 
 void main() {
   test('reads title, author and cover from an EPUB package', () {
-    final cover = Uint8List.fromList(const [1, 2, 3, 4]);
+    final cover = Uint8List.fromList(const [0xFF, 0xD8, 0xFF, 0x00]);
     final bytes = _epub(
       opf: '''
 <?xml version="1.0" encoding="UTF-8"?>
 <package xmlns="http://www.idpf.org/2007/opf" version="3.0">
   <metadata xmlns:dc="http://purl.org/dc/elements/1.1/">
+    <dc:identifier>urn:uuid:habit-1</dc:identifier>
     <dc:title>El hábito</dc:title>
     <dc:creator>Ada Lovelace</dc:creator>
     <meta name="cover" content="cover-image"/>
@@ -28,6 +29,7 @@ void main() {
 
     expect(metadata.title, 'El hábito');
     expect(metadata.author, 'Ada Lovelace');
+    expect(metadata.bookUid, 'urn:uuid:habit-1');
     expect(metadata.coverBytes, cover);
     expect(metadata.coverExtension, 'jpg');
   });

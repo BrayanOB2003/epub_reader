@@ -61,6 +61,40 @@ class $BooksTable extends Books with TableInfo<$BooksTable, Book> {
     type: DriftSqlType.string,
     requiredDuringInsert: false,
   );
+  static const VerificationMeta _coverBytesMeta = const VerificationMeta(
+    'coverBytes',
+  );
+  @override
+  late final GeneratedColumn<Uint8List> coverBytes = GeneratedColumn<Uint8List>(
+    'cover_bytes',
+    aliasedName,
+    true,
+    type: DriftSqlType.blob,
+    requiredDuringInsert: false,
+  );
+  static const VerificationMeta _contentHashMeta = const VerificationMeta(
+    'contentHash',
+  );
+  @override
+  late final GeneratedColumn<String> contentHash = GeneratedColumn<String>(
+    'content_hash',
+    aliasedName,
+    true,
+    type: DriftSqlType.string,
+    requiredDuringInsert: false,
+    defaultConstraints: GeneratedColumn.constraintIsAlways('UNIQUE'),
+  );
+  static const VerificationMeta _bookUidMeta = const VerificationMeta(
+    'bookUid',
+  );
+  @override
+  late final GeneratedColumn<String> bookUid = GeneratedColumn<String>(
+    'book_uid',
+    aliasedName,
+    true,
+    type: DriftSqlType.string,
+    requiredDuringInsert: false,
+  );
   static const VerificationMeta _locatorJsonMeta = const VerificationMeta(
     'locatorJson',
   );
@@ -102,6 +136,9 @@ class $BooksTable extends Books with TableInfo<$BooksTable, Book> {
     author,
     filePath,
     coverPath,
+    coverBytes,
+    contentHash,
+    bookUid,
     locatorJson,
     progress,
     addedAt,
@@ -147,6 +184,27 @@ class $BooksTable extends Books with TableInfo<$BooksTable, Book> {
       context.handle(
         _coverPathMeta,
         coverPath.isAcceptableOrUnknown(data['cover_path']!, _coverPathMeta),
+      );
+    }
+    if (data.containsKey('cover_bytes')) {
+      context.handle(
+        _coverBytesMeta,
+        coverBytes.isAcceptableOrUnknown(data['cover_bytes']!, _coverBytesMeta),
+      );
+    }
+    if (data.containsKey('content_hash')) {
+      context.handle(
+        _contentHashMeta,
+        contentHash.isAcceptableOrUnknown(
+          data['content_hash']!,
+          _contentHashMeta,
+        ),
+      );
+    }
+    if (data.containsKey('book_uid')) {
+      context.handle(
+        _bookUidMeta,
+        bookUid.isAcceptableOrUnknown(data['book_uid']!, _bookUidMeta),
       );
     }
     if (data.containsKey('locator_json')) {
@@ -201,6 +259,18 @@ class $BooksTable extends Books with TableInfo<$BooksTable, Book> {
         DriftSqlType.string,
         data['${effectivePrefix}cover_path'],
       ),
+      coverBytes: attachedDatabase.typeMapping.read(
+        DriftSqlType.blob,
+        data['${effectivePrefix}cover_bytes'],
+      ),
+      contentHash: attachedDatabase.typeMapping.read(
+        DriftSqlType.string,
+        data['${effectivePrefix}content_hash'],
+      ),
+      bookUid: attachedDatabase.typeMapping.read(
+        DriftSqlType.string,
+        data['${effectivePrefix}book_uid'],
+      ),
       locatorJson: attachedDatabase.typeMapping.read(
         DriftSqlType.string,
         data['${effectivePrefix}locator_json'],
@@ -228,6 +298,9 @@ class Book extends DataClass implements Insertable<Book> {
   final String? author;
   final String filePath;
   final String? coverPath;
+  final Uint8List? coverBytes;
+  final String? contentHash;
+  final String? bookUid;
   final String? locatorJson;
   final double progress;
   final DateTime addedAt;
@@ -237,6 +310,9 @@ class Book extends DataClass implements Insertable<Book> {
     this.author,
     required this.filePath,
     this.coverPath,
+    this.coverBytes,
+    this.contentHash,
+    this.bookUid,
     this.locatorJson,
     required this.progress,
     required this.addedAt,
@@ -252,6 +328,15 @@ class Book extends DataClass implements Insertable<Book> {
     map['file_path'] = Variable<String>(filePath);
     if (!nullToAbsent || coverPath != null) {
       map['cover_path'] = Variable<String>(coverPath);
+    }
+    if (!nullToAbsent || coverBytes != null) {
+      map['cover_bytes'] = Variable<Uint8List>(coverBytes);
+    }
+    if (!nullToAbsent || contentHash != null) {
+      map['content_hash'] = Variable<String>(contentHash);
+    }
+    if (!nullToAbsent || bookUid != null) {
+      map['book_uid'] = Variable<String>(bookUid);
     }
     if (!nullToAbsent || locatorJson != null) {
       map['locator_json'] = Variable<String>(locatorJson);
@@ -272,6 +357,15 @@ class Book extends DataClass implements Insertable<Book> {
       coverPath: coverPath == null && nullToAbsent
           ? const Value.absent()
           : Value(coverPath),
+      coverBytes: coverBytes == null && nullToAbsent
+          ? const Value.absent()
+          : Value(coverBytes),
+      contentHash: contentHash == null && nullToAbsent
+          ? const Value.absent()
+          : Value(contentHash),
+      bookUid: bookUid == null && nullToAbsent
+          ? const Value.absent()
+          : Value(bookUid),
       locatorJson: locatorJson == null && nullToAbsent
           ? const Value.absent()
           : Value(locatorJson),
@@ -291,6 +385,9 @@ class Book extends DataClass implements Insertable<Book> {
       author: serializer.fromJson<String?>(json['author']),
       filePath: serializer.fromJson<String>(json['filePath']),
       coverPath: serializer.fromJson<String?>(json['coverPath']),
+      coverBytes: serializer.fromJson<Uint8List?>(json['coverBytes']),
+      contentHash: serializer.fromJson<String?>(json['contentHash']),
+      bookUid: serializer.fromJson<String?>(json['bookUid']),
       locatorJson: serializer.fromJson<String?>(json['locatorJson']),
       progress: serializer.fromJson<double>(json['progress']),
       addedAt: serializer.fromJson<DateTime>(json['addedAt']),
@@ -305,6 +402,9 @@ class Book extends DataClass implements Insertable<Book> {
       'author': serializer.toJson<String?>(author),
       'filePath': serializer.toJson<String>(filePath),
       'coverPath': serializer.toJson<String?>(coverPath),
+      'coverBytes': serializer.toJson<Uint8List?>(coverBytes),
+      'contentHash': serializer.toJson<String?>(contentHash),
+      'bookUid': serializer.toJson<String?>(bookUid),
       'locatorJson': serializer.toJson<String?>(locatorJson),
       'progress': serializer.toJson<double>(progress),
       'addedAt': serializer.toJson<DateTime>(addedAt),
@@ -317,6 +417,9 @@ class Book extends DataClass implements Insertable<Book> {
     Value<String?> author = const Value.absent(),
     String? filePath,
     Value<String?> coverPath = const Value.absent(),
+    Value<Uint8List?> coverBytes = const Value.absent(),
+    Value<String?> contentHash = const Value.absent(),
+    Value<String?> bookUid = const Value.absent(),
     Value<String?> locatorJson = const Value.absent(),
     double? progress,
     DateTime? addedAt,
@@ -326,6 +429,9 @@ class Book extends DataClass implements Insertable<Book> {
     author: author.present ? author.value : this.author,
     filePath: filePath ?? this.filePath,
     coverPath: coverPath.present ? coverPath.value : this.coverPath,
+    coverBytes: coverBytes.present ? coverBytes.value : this.coverBytes,
+    contentHash: contentHash.present ? contentHash.value : this.contentHash,
+    bookUid: bookUid.present ? bookUid.value : this.bookUid,
     locatorJson: locatorJson.present ? locatorJson.value : this.locatorJson,
     progress: progress ?? this.progress,
     addedAt: addedAt ?? this.addedAt,
@@ -337,6 +443,13 @@ class Book extends DataClass implements Insertable<Book> {
       author: data.author.present ? data.author.value : this.author,
       filePath: data.filePath.present ? data.filePath.value : this.filePath,
       coverPath: data.coverPath.present ? data.coverPath.value : this.coverPath,
+      coverBytes: data.coverBytes.present
+          ? data.coverBytes.value
+          : this.coverBytes,
+      contentHash: data.contentHash.present
+          ? data.contentHash.value
+          : this.contentHash,
+      bookUid: data.bookUid.present ? data.bookUid.value : this.bookUid,
       locatorJson: data.locatorJson.present
           ? data.locatorJson.value
           : this.locatorJson,
@@ -353,6 +466,9 @@ class Book extends DataClass implements Insertable<Book> {
           ..write('author: $author, ')
           ..write('filePath: $filePath, ')
           ..write('coverPath: $coverPath, ')
+          ..write('coverBytes: $coverBytes, ')
+          ..write('contentHash: $contentHash, ')
+          ..write('bookUid: $bookUid, ')
           ..write('locatorJson: $locatorJson, ')
           ..write('progress: $progress, ')
           ..write('addedAt: $addedAt')
@@ -367,6 +483,9 @@ class Book extends DataClass implements Insertable<Book> {
     author,
     filePath,
     coverPath,
+    $driftBlobEquality.hash(coverBytes),
+    contentHash,
+    bookUid,
     locatorJson,
     progress,
     addedAt,
@@ -380,6 +499,9 @@ class Book extends DataClass implements Insertable<Book> {
           other.author == this.author &&
           other.filePath == this.filePath &&
           other.coverPath == this.coverPath &&
+          $driftBlobEquality.equals(other.coverBytes, this.coverBytes) &&
+          other.contentHash == this.contentHash &&
+          other.bookUid == this.bookUid &&
           other.locatorJson == this.locatorJson &&
           other.progress == this.progress &&
           other.addedAt == this.addedAt);
@@ -391,6 +513,9 @@ class BooksCompanion extends UpdateCompanion<Book> {
   final Value<String?> author;
   final Value<String> filePath;
   final Value<String?> coverPath;
+  final Value<Uint8List?> coverBytes;
+  final Value<String?> contentHash;
+  final Value<String?> bookUid;
   final Value<String?> locatorJson;
   final Value<double> progress;
   final Value<DateTime> addedAt;
@@ -400,6 +525,9 @@ class BooksCompanion extends UpdateCompanion<Book> {
     this.author = const Value.absent(),
     this.filePath = const Value.absent(),
     this.coverPath = const Value.absent(),
+    this.coverBytes = const Value.absent(),
+    this.contentHash = const Value.absent(),
+    this.bookUid = const Value.absent(),
     this.locatorJson = const Value.absent(),
     this.progress = const Value.absent(),
     this.addedAt = const Value.absent(),
@@ -410,6 +538,9 @@ class BooksCompanion extends UpdateCompanion<Book> {
     this.author = const Value.absent(),
     required String filePath,
     this.coverPath = const Value.absent(),
+    this.coverBytes = const Value.absent(),
+    this.contentHash = const Value.absent(),
+    this.bookUid = const Value.absent(),
     this.locatorJson = const Value.absent(),
     this.progress = const Value.absent(),
     required DateTime addedAt,
@@ -422,6 +553,9 @@ class BooksCompanion extends UpdateCompanion<Book> {
     Expression<String>? author,
     Expression<String>? filePath,
     Expression<String>? coverPath,
+    Expression<Uint8List>? coverBytes,
+    Expression<String>? contentHash,
+    Expression<String>? bookUid,
     Expression<String>? locatorJson,
     Expression<double>? progress,
     Expression<DateTime>? addedAt,
@@ -432,6 +566,9 @@ class BooksCompanion extends UpdateCompanion<Book> {
       if (author != null) 'author': author,
       if (filePath != null) 'file_path': filePath,
       if (coverPath != null) 'cover_path': coverPath,
+      if (coverBytes != null) 'cover_bytes': coverBytes,
+      if (contentHash != null) 'content_hash': contentHash,
+      if (bookUid != null) 'book_uid': bookUid,
       if (locatorJson != null) 'locator_json': locatorJson,
       if (progress != null) 'progress': progress,
       if (addedAt != null) 'added_at': addedAt,
@@ -444,6 +581,9 @@ class BooksCompanion extends UpdateCompanion<Book> {
     Value<String?>? author,
     Value<String>? filePath,
     Value<String?>? coverPath,
+    Value<Uint8List?>? coverBytes,
+    Value<String?>? contentHash,
+    Value<String?>? bookUid,
     Value<String?>? locatorJson,
     Value<double>? progress,
     Value<DateTime>? addedAt,
@@ -454,6 +594,9 @@ class BooksCompanion extends UpdateCompanion<Book> {
       author: author ?? this.author,
       filePath: filePath ?? this.filePath,
       coverPath: coverPath ?? this.coverPath,
+      coverBytes: coverBytes ?? this.coverBytes,
+      contentHash: contentHash ?? this.contentHash,
+      bookUid: bookUid ?? this.bookUid,
       locatorJson: locatorJson ?? this.locatorJson,
       progress: progress ?? this.progress,
       addedAt: addedAt ?? this.addedAt,
@@ -478,6 +621,15 @@ class BooksCompanion extends UpdateCompanion<Book> {
     if (coverPath.present) {
       map['cover_path'] = Variable<String>(coverPath.value);
     }
+    if (coverBytes.present) {
+      map['cover_bytes'] = Variable<Uint8List>(coverBytes.value);
+    }
+    if (contentHash.present) {
+      map['content_hash'] = Variable<String>(contentHash.value);
+    }
+    if (bookUid.present) {
+      map['book_uid'] = Variable<String>(bookUid.value);
+    }
     if (locatorJson.present) {
       map['locator_json'] = Variable<String>(locatorJson.value);
     }
@@ -498,6 +650,9 @@ class BooksCompanion extends UpdateCompanion<Book> {
           ..write('author: $author, ')
           ..write('filePath: $filePath, ')
           ..write('coverPath: $coverPath, ')
+          ..write('coverBytes: $coverBytes, ')
+          ..write('contentHash: $contentHash, ')
+          ..write('bookUid: $bookUid, ')
           ..write('locatorJson: $locatorJson, ')
           ..write('progress: $progress, ')
           ..write('addedAt: $addedAt')
@@ -517,28 +672,32 @@ abstract class _$AppDatabase extends GeneratedDatabase {
   List<DatabaseSchemaEntity> get allSchemaEntities => [books];
 }
 
-typedef $$BooksTableCreateCompanionBuilder =
-    BooksCompanion Function({
-      Value<int> id,
-      required String title,
-      Value<String?> author,
-      required String filePath,
-      Value<String?> coverPath,
-      Value<String?> locatorJson,
-      Value<double> progress,
-      required DateTime addedAt,
-    });
-typedef $$BooksTableUpdateCompanionBuilder =
-    BooksCompanion Function({
-      Value<int> id,
-      Value<String> title,
-      Value<String?> author,
-      Value<String> filePath,
-      Value<String?> coverPath,
-      Value<String?> locatorJson,
-      Value<double> progress,
-      Value<DateTime> addedAt,
-    });
+typedef $$BooksTableCreateCompanionBuilder = BooksCompanion Function({
+  Value<int> id,
+  required String title,
+  Value<String?> author,
+  required String filePath,
+  Value<String?> coverPath,
+  Value<Uint8List?> coverBytes,
+  Value<String?> contentHash,
+  Value<String?> bookUid,
+  Value<String?> locatorJson,
+  Value<double> progress,
+  required DateTime addedAt,
+});
+typedef $$BooksTableUpdateCompanionBuilder = BooksCompanion Function({
+  Value<int> id,
+  Value<String> title,
+  Value<String?> author,
+  Value<String> filePath,
+  Value<String?> coverPath,
+  Value<Uint8List?> coverBytes,
+  Value<String?> contentHash,
+  Value<String?> bookUid,
+  Value<String?> locatorJson,
+  Value<double> progress,
+  Value<DateTime> addedAt,
+});
 
 class $$BooksTableFilterComposer extends Composer<_$AppDatabase, $BooksTable> {
   $$BooksTableFilterComposer({
@@ -570,6 +729,21 @@ class $$BooksTableFilterComposer extends Composer<_$AppDatabase, $BooksTable> {
 
   ColumnFilters<String> get coverPath => $composableBuilder(
     column: $table.coverPath,
+    builder: (column) => ColumnFilters(column),
+  );
+
+  ColumnFilters<Uint8List> get coverBytes => $composableBuilder(
+    column: $table.coverBytes,
+    builder: (column) => ColumnFilters(column),
+  );
+
+  ColumnFilters<String> get contentHash => $composableBuilder(
+    column: $table.contentHash,
+    builder: (column) => ColumnFilters(column),
+  );
+
+  ColumnFilters<String> get bookUid => $composableBuilder(
+    column: $table.bookUid,
     builder: (column) => ColumnFilters(column),
   );
 
@@ -623,6 +797,21 @@ class $$BooksTableOrderingComposer
     builder: (column) => ColumnOrderings(column),
   );
 
+  ColumnOrderings<Uint8List> get coverBytes => $composableBuilder(
+    column: $table.coverBytes,
+    builder: (column) => ColumnOrderings(column),
+  );
+
+  ColumnOrderings<String> get contentHash => $composableBuilder(
+    column: $table.contentHash,
+    builder: (column) => ColumnOrderings(column),
+  );
+
+  ColumnOrderings<String> get bookUid => $composableBuilder(
+    column: $table.bookUid,
+    builder: (column) => ColumnOrderings(column),
+  );
+
   ColumnOrderings<String> get locatorJson => $composableBuilder(
     column: $table.locatorJson,
     builder: (column) => ColumnOrderings(column),
@@ -662,6 +851,19 @@ class $$BooksTableAnnotationComposer
 
   GeneratedColumn<String> get coverPath =>
       $composableBuilder(column: $table.coverPath, builder: (column) => column);
+
+  GeneratedColumn<Uint8List> get coverBytes => $composableBuilder(
+    column: $table.coverBytes,
+    builder: (column) => column,
+  );
+
+  GeneratedColumn<String> get contentHash => $composableBuilder(
+    column: $table.contentHash,
+    builder: (column) => column,
+  );
+
+  GeneratedColumn<String> get bookUid =>
+      $composableBuilder(column: $table.bookUid, builder: (column) => column);
 
   GeneratedColumn<String> get locatorJson => $composableBuilder(
     column: $table.locatorJson,
@@ -708,6 +910,9 @@ class $$BooksTableTableManager
                 Value<String?> author = const Value.absent(),
                 Value<String> filePath = const Value.absent(),
                 Value<String?> coverPath = const Value.absent(),
+                Value<Uint8List?> coverBytes = const Value.absent(),
+                Value<String?> contentHash = const Value.absent(),
+                Value<String?> bookUid = const Value.absent(),
                 Value<String?> locatorJson = const Value.absent(),
                 Value<double> progress = const Value.absent(),
                 Value<DateTime> addedAt = const Value.absent(),
@@ -717,6 +922,9 @@ class $$BooksTableTableManager
                 author: author,
                 filePath: filePath,
                 coverPath: coverPath,
+                coverBytes: coverBytes,
+                contentHash: contentHash,
+                bookUid: bookUid,
                 locatorJson: locatorJson,
                 progress: progress,
                 addedAt: addedAt,
@@ -728,6 +936,9 @@ class $$BooksTableTableManager
                 Value<String?> author = const Value.absent(),
                 required String filePath,
                 Value<String?> coverPath = const Value.absent(),
+                Value<Uint8List?> coverBytes = const Value.absent(),
+                Value<String?> contentHash = const Value.absent(),
+                Value<String?> bookUid = const Value.absent(),
                 Value<String?> locatorJson = const Value.absent(),
                 Value<double> progress = const Value.absent(),
                 required DateTime addedAt,
@@ -737,12 +948,24 @@ class $$BooksTableTableManager
                 author: author,
                 filePath: filePath,
                 coverPath: coverPath,
+                coverBytes: coverBytes,
+                contentHash: contentHash,
+                bookUid: bookUid,
                 locatorJson: locatorJson,
                 progress: progress,
                 addedAt: addedAt,
               ),
           withReferenceMapper: (p0) => p0
-              .map((e) => (e.readTable(table), BaseReferences(db, table, e)))
+              .map(
+                (e) => (
+                  e.readTable<$BooksTable, Book>(table),
+                  BaseReferences<_$AppDatabase, $BooksTable, Book>(
+                    db,
+                    table,
+                    e,
+                  ),
+                ),
+              )
               .toList(),
           prefetchHooksCallback: null,
         ),

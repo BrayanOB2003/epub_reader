@@ -1,7 +1,9 @@
 import 'dart:io';
+import 'dart:typed_data';
 
 import 'package:epub_reader/app/providers.dart';
 import 'package:epub_reader/core/database/app_database.dart';
+import 'package:epub_reader/features/library/data/epub_importer.dart';
 import 'package:epub_reader/features/library/data/epub_metadata.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
@@ -21,7 +23,10 @@ class _HomePageState extends ConsumerState<HomePage> {
     if (_importing) return;
     setState(() => _importing = true);
     try {
-      await ref.read(epubImporterProvider).pickAndImport();
+      final outcome = await ref.read(epubImporterProvider).pickAndImport();
+      if (outcome == ImportOutcome.alreadyInLibrary) {
+        _showMessage('Este libro ya está en la biblioteca.');
+      }
     } on EpubFormatException catch (error) {
       _showMessage(error.message);
     } catch (_) {
@@ -113,7 +118,7 @@ class _BookTile extends StatelessWidget {
           padding: const EdgeInsets.all(12),
           child: Row(
             children: [
-              _Cover(path: book.coverPath, title: book.title),
+              _Cover(bytes: book.coverBytes, path: book.coverPath, title: book.title),
               const SizedBox(width: 16),
               Expanded(
                 child: Column(
@@ -145,34 +150,37 @@ class _BookTile extends StatelessWidget {
 }
 
 class _Cover extends StatelessWidget {
-  const _Cover({required this.path, required this.title});
+  const _Cover({required this.bytes, required this.path, required this.title});
 
+  final Uint8List? bytes;
   final String? path;
   final String title;
 
   @override
   Widget build(BuildContext context) {
     final theme = Theme.of(context);
+    final storedCover = bytes;
     final file = path == null ? null : File(path!);
-    final hasCover = file != null && file.existsSync();
+    final Widget image;
+    if (storedCover != null && storedCover.isNotEmpty) {
+      image = Image.memory(storedCover, fit: BoxFit.cover, gaplessPlayback: true);
+    } else if (file != null && file.existsSync()) {
+      image = Image.file(file, fit: BoxFit.cover, gaplessPlayback: true);
+    } else {
+      image = ColoredBox(
+        color: theme.colorScheme.secondaryContainer,
+        child: Center(
+          child: Text(
+            title.isEmpty ? '?' : title.characters.first.toUpperCase(),
+            style: theme.textTheme.titleLarge?.copyWith(color: theme.colorScheme.onSecondaryContainer),
+          ),
+        ),
+      );
+    }
 
     return ClipRRect(
       borderRadius: BorderRadius.circular(6),
-      child: SizedBox(
-        width: 56,
-        height: 84,
-        child: hasCover
-            ? Image.file(file, fit: BoxFit.cover)
-            : ColoredBox(
-                color: theme.colorScheme.secondaryContainer,
-                child: Center(
-                  child: Text(
-                    title.isEmpty ? '?' : title.characters.first.toUpperCase(),
-                    style: theme.textTheme.titleLarge?.copyWith(color: theme.colorScheme.onSecondaryContainer),
-                  ),
-                ),
-              ),
-      ),
+      child: SizedBox(width: 56, height: 84, child: image),
     );
   }
 }
