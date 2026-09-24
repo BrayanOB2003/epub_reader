@@ -18,7 +18,9 @@ class _DiscoverPageState extends ConsumerState<DiscoverPage> {
     if (_downloadingId != null) return;
     final identifier = book.identifier;
     if (identifier != null) {
-      final saved = await ref.read(bookRepositoryProvider).findByBookUid(identifier);
+      final saved = await ref
+          .read(bookRepositoryProvider)
+          .findByBookUid(identifier);
       if (!mounted) return;
       if (saved != null) {
         context.push('/read/${saved.id}');
@@ -28,16 +30,17 @@ class _DiscoverPageState extends ConsumerState<DiscoverPage> {
 
     setState(() => _downloadingId = book.id);
     try {
-      var source = book;
-      final catalog = await ref.read(catalogProvider.future);
+      var catalog = await ref.read(catalogProvider.future);
       if (catalog.urlsExpired) {
-        ref.invalidate(catalogProvider);
-        final fresh = await ref.read(catalogProvider.future);
-        source = fresh.books.where((item) => item.id == book.id).firstOrNull ?? book;
+        catalog = await ref.read(catalogProvider.notifier).reload();
       }
+      final source =
+          catalog.books.where((item) => item.id == book.id).firstOrNull ?? book;
       final client = await ref.read(catalogClientProvider.future);
       final bytes = await client.download(source.downloadUrl);
-      final imported = await ref.read(epubImporterProvider).importBytes(bytes, fallbackTitle: source.title);
+      final imported = await ref
+          .read(epubImporterProvider)
+          .importBytes(bytes, fallbackTitle: source.title);
       if (!mounted) return;
       context.push('/read/${imported.bookId}');
     } on CatalogException catch (error) {
@@ -51,27 +54,42 @@ class _DiscoverPageState extends ConsumerState<DiscoverPage> {
 
   void _showMessage(String message) {
     if (!mounted) return;
-    ScaffoldMessenger.of(context).showSnackBar(SnackBar(content: Text(message)));
+    ScaffoldMessenger.of(
+      context,
+    ).showSnackBar(SnackBar(content: Text(message)));
   }
 
   @override
   Widget build(BuildContext context) {
     final catalog = ref.watch(catalogProvider);
     final library = ref.watch(booksProvider).value ?? const [];
-    final savedIds = library.map((book) => book.bookUid).whereType<String>().toSet();
+    final savedIds = library
+        .map((book) => book.bookUid)
+        .whereType<String>()
+        .toSet();
 
     return Scaffold(
       appBar: AppBar(title: const Text('Descubrimiento')),
       body: catalog.when(
         loading: () => const Center(child: CircularProgressIndicator()),
         error: (error, _) => _CatalogError(
-          message: error is CatalogException ? error.message : 'No se pudo cargar el catálogo.',
+          message: error is CatalogException
+              ? error.message
+              : 'No se pudo cargar el catálogo.',
           onRetry: () => ref.invalidate(catalogProvider),
         ),
         data: (data) {
           if (data.books.isEmpty) return const _CatalogEmpty();
           return RefreshIndicator(
-            onRefresh: () async => ref.refresh(catalogProvider.future),
+            onRefresh: () async {
+              try {
+                await ref.read(catalogProvider.notifier).reload();
+              } on CatalogException catch (error) {
+                _showMessage(error.message);
+              } catch (_) {
+                _showMessage('No se pudo cargar el catálogo.');
+              }
+            },
             child: ListView.separated(
               physics: const AlwaysScrollableScrollPhysics(),
               padding: const EdgeInsets.fromLTRB(16, 8, 16, 24),
@@ -81,7 +99,9 @@ class _DiscoverPageState extends ConsumerState<DiscoverPage> {
                 final book = data.books[index];
                 return _CatalogTile(
                   book: book,
-                  inLibrary: book.identifier != null && savedIds.contains(book.identifier),
+                  inLibrary:
+                      book.identifier != null &&
+                      savedIds.contains(book.identifier),
                   downloading: _downloadingId == book.id,
                   onTap: () => _open(book),
                 );
@@ -106,9 +126,17 @@ class _CatalogEmpty extends StatelessWidget {
         child: Column(
           mainAxisSize: MainAxisSize.min,
           children: [
-            Icon(Icons.explore_outlined, size: 56, color: theme.colorScheme.primary),
+            Icon(
+              Icons.explore_outlined,
+              size: 56,
+              color: theme.colorScheme.primary,
+            ),
             const SizedBox(height: 16),
-            Text('El catálogo está vacío', style: theme.textTheme.titleLarge, textAlign: TextAlign.center),
+            Text(
+              'El catálogo está vacío',
+              style: theme.textTheme.titleLarge,
+              textAlign: TextAlign.center,
+            ),
             const SizedBox(height: 8),
             Text(
               'Cuando haya libros disponibles, aparecerán aquí.',
@@ -147,7 +175,12 @@ class _CatalogError extends StatelessWidget {
 }
 
 class _CatalogTile extends StatelessWidget {
-  const _CatalogTile({required this.book, required this.inLibrary, required this.downloading, required this.onTap});
+  const _CatalogTile({
+    required this.book,
+    required this.inLibrary,
+    required this.downloading,
+    required this.onTap,
+  });
 
   final CatalogBook book;
   final bool inLibrary;
@@ -172,27 +205,44 @@ class _CatalogTile extends StatelessWidget {
                 child: Column(
                   crossAxisAlignment: CrossAxisAlignment.start,
                   children: [
-                    Text(book.title, style: theme.textTheme.titleMedium, maxLines: 2, overflow: TextOverflow.ellipsis),
+                    Text(
+                      book.title,
+                      style: theme.textTheme.titleMedium,
+                      maxLines: 2,
+                      overflow: TextOverflow.ellipsis,
+                    ),
                     if (book.authors != null) ...[
                       const SizedBox(height: 4),
                       Text(
                         book.authors!,
-                        style: theme.textTheme.bodyMedium?.copyWith(color: theme.colorScheme.onSurfaceVariant),
+                        style: theme.textTheme.bodyMedium?.copyWith(
+                          color: theme.colorScheme.onSurfaceVariant,
+                        ),
                         maxLines: 1,
                         overflow: TextOverflow.ellipsis,
                       ),
                     ],
                     if (inLibrary) ...[
                       const SizedBox(height: 8),
-                      Text('En tu biblioteca', style: theme.textTheme.labelMedium),
+                      Text(
+                        'En tu biblioteca',
+                        style: theme.textTheme.labelMedium,
+                      ),
                     ],
                   ],
                 ),
               ),
               if (downloading)
-                const SizedBox.square(dimension: 20, child: CircularProgressIndicator(strokeWidth: 2))
+                const SizedBox.square(
+                  dimension: 20,
+                  child: CircularProgressIndicator(strokeWidth: 2),
+                )
               else
-                Icon(inLibrary ? Icons.menu_book_outlined : Icons.download_outlined),
+                Icon(
+                  inLibrary
+                      ? Icons.menu_book_outlined
+                      : Icons.download_outlined,
+                ),
             ],
           ),
         ),
@@ -234,7 +284,9 @@ class _CatalogCover extends StatelessWidget {
       child: Center(
         child: Text(
           title.isEmpty ? '?' : title.characters.first.toUpperCase(),
-          style: theme.textTheme.titleLarge?.copyWith(color: theme.colorScheme.onSecondaryContainer),
+          style: theme.textTheme.titleLarge?.copyWith(
+            color: theme.colorScheme.onSecondaryContainer,
+          ),
         ),
       ),
     );

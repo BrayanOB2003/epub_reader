@@ -13,8 +13,10 @@ void main() {
           'autores': 'Miguel de Cervantes',
           'identificador': 'urn:uuid:6f8b2c1a-3e4d-4a9b-8c21-0d5e6f7a8b9c',
           'idioma': 'es',
-          'portada_url': 'https://storage.googleapis.com/epub_reader/catalogo/portadas/ab12.png',
-          'descarga_url': 'https://storage.googleapis.com/epub_reader/don-quijote.epub',
+          'portada_url':
+              'https://storage.googleapis.com/epub_reader/catalogo/portadas/ab12.png',
+          'descarga_url':
+              'https://storage.googleapis.com/epub_reader/don-quijote.epub',
           'tamano': 2458132,
         },
         {
@@ -24,7 +26,8 @@ void main() {
           'identificador': '978-1-234567-89-0',
           'idioma': 'es',
           'portada_url': null,
-          'descarga_url': 'https://storage.googleapis.com/epub_reader/clasicos/la-odisea.epub',
+          'descarga_url':
+              'https://storage.googleapis.com/epub_reader/clasicos/la-odisea.epub',
           'tamano': 812004,
         },
       ],
@@ -35,10 +38,21 @@ void main() {
     expect(catalog.books.first.authors, 'Miguel de Cervantes');
     expect(catalog.books.last.coverUrl, isNull);
     expect(catalog.generatedAt, DateTime.parse('2026-09-24T05:10:00+00:00'));
+
+    final restored = Catalog.fromJson(catalog.toJson());
+    expect(restored.generatedAt, catalog.generatedAt);
+    expect(restored.urlsExpireAt, DateTime.parse('2026-09-24T06:10:00+00:00'));
+    expect(restored.books.first.title, catalog.books.first.title);
+    expect(restored.books.first.downloadUrl, catalog.books.first.downloadUrl);
+    expect(restored.books.last.coverUrl, isNull);
   });
 
   test('reads an empty catalog', () {
-    final catalog = Catalog.fromJson({'generado_en': null, 'urls_expiran_en': null, 'libros': []});
+    final catalog = Catalog.fromJson({
+      'generado_en': null,
+      'urls_expiran_en': null,
+      'libros': [],
+    });
 
     expect(catalog.books, isEmpty);
     expect(catalog.generatedAt, isNull);

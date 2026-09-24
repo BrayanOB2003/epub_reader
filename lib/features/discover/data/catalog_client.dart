@@ -1,7 +1,9 @@
 import 'dart:convert';
 
 import 'package:epub_reader/features/discover/data/catalog.dart';
+import 'package:epub_reader/features/discover/data/catalog_env.dart';
 import 'package:flutter/foundation.dart';
+import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:http/http.dart' as http;
 
 const catalogEndpoint =
@@ -73,3 +75,10 @@ class CatalogClient {
 
   void close() => _http.close();
 }
+
+final catalogClientProvider = FutureProvider<CatalogClient>((ref) async {
+  final apiKey = await loadCatalogApiKey();
+  final client = CatalogClient(apiKey: apiKey);
+  ref.onDispose(client.close);
+  return client;
+});

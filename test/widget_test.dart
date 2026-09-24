@@ -41,8 +41,12 @@ void main() {
             ref.onDispose(database.close);
             return database;
           }),
-          catalogProvider.overrideWith((ref) async {
-            return const Catalog(generatedAt: null, urlsExpireAt: null, books: []);
+          catalogProvider.overrideWithBuild((ref, notifier) {
+            return const Catalog(
+              generatedAt: null,
+              urlsExpireAt: null,
+              books: [],
+            );
           }),
         ],
         child: const EpubReaderApp(),
