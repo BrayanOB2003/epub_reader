@@ -11,5 +11,9 @@ class ReadiumReadingEngine {
 
   Future<void> close() => _readium.closePublication();
 
+  Future<void> goForward() => _readium.goForward();
+
+  Future<void> goBackward() => _readium.goBackward();
+
   Stream<Locator> get onLocator => _readium.onTextLocatorChanged;
 }

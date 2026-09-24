@@ -83,7 +83,8 @@ class EpubImporter {
     final booksDir = Directory(p.join(documents.path, 'books'));
     await booksDir.create(recursive: true);
 
-    final epubFile = File(p.join(booksDir.path, '$stamp.epub'));
+    final relativeEpub = p.join('books', '$stamp.epub');
+    final epubFile = File(p.join(documents.path, relativeEpub));
     await epubFile.writeAsBytes(bytes, flush: true);
 
     String? coverPath;
@@ -96,7 +97,7 @@ class EpubImporter {
       title: metadata.title,
       author: metadata.author,
       bookUid: metadata.bookUid,
-      filePath: epubFile.path,
+      filePath: relativeEpub,
       coverPath: coverPath,
       coverBytes: coverBytes,
       contentHash: contentHash,
@@ -106,8 +107,9 @@ class EpubImporter {
   Future<String> _writeCover(Directory documents, Object name, Uint8List bytes, String? extension) async {
     final coversDir = Directory(p.join(documents.path, 'covers'));
     await coversDir.create(recursive: true);
-    final coverFile = File(p.join(coversDir.path, '$name.${extension ?? 'jpg'}'));
+    final relativeCover = p.join('covers', '$name.${extension ?? 'jpg'}');
+    final coverFile = File(p.join(documents.path, relativeCover));
     await coverFile.writeAsBytes(bytes, flush: true);
-    return coverFile.path;
+    return relativeCover;
   }
 }

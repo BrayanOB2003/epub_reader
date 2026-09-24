@@ -6,8 +6,10 @@ import 'package:epub_reader/core/database/app_database.dart';
 import 'package:epub_reader/core/reading/readium_reading_engine.dart';
 import 'package:epub_reader/features/library/data/book_repository.dart';
 import 'package:flutter/material.dart';
+import 'package:flutter/services.dart';
 import 'package:flutter_readium/flutter_readium.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
+import 'package:go_router/go_router.dart';
 
 class ReaderPage extends ConsumerStatefulWidget {
   const ReaderPage({required this.bookId, super.key});
@@ -29,11 +31,15 @@ class _ReaderPageState extends ConsumerState<ReaderPage> {
   Timer? _saveTimer;
   var _progress = 0.0;
   var _loading = true;
+  var _chromeVisible = false;
+  DateTime? _lastPageTurn;
+  var _swipeDx = 0.0;
   String? _error;
 
   @override
   void initState() {
     super.initState();
+    SystemChrome.setEnabledSystemUIMode(SystemUiMode.immersiveSticky);
     _repository = ref.read(bookRepositoryProvider);
     _engine = ref.read(readingEngineProvider);
     _open();
@@ -101,8 +107,41 @@ class _ReaderPageState extends ConsumerState<ReaderPage> {
     return Locator.fromJson(Map<String, dynamic>.from(decoded));
   }
 
+  void _close() {
+    if (context.canPop()) {
+      context.pop();
+    } else {
+      context.go('/library');
+    }
+  }
+
+  Future<void> _turnPage({required bool forward}) async {
+    final now = DateTime.now();
+    final last = _lastPageTurn;
+    if (last != null && now.difference(last) < const Duration(milliseconds: 350)) return;
+    _lastPageTurn = now;
+    if (_chromeVisible) setState(() => _chromeVisible = false);
+    if (forward) {
+      await _engine.goForward();
+    } else {
+      await _engine.goBackward();
+    }
+  }
+
+  void _onSwipeEnd(DragEndDetails details, {required bool rtl}) {
+    const minVelocity = 250.0;
+    const minDistance = 48.0;
+    final velocity = details.primaryVelocity ?? 0;
+    final distance = _swipeDx;
+    final swipedLeft = velocity <= -minVelocity || (velocity.abs() < minVelocity && distance <= -minDistance);
+    final swipedRight = velocity >= minVelocity || (velocity.abs() < minVelocity && distance >= minDistance);
+    if (!swipedLeft && !swipedRight) return;
+    _turnPage(forward: swipedLeft ? !rtl : rtl);
+  }
+
   @override
   void dispose() {
+    SystemChrome.setEnabledSystemUIMode(SystemUiMode.edgeToEdge);
     _saveTimer?.cancel();
     final locator = _latestLocator;
     if (locator != null) {
@@ -121,24 +160,17 @@ class _ReaderPageState extends ConsumerState<ReaderPage> {
 
   @override
   Widget build(BuildContext context) {
-    final title = _book?.title ?? 'Leyendo';
     return Scaffold(
-      appBar: AppBar(
-        title: Text(title, maxLines: 1, overflow: TextOverflow.ellipsis),
-        bottom: PreferredSize(
-          preferredSize: const Size.fromHeight(4),
-          child: LinearProgressIndicator(value: _loading ? null : _progress.clamp(0, 1)),
-        ),
-      ),
+      backgroundColor: Colors.black,
       body: _buildBody(),
     );
   }
 
   Widget _buildBody() {
-    if (_loading) return const Center(child: CircularProgressIndicator());
+    if (_loading) return _statusLayer(child: const CircularProgressIndicator());
     final error = _error;
     if (error != null) {
-      return Center(
+      return _statusLayer(
         child: Padding(
           padding: const EdgeInsets.all(24),
           child: Text(error, textAlign: TextAlign.center),
@@ -149,10 +181,123 @@ class _ReaderPageState extends ConsumerState<ReaderPage> {
     final publication = _publication;
     final book = _book;
     if (publication == null || book == null) {
-      return const Center(child: Text('No se pudo abrir el libro.'));
+      return _statusLayer(child: const Text('No se pudo abrir el libro.'));
     }
 
-    return ReadiumReaderWidget(publication: publication, initialLocator: _savedLocator(book));
+    final rtl = publication.metadata.readingProgression == ReadingProgression.rtl;
+
+    return Stack(
+      children: [
+        Positioned.fill(child: ReadiumReaderWidget(publication: publication, initialLocator: _savedLocator(book))),
+        Positioned.fill(
+          child: GestureDetector(
+            behavior: HitTestBehavior.translucent,
+            onHorizontalDragStart: (_) => _swipeDx = 0,
+            onHorizontalDragUpdate: (details) => _swipeDx += details.delta.dx,
+            onHorizontalDragEnd: (details) => _onSwipeEnd(details, rtl: rtl),
+            child: Row(
+              children: [
+                Expanded(
+                  flex: 2,
+                  child: _TapZone(
+                    label: rtl ? 'Página siguiente' : 'Página anterior',
+                    onTap: () => _turnPage(forward: rtl),
+                  ),
+                ),
+                Expanded(
+                  flex: 6,
+                  child: _TapZone(
+                    label: 'Mostrar menú',
+                    onTap: () => setState(() => _chromeVisible = !_chromeVisible),
+                  ),
+                ),
+                Expanded(
+                  flex: 2,
+                  child: _TapZone(
+                    label: rtl ? 'Página anterior' : 'Página siguiente',
+                    onTap: () => _turnPage(forward: !rtl),
+                  ),
+                ),
+              ],
+            ),
+          ),
+        ),
+        Positioned(top: 0, left: 0, right: 0, child: _readerChrome()),
+      ],
+    );
+  }
+
+  Widget _statusLayer({required Widget child}) {
+    return Stack(
+      children: [
+        Center(
+          child: DefaultTextStyle.merge(
+            style: const TextStyle(color: Color(0xFFF7F1E8)),
+            child: child,
+          ),
+        ),
+        Positioned(top: 0, left: 0, right: 0, child: _readerChrome(forceVisible: true)),
+      ],
+    );
+  }
+
+  Widget _readerChrome({bool forceVisible = false}) {
+    final visible = forceVisible || _chromeVisible;
+    return Column(
+      mainAxisSize: MainAxisSize.min,
+      children: [
+        IgnorePointer(
+          child: LinearProgressIndicator(
+            minHeight: 3,
+            value: _loading ? null : _progress.clamp(0, 1),
+            backgroundColor: const Color(0x33000000),
+            color: const Color(0xFF6B4F3A),
+          ),
+        ),
+        ClipRect(
+          child: AnimatedAlign(
+            alignment: Alignment.topCenter,
+            heightFactor: visible ? 1 : 0,
+            duration: const Duration(milliseconds: 180),
+            curve: Curves.easeOut,
+            child: Material(
+              color: const Color(0xF2F7F1E8),
+              child: SafeArea(
+                bottom: false,
+                child: Align(
+                  alignment: Alignment.centerRight,
+                  child: IconButton(
+                    tooltip: 'Cerrar',
+                    onPressed: _close,
+                    icon: const Icon(Icons.close),
+                  ),
+                ),
+              ),
+            ),
+          ),
+        ),
+      ],
+    );
+  }
+}
+
+class _TapZone extends StatelessWidget {
+  const _TapZone({required this.label, required this.onTap});
+
+  final String label;
+  final VoidCallback onTap;
+
+  @override
+  Widget build(BuildContext context) {
+    return Semantics(
+      button: true,
+      label: label,
+      child: GestureDetector(
+        behavior: HitTestBehavior.opaque,
+        onTap: onTap,
+        child: const SizedBox.expand(),
+      ),
+    );
   }
 }
 

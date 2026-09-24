@@ -19,7 +19,8 @@ void main() {
       if (documents.existsSync()) await documents.delete(recursive: true);
     });
 
-    final importer = EpubImporter(BookRepository(database), documentsDirectory: () async => documents);
+    final repository = BookRepository(database, documentsDirectory: () async => documents);
+    final importer = EpubImporter(repository, documentsDirectory: () async => documents);
     final cover = Uint8List.fromList(const [0xFF, 0xD8, 0xFF, 0xD9]);
     final bytes = _sampleEpub(cover);
 
@@ -31,6 +32,9 @@ void main() {
     expect(books.single.title, 'El hábito');
     expect(books.single.coverBytes, cover);
     expect(books.single.contentHash, isNotNull);
+    expect(p.isAbsolute(books.single.filePath), isFalse);
+    expect(books.single.filePath, startsWith('books${p.separator}'));
+    expect(books.single.coverPath, startsWith('covers${p.separator}'));
   });
 
   test('fills the cover of a book imported before covers were stored in the row', () async {
@@ -47,7 +51,8 @@ void main() {
     await epubFile.writeAsBytes(bytes);
     await database.into(database.books).insert(BooksCompanion.insert(title: 'El hábito', filePath: epubFile.path, addedAt: DateTime.now()));
 
-    final importer = EpubImporter(BookRepository(database), documentsDirectory: () async => documents);
+    final repository = BookRepository(database, documentsDirectory: () async => documents);
+    final importer = EpubImporter(repository, documentsDirectory: () async => documents);
     expect((await importer.importBytes(bytes, fallbackTitle: 'Libro')).outcome, ImportOutcome.alreadyInLibrary);
 
     final books = await database.select(database.books).get();
@@ -64,19 +69,55 @@ void main() {
       if (documents.existsSync()) await documents.delete(recursive: true);
     });
 
-    final repository = BookRepository(database);
+    final repository = BookRepository(database, documentsDirectory: () async => documents);
     final importer = EpubImporter(repository, documentsDirectory: () async => documents);
     await importer.importBytes(_sampleEpub(Uint8List.fromList(const [0xFF, 0xD8, 0xFF, 0xD9])), fallbackTitle: 'Libro');
 
     final book = (await database.select(database.books).get()).single;
-    expect(File(book.filePath).existsSync(), isTrue);
-    expect(File(book.coverPath!).existsSync(), isTrue);
+    final epubFile = File(p.join(documents.path, book.filePath));
+    final coverFile = File(p.join(documents.path, book.coverPath!));
+    expect(epubFile.existsSync(), isTrue);
+    expect(coverFile.existsSync(), isTrue);
 
     await repository.delete(book);
 
     expect(await database.select(database.books).get(), isEmpty);
-    expect(File(book.filePath).existsSync(), isFalse);
-    expect(File(book.coverPath!).existsSync(), isFalse);
+    expect(epubFile.existsSync(), isFalse);
+    expect(coverFile.existsSync(), isFalse);
+  });
+
+  test('finds a book whose stored path belongs to an old container', () async {
+    final database = AppDatabase(NativeDatabase.memory());
+    final documents = await Directory.systemTemp.createTemp('epub_reader_relocate');
+    addTearDown(() async {
+      await database.close();
+      if (documents.existsSync()) await documents.delete(recursive: true);
+    });
+
+    await Directory(p.join(documents.path, 'books')).create();
+    await Directory(p.join(documents.path, 'covers')).create();
+    await File(p.join(documents.path, 'books', 'sample.epub')).writeAsBytes([1, 2, 3]);
+    await File(p.join(documents.path, 'covers', 'sample.jpg')).writeAsBytes([4, 5, 6]);
+
+    const staleRoot = '/private/var/containers/Application/OLD-CONTAINER/Documents';
+    final id = await database.into(database.books).insert(
+      BooksCompanion.insert(
+        title: 'Mudado',
+        filePath: p.join(staleRoot, 'books', 'sample.epub'),
+        coverPath: Value(p.join(staleRoot, 'covers', 'sample.jpg')),
+        addedAt: DateTime.now(),
+      ),
+    );
+
+    final repository = BookRepository(database, documentsDirectory: () async => documents);
+    final book = await repository.getBook(id);
+
+    expect(File(book!.filePath).existsSync(), isTrue);
+    expect(File(book.coverPath!).existsSync(), isTrue);
+
+    final stored = await (database.select(database.books)..where((table) => table.id.equals(id))).getSingle();
+    expect(stored.filePath, p.join('books', 'sample.epub'));
+    expect(stored.coverPath, p.join('covers', 'sample.jpg'));
   });
 }
 
