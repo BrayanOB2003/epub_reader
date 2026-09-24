@@ -41,6 +41,26 @@ class _HomePageState extends ConsumerState<HomePage> {
     ScaffoldMessenger.of(context).showSnackBar(SnackBar(content: Text(message)));
   }
 
+  Future<void> _delete(Book book) async {
+    final confirmed = await showDialog<bool>(
+      context: context,
+      builder: (context) => AlertDialog(
+        title: const Text('Eliminar libro'),
+        content: Text('¿Quitar «${book.title}» de la biblioteca?'),
+        actions: [
+          TextButton(onPressed: () => Navigator.pop(context, false), child: const Text('Cancelar')),
+          TextButton(onPressed: () => Navigator.pop(context, true), child: const Text('Eliminar')),
+        ],
+      ),
+    );
+    if (confirmed != true || !mounted) return;
+    try {
+      await ref.read(bookRepositoryProvider).delete(book);
+    } catch (_) {
+      _showMessage('No se pudo eliminar el libro.');
+    }
+  }
+
   @override
   Widget build(BuildContext context) {
     final books = ref.watch(booksProvider);
@@ -63,7 +83,7 @@ class _HomePageState extends ConsumerState<HomePage> {
             padding: const EdgeInsets.fromLTRB(16, 8, 16, 96),
             itemCount: items.length,
             separatorBuilder: (_, _) => const SizedBox(height: 12),
-            itemBuilder: (context, index) => _BookTile(book: items[index]),
+            itemBuilder: (context, index) => _BookTile(book: items[index], onDelete: () => _delete(items[index])),
           );
         },
       ),
@@ -100,9 +120,10 @@ class _EmptyLibrary extends StatelessWidget {
 }
 
 class _BookTile extends StatelessWidget {
-  const _BookTile({required this.book});
+  const _BookTile({required this.book, required this.onDelete});
 
   final Book book;
+  final VoidCallback onDelete;
 
   @override
   Widget build(BuildContext context) {
@@ -140,6 +161,12 @@ class _BookTile extends StatelessWidget {
                     Text(percent == 0 ? 'Sin empezar' : '$percent %', style: theme.textTheme.labelMedium),
                   ],
                 ),
+              ),
+              IconButton(
+                tooltip: 'Eliminar',
+                visualDensity: VisualDensity.compact,
+                onPressed: onDelete,
+                icon: const Icon(Icons.close),
               ),
             ],
           ),

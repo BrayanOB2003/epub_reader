@@ -1,3 +1,5 @@
+import 'dart:io';
+
 import 'package:drift/drift.dart';
 import 'package:epub_reader/core/database/app_database.dart';
 
@@ -79,5 +81,17 @@ class BookRepository {
     return (_database.update(_database.books)..where((table) => table.id.equals(id))).write(
       BooksCompanion(locatorJson: Value(locatorJson), progress: Value(progress.clamp(0, 1))),
     );
+  }
+
+  Future<void> delete(Book book) async {
+    await (_database.delete(_database.books)..where((table) => table.id.equals(book.id))).go();
+    await _deleteFile(book.filePath);
+    final coverPath = book.coverPath;
+    if (coverPath != null) await _deleteFile(coverPath);
+  }
+
+  Future<void> _deleteFile(String path) async {
+    final file = File(path);
+    if (await file.exists()) await file.delete();
   }
 }

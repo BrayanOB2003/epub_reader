@@ -55,6 +55,29 @@ void main() {
     expect(books.single.coverBytes, cover);
     expect(books.single.contentHash, isNotNull);
   });
+
+  test('removes the library row and its files', () async {
+    final database = AppDatabase(NativeDatabase.memory());
+    final documents = await Directory.systemTemp.createTemp('epub_reader_delete');
+    addTearDown(() async {
+      await database.close();
+      if (documents.existsSync()) await documents.delete(recursive: true);
+    });
+
+    final repository = BookRepository(database);
+    final importer = EpubImporter(repository, documentsDirectory: () async => documents);
+    await importer.importBytes(_sampleEpub(Uint8List.fromList(const [0xFF, 0xD8, 0xFF, 0xD9])), fallbackTitle: 'Libro');
+
+    final book = (await database.select(database.books).get()).single;
+    expect(File(book.filePath).existsSync(), isTrue);
+    expect(File(book.coverPath!).existsSync(), isTrue);
+
+    await repository.delete(book);
+
+    expect(await database.select(database.books).get(), isEmpty);
+    expect(File(book.filePath).existsSync(), isFalse);
+    expect(File(book.coverPath!).existsSync(), isFalse);
+  });
 }
 
 Uint8List _sampleEpub(Uint8List cover) {
