@@ -5,6 +5,8 @@ import 'package:epub_reader/app/providers.dart';
 import 'package:epub_reader/core/database/app_database.dart';
 import 'package:epub_reader/core/reading/readium_reading_engine.dart';
 import 'package:epub_reader/features/library/data/book_repository.dart';
+import 'package:epub_reader/features/reader/reader_gestures.dart';
+import 'package:epub_reader/features/reader/reader_preferences.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter_readium/flutter_readium.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
@@ -31,8 +33,10 @@ class _ReaderPageState extends ConsumerState<ReaderPage> {
   var _progress = 0.0;
   var _loading = true;
   var _chromeVisible = false;
+  var _dark = false;
+  var _scroll = false;
+  var _fixedLayout = false;
   DateTime? _lastPageTurn;
-  var _swipeDx = 0.0;
   String? _error;
 
   @override
@@ -56,6 +60,8 @@ class _ReaderPageState extends ConsumerState<ReaderPage> {
 
     try {
       final publication = await _engine.open(book.filePath);
+      final fixedLayout = publicationIsFixed(publication);
+      await _engine.setPreferences(readerPreferences(dark: _dark, scroll: _scroll, fixedLayout: fixedLayout));
       _locatorSubscription = _engine.onLocator.listen(_onLocator);
       if (!mounted) {
         await _engine.close();
@@ -64,6 +70,7 @@ class _ReaderPageState extends ConsumerState<ReaderPage> {
       setState(() {
         _book = book;
         _publication = publication;
+        _fixedLayout = fixedLayout;
         _progress = book.progress;
         _loading = false;
       });
@@ -113,6 +120,43 @@ class _ReaderPageState extends ConsumerState<ReaderPage> {
     ScaffoldMessenger.of(context).showSnackBar(SnackBar(content: Text(message)));
   }
 
+  Future<void> _applyPreferences() async {
+    try {
+      await _engine.setPreferences(readerPreferences(dark: _dark, scroll: _scroll, fixedLayout: _fixedLayout));
+    } catch (_) {
+      if (mounted) _showMessage('No se pudieron aplicar los ajustes de lectura.');
+    }
+  }
+
+  Future<void> _toggleDark() async {
+    if (_fixedLayout) {
+      _showMessage('En un libro de maquetación fija el color del texto no cambia.');
+      return;
+    }
+    setState(() => _dark = !_dark);
+    await _applyPreferences();
+  }
+
+  Future<void> _toggleScroll() async {
+    if (_fixedLayout) {
+      _showMessage('Este libro se lee por páginas.');
+      return;
+    }
+    setState(() => _scroll = !_scroll);
+    await _applyPreferences();
+  }
+
+  void _onZone(ReaderZone zone) {
+    switch (zone) {
+      case ReaderZone.previous:
+        _turnPage(forward: false);
+      case ReaderZone.next:
+        _turnPage(forward: true);
+      case ReaderZone.menu:
+        setState(() => _chromeVisible = !_chromeVisible);
+    }
+  }
+
   Future<void> _persist() async {
     final locator = _latestLocator;
     if (locator == null) return;
@@ -153,17 +197,6 @@ class _ReaderPageState extends ConsumerState<ReaderPage> {
     }
   }
 
-  void _onSwipeEnd(DragEndDetails details, {required bool rtl}) {
-    const minVelocity = 250.0;
-    const minDistance = 48.0;
-    final velocity = details.primaryVelocity ?? 0;
-    final distance = _swipeDx;
-    final swipedLeft = velocity <= -minVelocity || (velocity.abs() < minVelocity && distance <= -minDistance);
-    final swipedRight = velocity >= minVelocity || (velocity.abs() < minVelocity && distance >= minDistance);
-    if (!swipedLeft && !swipedRight) return;
-    _turnPage(forward: swipedLeft ? !rtl : rtl);
-  }
-
   @override
   void dispose() {
     _saveTimer?.cancel();
@@ -184,8 +217,9 @@ class _ReaderPageState extends ConsumerState<ReaderPage> {
 
   @override
   Widget build(BuildContext context) {
+    final pageColor = _dark && !_fixedLayout ? readerDarkBackground : readerLightBackground;
     return Scaffold(
-      backgroundColor: Colors.black,
+      backgroundColor: _loading || _error != null ? Colors.black : pageColor,
       body: SafeArea(child: _buildBody()),
     );
   }
@@ -214,37 +248,7 @@ class _ReaderPageState extends ConsumerState<ReaderPage> {
       children: [
         Positioned.fill(child: ReadiumReaderWidget(publication: publication, initialLocator: _savedLocator(book))),
         Positioned.fill(
-          child: GestureDetector(
-            behavior: HitTestBehavior.translucent,
-            onHorizontalDragStart: (_) => _swipeDx = 0,
-            onHorizontalDragUpdate: (details) => _swipeDx += details.delta.dx,
-            onHorizontalDragEnd: (details) => _onSwipeEnd(details, rtl: rtl),
-            child: Row(
-              children: [
-                Expanded(
-                  flex: 2,
-                  child: _TapZone(
-                    label: rtl ? 'Página siguiente' : 'Página anterior',
-                    onTap: () => _turnPage(forward: rtl),
-                  ),
-                ),
-                Expanded(
-                  flex: 6,
-                  child: _TapZone(
-                    label: 'Mostrar menú',
-                    onTap: () => setState(() => _chromeVisible = !_chromeVisible),
-                  ),
-                ),
-                Expanded(
-                  flex: 2,
-                  child: _TapZone(
-                    label: rtl ? 'Página anterior' : 'Página siguiente',
-                    onTap: () => _turnPage(forward: !rtl),
-                  ),
-                ),
-              ],
-            ),
-          ),
+          child: ReaderGestureLayer(rtl: rtl, scroll: _scroll, onZone: _onZone),
         ),
         Positioned(top: 0, left: 0, right: 0, child: _readerChrome()),
       ],
@@ -290,12 +294,27 @@ class _ReaderPageState extends ConsumerState<ReaderPage> {
                 bottom: false,
                 child: Row(
                   children: [
-                    if (_publication != null)
+                    if (_publication != null) ...[
                       IconButton(
                         tooltip: 'Índice',
                         onPressed: _openContents,
                         icon: const Icon(Icons.format_list_bulleted),
                       ),
+                      IconButton(
+                        tooltip: _fixedLayout
+                            ? 'En este libro el color del texto no cambia'
+                            : (_dark ? 'Modo claro' : 'Modo oscuro'),
+                        onPressed: _toggleDark,
+                        icon: Icon(_dark ? Icons.light_mode : Icons.dark_mode),
+                      ),
+                      IconButton(
+                        tooltip: _fixedLayout
+                            ? 'Este libro se lee por páginas'
+                            : (_scroll ? 'Lectura por páginas' : 'Lectura con scroll'),
+                        onPressed: _toggleScroll,
+                        icon: Icon(_scroll ? Icons.menu_book : Icons.swap_vert),
+                      ),
+                    ],
                     const Spacer(),
                     IconButton(
                       tooltip: 'Cerrar',
@@ -368,26 +387,6 @@ class _ContentsDialog extends StatelessWidget {
               ),
       ),
       actions: [TextButton(onPressed: () => Navigator.pop(context), child: const Text('Cerrar'))],
-    );
-  }
-}
-
-class _TapZone extends StatelessWidget {
-  const _TapZone({required this.label, required this.onTap});
-
-  final String label;
-  final VoidCallback onTap;
-
-  @override
-  Widget build(BuildContext context) {
-    return Semantics(
-      button: true,
-      label: label,
-      child: GestureDetector(
-        behavior: HitTestBehavior.opaque,
-        onTap: onTap,
-        child: const SizedBox.expand(),
-      ),
     );
   }
 }

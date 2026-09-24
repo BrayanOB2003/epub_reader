@@ -17,5 +17,7 @@ class ReadiumReadingEngine {
 
   Future<bool> goToLocator(Locator locator) => _readium.goToLocator(locator);
 
+  Future<void> setPreferences(EPUBPreferences preferences) => _readium.setEPUBPreferences(preferences);
+
   Stream<Locator> get onLocator => _readium.onTextLocatorChanged;
 }
