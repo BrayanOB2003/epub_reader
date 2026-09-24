@@ -5,7 +5,6 @@ import 'package:epub_reader/app/providers.dart';
 import 'package:epub_reader/core/database/app_database.dart';
 import 'package:epub_reader/core/reading/readium_reading_engine.dart';
 import 'package:epub_reader/features/library/data/book_repository.dart';
-import 'package:epub_reader/features/reader/reader_pages.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter_readium/flutter_readium.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
@@ -30,9 +29,6 @@ class _ReaderPageState extends ConsumerState<ReaderPage> {
   StreamSubscription<Locator>? _locatorSubscription;
   Timer? _saveTimer;
   var _progress = 0.0;
-  var _page = 1;
-  int? _totalPages;
-  int? _dragPage;
   var _loading = true;
   var _chromeVisible = false;
   DateTime? _lastPageTurn;
@@ -65,13 +61,11 @@ class _ReaderPageState extends ConsumerState<ReaderPage> {
         await _engine.close();
         return;
       }
-      final saved = _savedLocator(book);
       setState(() {
         _book = book;
         _publication = publication;
         _progress = book.progress;
         _loading = false;
-        if (saved != null) _rememberPage(saved);
       });
     } catch (error) {
       if (!mounted) return;
@@ -85,36 +79,38 @@ class _ReaderPageState extends ConsumerState<ReaderPage> {
   void _onLocator(Locator locator) {
     _latestLocator = locator;
     final progression = locator.locations?.totalProgression;
-    if (mounted) {
-      setState(() {
-        if (progression != null) _progress = progression;
-        if (_dragPage == null) _rememberPage(locator);
-      });
+    if (progression != null && mounted) {
+      setState(() => _progress = progression);
     }
     _saveTimer?.cancel();
     _saveTimer = Timer(const Duration(milliseconds: 400), _persist);
   }
 
-  void _rememberPage(Locator locator) {
-    final page = bookPage(locator);
-    if (page != null) {
-      _page = page;
-      final known = _totalPages;
-      if (known != null && page > known) _totalPages = page;
+  Future<void> _openContents() async {
+    final publication = _publication;
+    if (publication == null || !mounted) return;
+    final entries = _contentsOf(publication);
+    final selected = await showDialog<Link>(
+      context: context,
+      builder: (context) => _ContentsDialog(entries: entries),
+    );
+    if (selected == null || !mounted) return;
+    final locator = publication.locatorFromLink(selected);
+    if (locator == null) {
+      _showMessage('No se pudo abrir este capítulo.');
+      return;
     }
-    _totalPages ??= estimatedTotalPages(position: page, totalProgression: locator.locations?.totalProgression);
+    final moved = await _engine.goToLocator(locator);
+    if (!mounted) return;
+    if (!moved) {
+      _showMessage('No se pudo abrir este capítulo.');
+      return;
+    }
+    setState(() => _chromeVisible = false);
   }
 
-  Future<void> _goToPage(int page) async {
-    final publication = _publication;
-    final total = _totalPages;
-    if (publication == null || total == null || total < 2 || page == _page) return;
-    final order = publication.readingOrder;
-    final target = spineTarget(page: page, total: total, chapterCount: order.length);
-    if (order.isEmpty) return;
-    final locator = publication.locatorFromLink(order[target.index]);
-    if (locator == null) return;
-    await _engine.goToLocator(locator.copyWithLocations(progression: target.progression));
+  void _showMessage(String message) {
+    ScaffoldMessenger.of(context).showSnackBar(SnackBar(content: Text(message)));
   }
 
   Future<void> _persist() async {
@@ -251,7 +247,6 @@ class _ReaderPageState extends ConsumerState<ReaderPage> {
           ),
         ),
         Positioned(top: 0, left: 0, right: 0, child: _readerChrome()),
-        Positioned(left: 0, right: 0, bottom: 0, child: _pageChrome()),
       ],
     );
   }
@@ -293,13 +288,21 @@ class _ReaderPageState extends ConsumerState<ReaderPage> {
               color: const Color(0xF2F7F1E8),
               child: SafeArea(
                 bottom: false,
-                child: Align(
-                  alignment: Alignment.centerRight,
-                  child: IconButton(
-                    tooltip: 'Cerrar',
-                    onPressed: _close,
-                    icon: const Icon(Icons.close),
-                  ),
+                child: Row(
+                  children: [
+                    if (_publication != null)
+                      IconButton(
+                        tooltip: 'Índice',
+                        onPressed: _openContents,
+                        icon: const Icon(Icons.format_list_bulleted),
+                      ),
+                    const Spacer(),
+                    IconButton(
+                      tooltip: 'Cerrar',
+                      onPressed: _close,
+                      icon: const Icon(Icons.close),
+                    ),
+                  ],
                 ),
               ),
             ),
@@ -308,44 +311,63 @@ class _ReaderPageState extends ConsumerState<ReaderPage> {
       ],
     );
   }
+}
 
-  Widget _pageChrome() {
-    final total = _totalPages ?? _page;
-    final page = (_dragPage ?? _page).clamp(1, total);
-    return ClipRect(
-      child: AnimatedAlign(
-        alignment: Alignment.bottomCenter,
-        heightFactor: _chromeVisible ? 1 : 0,
-        duration: const Duration(milliseconds: 180),
-        curve: Curves.easeOut,
-        child: Material(
-          color: const Color(0xF2F7F1E8),
-          child: Padding(
-            padding: const EdgeInsets.fromLTRB(12, 8, 12, 4),
-            child: Column(
-              mainAxisSize: MainAxisSize.min,
-              children: [
-                Text('Página $page de $total', style: Theme.of(context).textTheme.labelLarge),
-                Slider(
-                  value: page.toDouble(),
-                  min: 1,
-                  max: total > 1 ? total.toDouble() : 2,
-                  activeColor: const Color(0xFF6B4F3A),
-                  label: '$page',
-                  onChanged: total < 2
-                      ? null
-                      : (value) => setState(() => _dragPage = value.round().clamp(1, total).toInt()),
-                  onChangeEnd: (value) {
-                    final target = value.round().clamp(1, total).toInt();
-                    setState(() => _dragPage = null);
-                    _goToPage(target);
-                  },
-                ),
-              ],
-            ),
-          ),
-        ),
+class _TocEntry {
+  const _TocEntry({required this.link, required this.depth});
+
+  final Link link;
+  final int depth;
+
+  String get title {
+    final title = link.title?.trim();
+    if (title != null && title.isNotEmpty) return title;
+    return 'Sin título';
+  }
+}
+
+List<_TocEntry> _contentsOf(Publication publication) {
+  final source = publication.tableOfContents.isNotEmpty ? publication.tableOfContents : publication.readingOrder;
+  final entries = <_TocEntry>[];
+  void walk(List<Link> links, int depth) {
+    for (final link in links) {
+      entries.add(_TocEntry(link: link, depth: depth));
+      walk(link.children, depth + 1);
+    }
+  }
+
+  walk(source, 0);
+  return entries;
+}
+
+class _ContentsDialog extends StatelessWidget {
+  const _ContentsDialog({required this.entries});
+
+  final List<_TocEntry> entries;
+
+  @override
+  Widget build(BuildContext context) {
+    final height = MediaQuery.sizeOf(context).height * 0.6;
+    return AlertDialog(
+      title: const Text('Índice'),
+      content: SizedBox(
+        width: double.maxFinite,
+        height: height,
+        child: entries.isEmpty
+            ? const Text('Este libro no tiene índice.')
+            : ListView.builder(
+                itemCount: entries.length,
+                itemBuilder: (context, index) {
+                  final entry = entries[index];
+                  return ListTile(
+                    contentPadding: EdgeInsets.only(left: 16 + entry.depth * 16, right: 16),
+                    title: Text(entry.title),
+                    onTap: () => Navigator.pop(context, entry.link),
+                  );
+                },
+              ),
       ),
+      actions: [TextButton(onPressed: () => Navigator.pop(context), child: const Text('Cerrar'))],
     );
   }
 }
