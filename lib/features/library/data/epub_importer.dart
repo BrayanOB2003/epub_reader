@@ -11,6 +11,13 @@ import 'package:path_provider/path_provider.dart';
 
 enum ImportOutcome { imported, alreadyInLibrary, cancelled }
 
+class ImportResult {
+  const ImportResult({required this.outcome, required this.bookId});
+
+  final ImportOutcome outcome;
+  final int bookId;
+}
+
 class EpubImporter {
   EpubImporter(this._repository, {Future<Directory> Function()? documentsDirectory})
     : _documentsDirectory = documentsDirectory ?? getApplicationDocumentsDirectory;
@@ -28,10 +35,11 @@ class EpubImporter {
 
     final bytes = await file.readAsBytes();
     final fallbackTitle = p.basenameWithoutExtension(file.name);
-    return importBytes(bytes, fallbackTitle: fallbackTitle.isEmpty ? 'Sin título' : fallbackTitle);
+    final result = await importBytes(bytes, fallbackTitle: fallbackTitle.isEmpty ? 'Sin título' : fallbackTitle);
+    return result.outcome;
   }
 
-  Future<ImportOutcome> importBytes(Uint8List bytes, {required String fallbackTitle}) async {
+  Future<ImportResult> importBytes(Uint8List bytes, {required String fallbackTitle}) async {
     final metadata = readEpubMetadata(bytes, fallbackTitle: fallbackTitle);
     final contentHash = sha256.convert(bytes).toString();
     final existing =
@@ -39,11 +47,11 @@ class EpubImporter {
         await _matchLegacyBook(contentHash, metadata.bookUid);
     if (existing != null) {
       await _keepCover(existing, metadata);
-      return ImportOutcome.alreadyInLibrary;
+      return ImportResult(outcome: ImportOutcome.alreadyInLibrary, bookId: existing.id);
     }
 
-    await _store(bytes, metadata, contentHash);
-    return ImportOutcome.imported;
+    final bookId = await _store(bytes, metadata, contentHash);
+    return ImportResult(outcome: ImportOutcome.imported, bookId: bookId);
   }
 
   Future<Book?> _matchLegacyBook(String contentHash, String? bookUid) async {
@@ -69,7 +77,7 @@ class EpubImporter {
     await _repository.saveCover(id: existing.id, coverBytes: coverBytes, coverPath: coverPath);
   }
 
-  Future<void> _store(Uint8List bytes, EpubMetadata metadata, String contentHash) async {
+  Future<int> _store(Uint8List bytes, EpubMetadata metadata, String contentHash) async {
     final documents = await _documentsDirectory();
     final stamp = DateTime.now().microsecondsSinceEpoch;
     final booksDir = Directory(p.join(documents.path, 'books'));
@@ -84,7 +92,7 @@ class EpubImporter {
       coverPath = await _writeCover(documents, stamp, coverBytes, metadata.coverExtension);
     }
 
-    await _repository.insert(
+    return _repository.insert(
       title: metadata.title,
       author: metadata.author,
       bookUid: metadata.bookUid,

@@ -31,6 +31,11 @@ class BookRepository {
     );
   }
 
+  Future<Book?> findByBookUid(String bookUid) {
+    final query = _database.select(_database.books)..where((table) => table.bookUid.equals(bookUid));
+    return query.getSingleOrNull();
+  }
+
   Future<Book?> findDuplicate({required String contentHash, String? bookUid}) async {
     final byHash = _database.select(_database.books)..where((table) => table.contentHash.equals(contentHash));
     final hashed = await byHash.getSingleOrNull();

@@ -2,6 +2,7 @@ import 'package:drift/native.dart';
 import 'package:epub_reader/app/app.dart';
 import 'package:epub_reader/app/providers.dart';
 import 'package:epub_reader/core/database/app_database.dart';
+import 'package:epub_reader/features/discover/data/catalog.dart';
 import 'package:epub_reader/features/library/home_page.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
@@ -40,6 +41,9 @@ void main() {
             ref.onDispose(database.close);
             return database;
           }),
+          catalogProvider.overrideWith((ref) async {
+            return const Catalog(generatedAt: null, urlsExpireAt: null, books: []);
+          }),
         ],
         child: const EpubReaderApp(),
       ),
@@ -53,7 +57,7 @@ void main() {
     await tester.tap(find.text('Descubrimiento'));
     await tester.pumpAndSettle();
 
-    expect(find.text('Todavía no hay lecturas nuevas'), findsOneWidget);
+    expect(find.text('El catálogo está vacío'), findsOneWidget);
 
     await tester.pumpWidget(const SizedBox.shrink());
     await tester.pump(Duration.zero);

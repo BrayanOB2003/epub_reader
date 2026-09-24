@@ -23,8 +23,8 @@ void main() {
     final cover = Uint8List.fromList(const [0xFF, 0xD8, 0xFF, 0xD9]);
     final bytes = _sampleEpub(cover);
 
-    expect(await importer.importBytes(bytes, fallbackTitle: 'Libro'), ImportOutcome.imported);
-    expect(await importer.importBytes(bytes, fallbackTitle: 'Libro'), ImportOutcome.alreadyInLibrary);
+    expect((await importer.importBytes(bytes, fallbackTitle: 'Libro')).outcome, ImportOutcome.imported);
+    expect((await importer.importBytes(bytes, fallbackTitle: 'Libro')).outcome, ImportOutcome.alreadyInLibrary);
 
     final books = await database.select(database.books).get();
     expect(books, hasLength(1));
@@ -48,7 +48,7 @@ void main() {
     await database.into(database.books).insert(BooksCompanion.insert(title: 'El hábito', filePath: epubFile.path, addedAt: DateTime.now()));
 
     final importer = EpubImporter(BookRepository(database), documentsDirectory: () async => documents);
-    expect(await importer.importBytes(bytes, fallbackTitle: 'Libro'), ImportOutcome.alreadyInLibrary);
+    expect((await importer.importBytes(bytes, fallbackTitle: 'Libro')).outcome, ImportOutcome.alreadyInLibrary);
 
     final books = await database.select(database.books).get();
     expect(books, hasLength(1));
