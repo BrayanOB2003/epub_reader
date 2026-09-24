@@ -6,7 +6,6 @@ import 'package:epub_reader/core/database/app_database.dart';
 import 'package:epub_reader/core/reading/readium_reading_engine.dart';
 import 'package:epub_reader/features/library/data/book_repository.dart';
 import 'package:flutter/material.dart';
-import 'package:flutter/services.dart';
 import 'package:flutter_readium/flutter_readium.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:go_router/go_router.dart';
@@ -39,7 +38,6 @@ class _ReaderPageState extends ConsumerState<ReaderPage> {
   @override
   void initState() {
     super.initState();
-    SystemChrome.setEnabledSystemUIMode(SystemUiMode.immersiveSticky);
     _repository = ref.read(bookRepositoryProvider);
     _engine = ref.read(readingEngineProvider);
     _open();
@@ -141,7 +139,6 @@ class _ReaderPageState extends ConsumerState<ReaderPage> {
 
   @override
   void dispose() {
-    SystemChrome.setEnabledSystemUIMode(SystemUiMode.edgeToEdge);
     _saveTimer?.cancel();
     final locator = _latestLocator;
     if (locator != null) {
@@ -162,7 +159,7 @@ class _ReaderPageState extends ConsumerState<ReaderPage> {
   Widget build(BuildContext context) {
     return Scaffold(
       backgroundColor: Colors.black,
-      body: _buildBody(),
+      body: SafeArea(child: _buildBody()),
     );
   }
 
