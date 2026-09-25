@@ -36,6 +36,7 @@ class _ReaderPageState extends ConsumerState<ReaderPage> {
   var _dark = false;
   var _scroll = false;
   var _fixedLayout = false;
+  var _textSelected = false;
   DateTime? _lastPageTurn;
   String? _error;
 
@@ -84,7 +85,11 @@ class _ReaderPageState extends ConsumerState<ReaderPage> {
   }
 
   void _onLocator(Locator locator) {
+    final previous = _latestLocator;
     _latestLocator = locator;
+    if (_textSelected && _readingPositionChanged(previous, locator)) {
+      _textSelected = false;
+    }
     final progression = locator.locations?.totalProgression;
     if (progression != null && mounted) {
       setState(() => _progress = progression);
@@ -107,6 +112,7 @@ class _ReaderPageState extends ConsumerState<ReaderPage> {
       _showMessage('No se pudo abrir este capítulo.');
       return;
     }
+    _textSelected = false;
     final moved = await _engine.goToLocator(locator);
     if (!mounted) return;
     if (!moved) {
@@ -155,6 +161,16 @@ class _ReaderPageState extends ConsumerState<ReaderPage> {
       case ReaderZone.menu:
         setState(() => _chromeVisible = !_chromeVisible);
     }
+  }
+
+  void _onTextSelected(TextSelectionEvent event) {
+    if (_textSelected || !mounted) return;
+    setState(() => _textSelected = true);
+  }
+
+  void _onSelectionTap() {
+    if (!_textSelected || !mounted) return;
+    setState(() => _textSelected = false);
   }
 
   Future<void> _persist() async {
@@ -246,9 +262,22 @@ class _ReaderPageState extends ConsumerState<ReaderPage> {
 
     return Stack(
       children: [
-        Positioned.fill(child: ReadiumReaderWidget(publication: publication, initialLocator: _savedLocator(book))),
         Positioned.fill(
-          child: ReaderGestureLayer(rtl: rtl, scroll: _scroll, onZone: _onZone),
+          child: ReadiumReaderWidget(
+            publication: publication,
+            initialLocator: _savedLocator(book),
+            allowedDefaultActions: const {DefaultSelectionAction.copy, DefaultSelectionAction.share},
+            onTextSelected: _onTextSelected,
+          ),
+        ),
+        Positioned.fill(
+          child: ReaderGestureLayer(
+            rtl: rtl,
+            scroll: _scroll,
+            textSelected: _textSelected,
+            onZone: _onZone,
+            onSelectionTap: _onSelectionTap,
+          ),
         ),
         Positioned(top: 0, left: 0, right: 0, child: _readerChrome()),
       ],
@@ -330,6 +359,11 @@ class _ReaderPageState extends ConsumerState<ReaderPage> {
       ],
     );
   }
+}
+
+bool _readingPositionChanged(Locator? previous, Locator next) {
+  if (previous == null) return false;
+  return previous.href != next.href || previous.locations?.progression != next.locations?.progression;
 }
 
 class _TocEntry {

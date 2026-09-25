@@ -12,6 +12,16 @@ void main() {
     expect(readerZoneAt(x: 90, width: 100, rtl: true), ReaderZone.previous);
   });
 
+  test('taps go to Readium while text is selected, so the page does not turn', () {
+    for (final zone in ReaderZone.values) {
+      expect(readerClaimsTap(textSelected: true, scroll: false, zone: zone), isFalse);
+      expect(readerClaimsTap(textSelected: true, scroll: true, zone: zone), isFalse);
+      expect(readerClaimsTap(textSelected: false, scroll: false, zone: zone), isTrue);
+    }
+    expect(readerClaimsTap(textSelected: false, scroll: true, zone: ReaderZone.menu), isTrue);
+    expect(readerClaimsTap(textSelected: false, scroll: true, zone: ReaderZone.next), isFalse);
+  });
+
   test('light and dark themes set text colors only for reflowable books', () {
     final light = readerPreferences(dark: false, scroll: false, fixedLayout: false);
     final dark = readerPreferences(dark: true, scroll: true, fixedLayout: false);

@@ -3,6 +3,14 @@ import 'package:flutter/material.dart';
 
 enum ReaderZone { previous, menu, next }
 
+/// While text is selected, taps belong to Readium: it clears the selection
+/// and ignores the tap, so the page never turns under an active selection.
+bool readerClaimsTap({required bool textSelected, required bool scroll, required ReaderZone zone}) {
+  if (textSelected) return false;
+  if (!scroll) return true;
+  return zone == ReaderZone.menu;
+}
+
 const shortTapDeadline = Duration(milliseconds: 200);
 
 ReaderZone readerZoneAt({required double x, required double width, required bool rtl}) {
@@ -14,11 +22,20 @@ ReaderZone readerZoneAt({required double x, required double width, required bool
 }
 
 class ReaderGestureLayer extends StatelessWidget {
-  const ReaderGestureLayer({required this.rtl, required this.scroll, required this.onZone, super.key});
+  const ReaderGestureLayer({
+    required this.rtl,
+    required this.scroll,
+    required this.textSelected,
+    required this.onZone,
+    required this.onSelectionTap,
+    super.key,
+  });
 
   final bool rtl;
   final bool scroll;
+  final bool textSelected;
   final ValueChanged<ReaderZone> onZone;
+  final VoidCallback onSelectionTap;
 
   @override
   Widget build(BuildContext context) {
@@ -30,6 +47,9 @@ class ReaderGestureLayer extends StatelessWidget {
           (recognizer) {
             recognizer.shouldClaim = (position) => _claims(context, position);
             recognizer.onShortTap = (position) => _dispatch(context, position);
+            recognizer.onReleasedToReader = () {
+              if (textSelected) onSelectionTap();
+            };
           },
         ),
       },
@@ -37,10 +57,8 @@ class ReaderGestureLayer extends StatelessWidget {
     );
   }
 
-  bool _claims(BuildContext context, Offset global) {
-    if (!scroll) return true;
-    return _zone(context, global) == ReaderZone.menu;
-  }
+  bool _claims(BuildContext context, Offset global) =>
+      readerClaimsTap(textSelected: textSelected, scroll: scroll, zone: _zone(context, global));
 
   void _dispatch(BuildContext context, Offset global) {
     final zone = _zone(context, global);
@@ -61,6 +79,7 @@ class _ShortTapRecognizer extends PrimaryPointerGestureRecognizer {
 
   bool Function(Offset globalPosition)? shouldClaim;
   void Function(Offset globalPosition)? onShortTap;
+  VoidCallback? onReleasedToReader;
 
   @override
   void handlePrimaryPointer(PointerEvent event) {
@@ -69,6 +88,7 @@ class _ShortTapRecognizer extends PrimaryPointerGestureRecognizer {
     final claim = shouldClaim?.call(position) ?? true;
     if (!claim) {
       resolve(GestureDisposition.rejected);
+      onReleasedToReader?.call();
       return;
     }
     resolve(GestureDisposition.accepted);
