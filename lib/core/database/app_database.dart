@@ -28,6 +28,12 @@ class Books extends Table {
 
   RealColumn get progress => real().withDefault(const Constant(0))();
 
+  BoolColumn get darkMode => boolean().withDefault(const Constant(false))();
+
+  BoolColumn get scrollMode => boolean().withDefault(const Constant(false))();
+
+  RealColumn get fontSize => real().withDefault(const Constant(1))();
+
   DateTimeColumn get addedAt => dateTime()();
 }
 
@@ -36,7 +42,7 @@ class AppDatabase extends _$AppDatabase {
   AppDatabase(super.e);
 
   @override
-  int get schemaVersion => 2;
+  int get schemaVersion => 3;
 
   @override
   MigrationStrategy get migration {
@@ -46,6 +52,11 @@ class AppDatabase extends _$AppDatabase {
           await migrator.addColumn(books, books.coverBytes);
           await migrator.addColumn(books, books.contentHash);
           await migrator.addColumn(books, books.bookUid);
+        }
+        if (from < 3) {
+          await migrator.addColumn(books, books.darkMode);
+          await migrator.addColumn(books, books.scrollMode);
+          await migrator.addColumn(books, books.fontSize);
         }
       },
     );

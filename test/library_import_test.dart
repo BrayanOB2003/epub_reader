@@ -99,6 +99,50 @@ void main() {
     },
   );
 
+  test('reading settings stay with the book that changed them', () async {
+    final database = AppDatabase(NativeDatabase.memory());
+    addTearDown(database.close);
+
+    final repository = BookRepository(
+      database,
+      documentsDirectory: () async => Directory.systemTemp,
+    );
+    final first = await database
+        .into(database.books)
+        .insert(
+          BooksCompanion.insert(
+            title: 'Uno',
+            filePath: 'books/uno.epub',
+            addedAt: DateTime.now(),
+          ),
+        );
+    final second = await database
+        .into(database.books)
+        .insert(
+          BooksCompanion.insert(
+            title: 'Dos',
+            filePath: 'books/dos.epub',
+            addedAt: DateTime.now(),
+          ),
+        );
+
+    await repository.saveReadingSettings(
+      id: first,
+      darkMode: true,
+      scrollMode: true,
+      fontSize: 1.4,
+    );
+
+    final one = await repository.getBook(first);
+    final two = await repository.getBook(second);
+    expect(one!.darkMode, isTrue);
+    expect(one.scrollMode, isTrue);
+    expect(one.fontSize, 1.4);
+    expect(two!.darkMode, isFalse);
+    expect(two.scrollMode, isFalse);
+    expect(two.fontSize, 1);
+  });
+
   test('removes the library row and its files', () async {
     final database = AppDatabase(NativeDatabase.memory());
     final documents = await Directory.systemTemp.createTemp(

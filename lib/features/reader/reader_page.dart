@@ -66,6 +66,9 @@ class _ReaderPageState extends ConsumerState<ReaderPage> {
     try {
       final publication = await _engine.open(book.filePath);
       final fixedLayout = publicationIsFixed(publication);
+      _dark = book.darkMode;
+      _scroll = book.scrollMode;
+      _fontSize = book.fontSize.clamp(readerFontSizeMin, readerFontSizeMax);
       await _engine.setPreferences(
         readerPreferences(
           dark: _dark,
@@ -166,7 +169,7 @@ class _ReaderPageState extends ConsumerState<ReaderPage> {
       return;
     }
     setState(() => _dark = !_dark);
-    await _applyPreferences();
+    await _commitPreferences();
   }
 
   Future<void> _toggleScroll() async {
@@ -175,7 +178,7 @@ class _ReaderPageState extends ConsumerState<ReaderPage> {
       return;
     }
     setState(() => _scroll = !_scroll);
-    await _applyPreferences();
+    await _commitPreferences();
   }
 
   Future<void> _changeFontSize({required bool larger}) async {
@@ -188,7 +191,7 @@ class _ReaderPageState extends ConsumerState<ReaderPage> {
     final next = stepReaderFontSize(_fontSize, larger: larger);
     if (next == _fontSize) return;
     setState(() => _fontSize = next);
-    await _applyPreferences();
+    await _commitPreferences();
   }
 
   Future<void> _resetFontSize() async {
@@ -200,7 +203,23 @@ class _ReaderPageState extends ConsumerState<ReaderPage> {
     }
     if (_fontSize == readerFontSizeDefault) return;
     setState(() => _fontSize = readerFontSizeDefault);
+    await _commitPreferences();
+  }
+
+  Future<void> _commitPreferences() async {
     await _applyPreferences();
+    try {
+      await _repository.saveReadingSettings(
+        id: widget.bookId,
+        darkMode: _dark,
+        scrollMode: _scroll,
+        fontSize: _fontSize,
+      );
+    } catch (_) {
+      if (mounted) {
+        _showMessage('No se pudieron guardar los ajustes de lectura.');
+      }
+    }
   }
 
   void _onZone(ReaderZone zone) {

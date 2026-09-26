@@ -118,6 +118,48 @@ class $BooksTable extends Books with TableInfo<$BooksTable, Book> {
     requiredDuringInsert: false,
     defaultValue: const Constant(0),
   );
+  static const VerificationMeta _darkModeMeta = const VerificationMeta(
+    'darkMode',
+  );
+  @override
+  late final GeneratedColumn<bool> darkMode = GeneratedColumn<bool>(
+    'dark_mode',
+    aliasedName,
+    false,
+    type: DriftSqlType.bool,
+    requiredDuringInsert: false,
+    defaultConstraints: GeneratedColumn.constraintIsAlways(
+      'CHECK ("dark_mode" IN (0, 1))',
+    ),
+    defaultValue: const Constant(false),
+  );
+  static const VerificationMeta _scrollModeMeta = const VerificationMeta(
+    'scrollMode',
+  );
+  @override
+  late final GeneratedColumn<bool> scrollMode = GeneratedColumn<bool>(
+    'scroll_mode',
+    aliasedName,
+    false,
+    type: DriftSqlType.bool,
+    requiredDuringInsert: false,
+    defaultConstraints: GeneratedColumn.constraintIsAlways(
+      'CHECK ("scroll_mode" IN (0, 1))',
+    ),
+    defaultValue: const Constant(false),
+  );
+  static const VerificationMeta _fontSizeMeta = const VerificationMeta(
+    'fontSize',
+  );
+  @override
+  late final GeneratedColumn<double> fontSize = GeneratedColumn<double>(
+    'font_size',
+    aliasedName,
+    false,
+    type: DriftSqlType.double,
+    requiredDuringInsert: false,
+    defaultValue: const Constant(1),
+  );
   static const VerificationMeta _addedAtMeta = const VerificationMeta(
     'addedAt',
   );
@@ -141,6 +183,9 @@ class $BooksTable extends Books with TableInfo<$BooksTable, Book> {
     bookUid,
     locatorJson,
     progress,
+    darkMode,
+    scrollMode,
+    fontSize,
     addedAt,
   ];
   @override
@@ -222,6 +267,24 @@ class $BooksTable extends Books with TableInfo<$BooksTable, Book> {
         progress.isAcceptableOrUnknown(data['progress']!, _progressMeta),
       );
     }
+    if (data.containsKey('dark_mode')) {
+      context.handle(
+        _darkModeMeta,
+        darkMode.isAcceptableOrUnknown(data['dark_mode']!, _darkModeMeta),
+      );
+    }
+    if (data.containsKey('scroll_mode')) {
+      context.handle(
+        _scrollModeMeta,
+        scrollMode.isAcceptableOrUnknown(data['scroll_mode']!, _scrollModeMeta),
+      );
+    }
+    if (data.containsKey('font_size')) {
+      context.handle(
+        _fontSizeMeta,
+        fontSize.isAcceptableOrUnknown(data['font_size']!, _fontSizeMeta),
+      );
+    }
     if (data.containsKey('added_at')) {
       context.handle(
         _addedAtMeta,
@@ -279,6 +342,18 @@ class $BooksTable extends Books with TableInfo<$BooksTable, Book> {
         DriftSqlType.double,
         data['${effectivePrefix}progress'],
       )!,
+      darkMode: attachedDatabase.typeMapping.read(
+        DriftSqlType.bool,
+        data['${effectivePrefix}dark_mode'],
+      )!,
+      scrollMode: attachedDatabase.typeMapping.read(
+        DriftSqlType.bool,
+        data['${effectivePrefix}scroll_mode'],
+      )!,
+      fontSize: attachedDatabase.typeMapping.read(
+        DriftSqlType.double,
+        data['${effectivePrefix}font_size'],
+      )!,
       addedAt: attachedDatabase.typeMapping.read(
         DriftSqlType.dateTime,
         data['${effectivePrefix}added_at'],
@@ -303,6 +378,9 @@ class Book extends DataClass implements Insertable<Book> {
   final String? bookUid;
   final String? locatorJson;
   final double progress;
+  final bool darkMode;
+  final bool scrollMode;
+  final double fontSize;
   final DateTime addedAt;
   const Book({
     required this.id,
@@ -315,6 +393,9 @@ class Book extends DataClass implements Insertable<Book> {
     this.bookUid,
     this.locatorJson,
     required this.progress,
+    required this.darkMode,
+    required this.scrollMode,
+    required this.fontSize,
     required this.addedAt,
   });
   @override
@@ -342,6 +423,9 @@ class Book extends DataClass implements Insertable<Book> {
       map['locator_json'] = Variable<String>(locatorJson);
     }
     map['progress'] = Variable<double>(progress);
+    map['dark_mode'] = Variable<bool>(darkMode);
+    map['scroll_mode'] = Variable<bool>(scrollMode);
+    map['font_size'] = Variable<double>(fontSize);
     map['added_at'] = Variable<DateTime>(addedAt);
     return map;
   }
@@ -370,6 +454,9 @@ class Book extends DataClass implements Insertable<Book> {
           ? const Value.absent()
           : Value(locatorJson),
       progress: Value(progress),
+      darkMode: Value(darkMode),
+      scrollMode: Value(scrollMode),
+      fontSize: Value(fontSize),
       addedAt: Value(addedAt),
     );
   }
@@ -390,6 +477,9 @@ class Book extends DataClass implements Insertable<Book> {
       bookUid: serializer.fromJson<String?>(json['bookUid']),
       locatorJson: serializer.fromJson<String?>(json['locatorJson']),
       progress: serializer.fromJson<double>(json['progress']),
+      darkMode: serializer.fromJson<bool>(json['darkMode']),
+      scrollMode: serializer.fromJson<bool>(json['scrollMode']),
+      fontSize: serializer.fromJson<double>(json['fontSize']),
       addedAt: serializer.fromJson<DateTime>(json['addedAt']),
     );
   }
@@ -407,6 +497,9 @@ class Book extends DataClass implements Insertable<Book> {
       'bookUid': serializer.toJson<String?>(bookUid),
       'locatorJson': serializer.toJson<String?>(locatorJson),
       'progress': serializer.toJson<double>(progress),
+      'darkMode': serializer.toJson<bool>(darkMode),
+      'scrollMode': serializer.toJson<bool>(scrollMode),
+      'fontSize': serializer.toJson<double>(fontSize),
       'addedAt': serializer.toJson<DateTime>(addedAt),
     };
   }
@@ -422,6 +515,9 @@ class Book extends DataClass implements Insertable<Book> {
     Value<String?> bookUid = const Value.absent(),
     Value<String?> locatorJson = const Value.absent(),
     double? progress,
+    bool? darkMode,
+    bool? scrollMode,
+    double? fontSize,
     DateTime? addedAt,
   }) => Book(
     id: id ?? this.id,
@@ -434,6 +530,9 @@ class Book extends DataClass implements Insertable<Book> {
     bookUid: bookUid.present ? bookUid.value : this.bookUid,
     locatorJson: locatorJson.present ? locatorJson.value : this.locatorJson,
     progress: progress ?? this.progress,
+    darkMode: darkMode ?? this.darkMode,
+    scrollMode: scrollMode ?? this.scrollMode,
+    fontSize: fontSize ?? this.fontSize,
     addedAt: addedAt ?? this.addedAt,
   );
   Book copyWithCompanion(BooksCompanion data) {
@@ -454,6 +553,11 @@ class Book extends DataClass implements Insertable<Book> {
           ? data.locatorJson.value
           : this.locatorJson,
       progress: data.progress.present ? data.progress.value : this.progress,
+      darkMode: data.darkMode.present ? data.darkMode.value : this.darkMode,
+      scrollMode: data.scrollMode.present
+          ? data.scrollMode.value
+          : this.scrollMode,
+      fontSize: data.fontSize.present ? data.fontSize.value : this.fontSize,
       addedAt: data.addedAt.present ? data.addedAt.value : this.addedAt,
     );
   }
@@ -471,6 +575,9 @@ class Book extends DataClass implements Insertable<Book> {
           ..write('bookUid: $bookUid, ')
           ..write('locatorJson: $locatorJson, ')
           ..write('progress: $progress, ')
+          ..write('darkMode: $darkMode, ')
+          ..write('scrollMode: $scrollMode, ')
+          ..write('fontSize: $fontSize, ')
           ..write('addedAt: $addedAt')
           ..write(')'))
         .toString();
@@ -488,6 +595,9 @@ class Book extends DataClass implements Insertable<Book> {
     bookUid,
     locatorJson,
     progress,
+    darkMode,
+    scrollMode,
+    fontSize,
     addedAt,
   );
   @override
@@ -504,6 +614,9 @@ class Book extends DataClass implements Insertable<Book> {
           other.bookUid == this.bookUid &&
           other.locatorJson == this.locatorJson &&
           other.progress == this.progress &&
+          other.darkMode == this.darkMode &&
+          other.scrollMode == this.scrollMode &&
+          other.fontSize == this.fontSize &&
           other.addedAt == this.addedAt);
 }
 
@@ -518,6 +631,9 @@ class BooksCompanion extends UpdateCompanion<Book> {
   final Value<String?> bookUid;
   final Value<String?> locatorJson;
   final Value<double> progress;
+  final Value<bool> darkMode;
+  final Value<bool> scrollMode;
+  final Value<double> fontSize;
   final Value<DateTime> addedAt;
   const BooksCompanion({
     this.id = const Value.absent(),
@@ -530,6 +646,9 @@ class BooksCompanion extends UpdateCompanion<Book> {
     this.bookUid = const Value.absent(),
     this.locatorJson = const Value.absent(),
     this.progress = const Value.absent(),
+    this.darkMode = const Value.absent(),
+    this.scrollMode = const Value.absent(),
+    this.fontSize = const Value.absent(),
     this.addedAt = const Value.absent(),
   });
   BooksCompanion.insert({
@@ -543,6 +662,9 @@ class BooksCompanion extends UpdateCompanion<Book> {
     this.bookUid = const Value.absent(),
     this.locatorJson = const Value.absent(),
     this.progress = const Value.absent(),
+    this.darkMode = const Value.absent(),
+    this.scrollMode = const Value.absent(),
+    this.fontSize = const Value.absent(),
     required DateTime addedAt,
   }) : title = Value(title),
        filePath = Value(filePath),
@@ -558,6 +680,9 @@ class BooksCompanion extends UpdateCompanion<Book> {
     Expression<String>? bookUid,
     Expression<String>? locatorJson,
     Expression<double>? progress,
+    Expression<bool>? darkMode,
+    Expression<bool>? scrollMode,
+    Expression<double>? fontSize,
     Expression<DateTime>? addedAt,
   }) {
     return RawValuesInsertable({
@@ -571,6 +696,9 @@ class BooksCompanion extends UpdateCompanion<Book> {
       if (bookUid != null) 'book_uid': bookUid,
       if (locatorJson != null) 'locator_json': locatorJson,
       if (progress != null) 'progress': progress,
+      if (darkMode != null) 'dark_mode': darkMode,
+      if (scrollMode != null) 'scroll_mode': scrollMode,
+      if (fontSize != null) 'font_size': fontSize,
       if (addedAt != null) 'added_at': addedAt,
     });
   }
@@ -586,6 +714,9 @@ class BooksCompanion extends UpdateCompanion<Book> {
     Value<String?>? bookUid,
     Value<String?>? locatorJson,
     Value<double>? progress,
+    Value<bool>? darkMode,
+    Value<bool>? scrollMode,
+    Value<double>? fontSize,
     Value<DateTime>? addedAt,
   }) {
     return BooksCompanion(
@@ -599,6 +730,9 @@ class BooksCompanion extends UpdateCompanion<Book> {
       bookUid: bookUid ?? this.bookUid,
       locatorJson: locatorJson ?? this.locatorJson,
       progress: progress ?? this.progress,
+      darkMode: darkMode ?? this.darkMode,
+      scrollMode: scrollMode ?? this.scrollMode,
+      fontSize: fontSize ?? this.fontSize,
       addedAt: addedAt ?? this.addedAt,
     );
   }
@@ -636,6 +770,15 @@ class BooksCompanion extends UpdateCompanion<Book> {
     if (progress.present) {
       map['progress'] = Variable<double>(progress.value);
     }
+    if (darkMode.present) {
+      map['dark_mode'] = Variable<bool>(darkMode.value);
+    }
+    if (scrollMode.present) {
+      map['scroll_mode'] = Variable<bool>(scrollMode.value);
+    }
+    if (fontSize.present) {
+      map['font_size'] = Variable<double>(fontSize.value);
+    }
     if (addedAt.present) {
       map['added_at'] = Variable<DateTime>(addedAt.value);
     }
@@ -655,6 +798,9 @@ class BooksCompanion extends UpdateCompanion<Book> {
           ..write('bookUid: $bookUid, ')
           ..write('locatorJson: $locatorJson, ')
           ..write('progress: $progress, ')
+          ..write('darkMode: $darkMode, ')
+          ..write('scrollMode: $scrollMode, ')
+          ..write('fontSize: $fontSize, ')
           ..write('addedAt: $addedAt')
           ..write(')'))
         .toString();
@@ -683,6 +829,9 @@ typedef $$BooksTableCreateCompanionBuilder = BooksCompanion Function({
   Value<String?> bookUid,
   Value<String?> locatorJson,
   Value<double> progress,
+  Value<bool> darkMode,
+  Value<bool> scrollMode,
+  Value<double> fontSize,
   required DateTime addedAt,
 });
 typedef $$BooksTableUpdateCompanionBuilder = BooksCompanion Function({
@@ -696,6 +845,9 @@ typedef $$BooksTableUpdateCompanionBuilder = BooksCompanion Function({
   Value<String?> bookUid,
   Value<String?> locatorJson,
   Value<double> progress,
+  Value<bool> darkMode,
+  Value<bool> scrollMode,
+  Value<double> fontSize,
   Value<DateTime> addedAt,
 });
 
@@ -754,6 +906,21 @@ class $$BooksTableFilterComposer extends Composer<_$AppDatabase, $BooksTable> {
 
   ColumnFilters<double> get progress => $composableBuilder(
     column: $table.progress,
+    builder: (column) => ColumnFilters(column),
+  );
+
+  ColumnFilters<bool> get darkMode => $composableBuilder(
+    column: $table.darkMode,
+    builder: (column) => ColumnFilters(column),
+  );
+
+  ColumnFilters<bool> get scrollMode => $composableBuilder(
+    column: $table.scrollMode,
+    builder: (column) => ColumnFilters(column),
+  );
+
+  ColumnFilters<double> get fontSize => $composableBuilder(
+    column: $table.fontSize,
     builder: (column) => ColumnFilters(column),
   );
 
@@ -822,6 +989,21 @@ class $$BooksTableOrderingComposer
     builder: (column) => ColumnOrderings(column),
   );
 
+  ColumnOrderings<bool> get darkMode => $composableBuilder(
+    column: $table.darkMode,
+    builder: (column) => ColumnOrderings(column),
+  );
+
+  ColumnOrderings<bool> get scrollMode => $composableBuilder(
+    column: $table.scrollMode,
+    builder: (column) => ColumnOrderings(column),
+  );
+
+  ColumnOrderings<double> get fontSize => $composableBuilder(
+    column: $table.fontSize,
+    builder: (column) => ColumnOrderings(column),
+  );
+
   ColumnOrderings<DateTime> get addedAt => $composableBuilder(
     column: $table.addedAt,
     builder: (column) => ColumnOrderings(column),
@@ -873,6 +1055,17 @@ class $$BooksTableAnnotationComposer
   GeneratedColumn<double> get progress =>
       $composableBuilder(column: $table.progress, builder: (column) => column);
 
+  GeneratedColumn<bool> get darkMode =>
+      $composableBuilder(column: $table.darkMode, builder: (column) => column);
+
+  GeneratedColumn<bool> get scrollMode => $composableBuilder(
+    column: $table.scrollMode,
+    builder: (column) => column,
+  );
+
+  GeneratedColumn<double> get fontSize =>
+      $composableBuilder(column: $table.fontSize, builder: (column) => column);
+
   GeneratedColumn<DateTime> get addedAt =>
       $composableBuilder(column: $table.addedAt, builder: (column) => column);
 }
@@ -915,6 +1108,9 @@ class $$BooksTableTableManager
                 Value<String?> bookUid = const Value.absent(),
                 Value<String?> locatorJson = const Value.absent(),
                 Value<double> progress = const Value.absent(),
+                Value<bool> darkMode = const Value.absent(),
+                Value<bool> scrollMode = const Value.absent(),
+                Value<double> fontSize = const Value.absent(),
                 Value<DateTime> addedAt = const Value.absent(),
               }) => BooksCompanion(
                 id: id,
@@ -927,6 +1123,9 @@ class $$BooksTableTableManager
                 bookUid: bookUid,
                 locatorJson: locatorJson,
                 progress: progress,
+                darkMode: darkMode,
+                scrollMode: scrollMode,
+                fontSize: fontSize,
                 addedAt: addedAt,
               ),
           createCompanionCallback:
@@ -941,6 +1140,9 @@ class $$BooksTableTableManager
                 Value<String?> bookUid = const Value.absent(),
                 Value<String?> locatorJson = const Value.absent(),
                 Value<double> progress = const Value.absent(),
+                Value<bool> darkMode = const Value.absent(),
+                Value<bool> scrollMode = const Value.absent(),
+                Value<double> fontSize = const Value.absent(),
                 required DateTime addedAt,
               }) => BooksCompanion.insert(
                 id: id,
@@ -953,6 +1155,9 @@ class $$BooksTableTableManager
                 bookUid: bookUid,
                 locatorJson: locatorJson,
                 progress: progress,
+                darkMode: darkMode,
+                scrollMode: scrollMode,
+                fontSize: fontSize,
                 addedAt: addedAt,
               ),
           withReferenceMapper: (p0) => p0

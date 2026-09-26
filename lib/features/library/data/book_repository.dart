@@ -6,8 +6,11 @@ import 'package:epub_reader/features/library/data/book_paths.dart';
 import 'package:path_provider/path_provider.dart';
 
 class BookRepository {
-  BookRepository(this._database, {Future<Directory> Function()? documentsDirectory})
-    : _documentsDirectory = documentsDirectory ?? getApplicationDocumentsDirectory;
+  BookRepository(
+    this._database, {
+    Future<Directory> Function()? documentsDirectory,
+  }) : _documentsDirectory =
+           documentsDirectory ?? getApplicationDocumentsDirectory;
 
   final AppDatabase _database;
   final Future<Directory> Function() _documentsDirectory;
@@ -15,24 +18,35 @@ class BookRepository {
 
   Stream<List<Book>> watchBooks() {
     final query = _database.select(_database.books)
-      ..orderBy([(table) => OrderingTerm(expression: table.addedAt, mode: OrderingMode.desc)]);
+      ..orderBy([
+        (table) =>
+            OrderingTerm(expression: table.addedAt, mode: OrderingMode.desc),
+      ]);
     return query.watch().asyncMap(_presentAll);
   }
 
   Future<Book?> getBook(int id) async {
-    final query = _database.select(_database.books)..where((table) => table.id.equals(id));
+    final query = _database.select(_database.books)
+      ..where((table) => table.id.equals(id));
     final book = await query.getSingleOrNull();
     if (book == null) return null;
     return _present(book);
   }
 
   Future<List<Book>> booksWithoutHash() async {
-    final query = _database.select(_database.books)..where((table) => table.contentHash.isNull());
+    final query = _database.select(_database.books)
+      ..where((table) => table.contentHash.isNull());
     return _presentAll(await query.get());
   }
 
-  Future<void> saveIdentity({required int id, required String contentHash, String? bookUid}) {
-    return (_database.update(_database.books)..where((table) => table.id.equals(id))).write(
+  Future<void> saveIdentity({
+    required int id,
+    required String contentHash,
+    String? bookUid,
+  }) {
+    return (_database.update(
+      _database.books,
+    )..where((table) => table.id.equals(id))).write(
       BooksCompanion(
         contentHash: Value(contentHash),
         bookUid: bookUid == null ? const Value.absent() : Value(bookUid),
@@ -41,19 +55,25 @@ class BookRepository {
   }
 
   Future<Book?> findByBookUid(String bookUid) async {
-    final query = _database.select(_database.books)..where((table) => table.bookUid.equals(bookUid));
+    final query = _database.select(_database.books)
+      ..where((table) => table.bookUid.equals(bookUid));
     final book = await query.getSingleOrNull();
     if (book == null) return null;
     return _present(book);
   }
 
-  Future<Book?> findDuplicate({required String contentHash, String? bookUid}) async {
-    final byHash = _database.select(_database.books)..where((table) => table.contentHash.equals(contentHash));
+  Future<Book?> findDuplicate({
+    required String contentHash,
+    String? bookUid,
+  }) async {
+    final byHash = _database.select(_database.books)
+      ..where((table) => table.contentHash.equals(contentHash));
     final hashed = await byHash.getSingleOrNull();
     if (hashed != null) return _present(hashed);
     if (bookUid == null || bookUid.isEmpty) return null;
 
-    final byUid = _database.select(_database.books)..where((table) => table.bookUid.equals(bookUid));
+    final byUid = _database.select(_database.books)
+      ..where((table) => table.bookUid.equals(bookUid));
     final book = await byUid.getSingleOrNull();
     if (book == null) return null;
     return _present(book);
@@ -68,34 +88,73 @@ class BookRepository {
     String? coverPath,
     Uint8List? coverBytes,
   }) {
-    return _database.into(_database.books).insert(
-      BooksCompanion.insert(
-        title: title,
-        author: Value(author),
-        filePath: filePath,
-        coverPath: Value(coverPath),
+    return _database
+        .into(_database.books)
+        .insert(
+          BooksCompanion.insert(
+            title: title,
+            author: Value(author),
+            filePath: filePath,
+            coverPath: Value(coverPath),
+            coverBytes: Value(coverBytes),
+            contentHash: Value(contentHash),
+            bookUid: Value(bookUid),
+            addedAt: DateTime.now(),
+          ),
+        );
+  }
+
+  Future<void> saveCover({
+    required int id,
+    required Uint8List coverBytes,
+    String? coverPath,
+  }) {
+    return (_database.update(
+      _database.books,
+    )..where((table) => table.id.equals(id))).write(
+      BooksCompanion(
         coverBytes: Value(coverBytes),
-        contentHash: Value(contentHash),
-        bookUid: Value(bookUid),
-        addedAt: DateTime.now(),
+        coverPath: Value(coverPath),
       ),
     );
   }
 
-  Future<void> saveCover({required int id, required Uint8List coverBytes, String? coverPath}) {
-    return (_database.update(_database.books)..where((table) => table.id.equals(id))).write(
-      BooksCompanion(coverBytes: Value(coverBytes), coverPath: Value(coverPath)),
+  Future<void> saveProgress({
+    required int id,
+    required String locatorJson,
+    required double progress,
+  }) {
+    return (_database.update(
+      _database.books,
+    )..where((table) => table.id.equals(id))).write(
+      BooksCompanion(
+        locatorJson: Value(locatorJson),
+        progress: Value(progress.clamp(0, 1)),
+      ),
     );
   }
 
-  Future<void> saveProgress({required int id, required String locatorJson, required double progress}) {
-    return (_database.update(_database.books)..where((table) => table.id.equals(id))).write(
-      BooksCompanion(locatorJson: Value(locatorJson), progress: Value(progress.clamp(0, 1))),
+  Future<void> saveReadingSettings({
+    required int id,
+    required bool darkMode,
+    required bool scrollMode,
+    required double fontSize,
+  }) {
+    return (_database.update(
+      _database.books,
+    )..where((table) => table.id.equals(id))).write(
+      BooksCompanion(
+        darkMode: Value(darkMode),
+        scrollMode: Value(scrollMode),
+        fontSize: Value(fontSize),
+      ),
     );
   }
 
   Future<void> delete(Book book) async {
-    await (_database.delete(_database.books)..where((table) => table.id.equals(book.id))).go();
+    await (_database.delete(
+      _database.books,
+    )..where((table) => table.id.equals(book.id))).go();
     await _deleteFile(await _deletable(book.filePath));
     final coverPath = book.coverPath;
     if (coverPath != null) await _deleteFile(await _deletable(coverPath));
@@ -115,23 +174,37 @@ class BookRepository {
     if (documents == null) return book;
 
     final portableFile = portableBookPath(book.filePath, documents.path);
-    final portableCover = book.coverPath == null ? null : portableBookPath(book.coverPath!, documents.path);
+    final portableCover = book.coverPath == null
+        ? null
+        : portableBookPath(book.coverPath!, documents.path);
     if (portableFile != book.filePath || portableCover != book.coverPath) {
-      await (_database.update(_database.books)..where((table) => table.id.equals(book.id))).write(
-        BooksCompanion(filePath: Value(portableFile), coverPath: Value(portableCover)),
+      await (_database.update(
+        _database.books,
+      )..where((table) => table.id.equals(book.id))).write(
+        BooksCompanion(
+          filePath: Value(portableFile),
+          coverPath: Value(portableCover),
+        ),
       );
     }
 
     return book.copyWith(
       filePath: absoluteBookPath(portableFile, documents.path),
-      coverPath: Value(portableCover == null ? null : absoluteBookPath(portableCover, documents.path)),
+      coverPath: Value(
+        portableCover == null
+            ? null
+            : absoluteBookPath(portableCover, documents.path),
+      ),
     );
   }
 
   Future<String> _deletable(String stored) async {
     final documents = await _documentsDir();
     if (documents == null) return stored;
-    return absoluteBookPath(portableBookPath(stored, documents.path), documents.path);
+    return absoluteBookPath(
+      portableBookPath(stored, documents.path),
+      documents.path,
+    );
   }
 
   Future<Directory?> _documentsDir() async {
