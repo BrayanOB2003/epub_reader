@@ -17,6 +17,33 @@ void main() {
     expect(readerClaimsTap(textSelected: false), isTrue);
   });
 
+  test('a flick turns the page and a held swipe does not', () {
+    expect(
+      pageTurnSwipe(dx: -80, dy: 4, elapsed: const Duration(milliseconds: 180), rtl: false),
+      isTrue,
+    );
+    expect(
+      pageTurnSwipe(dx: 80, dy: 4, elapsed: const Duration(milliseconds: 180), rtl: false),
+      isFalse,
+    );
+    expect(
+      pageTurnSwipe(dx: 80, dy: 4, elapsed: const Duration(milliseconds: 180), rtl: true),
+      isTrue,
+    );
+    expect(
+      pageTurnSwipe(dx: -80, dy: 4, elapsed: const Duration(milliseconds: 700), rtl: false),
+      isNull,
+    );
+    expect(
+      pageTurnSwipe(dx: -20, dy: 0, elapsed: const Duration(milliseconds: 120), rtl: false),
+      isNull,
+    );
+    expect(
+      pageTurnSwipe(dx: 30, dy: 90, elapsed: const Duration(milliseconds: 180), rtl: false),
+      isNull,
+    );
+  });
+
   test('a side tap while scrolling opens the neighboring chapter', () {
     const hrefs = ['c1.xhtml', 'c2.xhtml#start', 'c3.xhtml'];
     expect(adjacentChapterIndex(hrefs: hrefs, currentHref: 'c2.xhtml#p4', forward: true), 2);

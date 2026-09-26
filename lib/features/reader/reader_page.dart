@@ -317,8 +317,10 @@ class _ReaderPageState extends ConsumerState<ReaderPage> {
         Positioned.fill(
             child: ReaderGestureLayer(
               rtl: rtl,
+              scroll: _scroll,
               textSelected: _textSelected,
               onZone: _onZone,
+              onSwipe: (forward) => _turnPage(forward: forward),
               onSelectionTap: _onSelectionTap,
             ),
         ),
