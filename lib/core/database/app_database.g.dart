@@ -1218,6 +1218,17 @@ class $ReaderProfilesTable extends ReaderProfiles
     type: DriftSqlType.string,
     requiredDuringInsert: true,
   );
+  static const VerificationMeta _routineHourMeta = const VerificationMeta(
+    'routineHour',
+  );
+  @override
+  late final GeneratedColumn<int> routineHour = GeneratedColumn<int>(
+    'routine_hour',
+    aliasedName,
+    true,
+    type: DriftSqlType.int,
+    requiredDuringInsert: false,
+  );
   static const VerificationMeta _completedAtMeta = const VerificationMeta(
     'completedAt',
   );
@@ -1235,6 +1246,7 @@ class $ReaderProfilesTable extends ReaderProfiles
     motivations,
     dailyGoalMinutes,
     routine,
+    routineHour,
     completedAt,
   ];
   @override
@@ -1282,6 +1294,15 @@ class $ReaderProfilesTable extends ReaderProfiles
     } else if (isInserting) {
       context.missing(_routineMeta);
     }
+    if (data.containsKey('routine_hour')) {
+      context.handle(
+        _routineHourMeta,
+        routineHour.isAcceptableOrUnknown(
+          data['routine_hour']!,
+          _routineHourMeta,
+        ),
+      );
+    }
     if (data.containsKey('completed_at')) {
       context.handle(
         _completedAtMeta,
@@ -1318,6 +1339,10 @@ class $ReaderProfilesTable extends ReaderProfiles
         DriftSqlType.string,
         data['${effectivePrefix}routine'],
       )!,
+      routineHour: attachedDatabase.typeMapping.read(
+        DriftSqlType.int,
+        data['${effectivePrefix}routine_hour'],
+      ),
       completedAt: attachedDatabase.typeMapping.read(
         DriftSqlType.dateTime,
         data['${effectivePrefix}completed_at'],
@@ -1336,12 +1361,14 @@ class ReaderProfile extends DataClass implements Insertable<ReaderProfile> {
   final String motivations;
   final int dailyGoalMinutes;
   final String routine;
+  final int? routineHour;
   final DateTime completedAt;
   const ReaderProfile({
     required this.id,
     required this.motivations,
     required this.dailyGoalMinutes,
     required this.routine,
+    this.routineHour,
     required this.completedAt,
   });
   @override
@@ -1351,6 +1378,9 @@ class ReaderProfile extends DataClass implements Insertable<ReaderProfile> {
     map['motivations'] = Variable<String>(motivations);
     map['daily_goal_minutes'] = Variable<int>(dailyGoalMinutes);
     map['routine'] = Variable<String>(routine);
+    if (!nullToAbsent || routineHour != null) {
+      map['routine_hour'] = Variable<int>(routineHour);
+    }
     map['completed_at'] = Variable<DateTime>(completedAt);
     return map;
   }
@@ -1361,6 +1391,9 @@ class ReaderProfile extends DataClass implements Insertable<ReaderProfile> {
       motivations: Value(motivations),
       dailyGoalMinutes: Value(dailyGoalMinutes),
       routine: Value(routine),
+      routineHour: routineHour == null && nullToAbsent
+          ? const Value.absent()
+          : Value(routineHour),
       completedAt: Value(completedAt),
     );
   }
@@ -1375,6 +1408,7 @@ class ReaderProfile extends DataClass implements Insertable<ReaderProfile> {
       motivations: serializer.fromJson<String>(json['motivations']),
       dailyGoalMinutes: serializer.fromJson<int>(json['dailyGoalMinutes']),
       routine: serializer.fromJson<String>(json['routine']),
+      routineHour: serializer.fromJson<int?>(json['routineHour']),
       completedAt: serializer.fromJson<DateTime>(json['completedAt']),
     );
   }
@@ -1386,6 +1420,7 @@ class ReaderProfile extends DataClass implements Insertable<ReaderProfile> {
       'motivations': serializer.toJson<String>(motivations),
       'dailyGoalMinutes': serializer.toJson<int>(dailyGoalMinutes),
       'routine': serializer.toJson<String>(routine),
+      'routineHour': serializer.toJson<int?>(routineHour),
       'completedAt': serializer.toJson<DateTime>(completedAt),
     };
   }
@@ -1395,12 +1430,14 @@ class ReaderProfile extends DataClass implements Insertable<ReaderProfile> {
     String? motivations,
     int? dailyGoalMinutes,
     String? routine,
+    Value<int?> routineHour = const Value.absent(),
     DateTime? completedAt,
   }) => ReaderProfile(
     id: id ?? this.id,
     motivations: motivations ?? this.motivations,
     dailyGoalMinutes: dailyGoalMinutes ?? this.dailyGoalMinutes,
     routine: routine ?? this.routine,
+    routineHour: routineHour.present ? routineHour.value : this.routineHour,
     completedAt: completedAt ?? this.completedAt,
   );
   ReaderProfile copyWithCompanion(ReaderProfilesCompanion data) {
@@ -1413,6 +1450,9 @@ class ReaderProfile extends DataClass implements Insertable<ReaderProfile> {
           ? data.dailyGoalMinutes.value
           : this.dailyGoalMinutes,
       routine: data.routine.present ? data.routine.value : this.routine,
+      routineHour: data.routineHour.present
+          ? data.routineHour.value
+          : this.routineHour,
       completedAt: data.completedAt.present
           ? data.completedAt.value
           : this.completedAt,
@@ -1426,14 +1466,21 @@ class ReaderProfile extends DataClass implements Insertable<ReaderProfile> {
           ..write('motivations: $motivations, ')
           ..write('dailyGoalMinutes: $dailyGoalMinutes, ')
           ..write('routine: $routine, ')
+          ..write('routineHour: $routineHour, ')
           ..write('completedAt: $completedAt')
           ..write(')'))
         .toString();
   }
 
   @override
-  int get hashCode =>
-      Object.hash(id, motivations, dailyGoalMinutes, routine, completedAt);
+  int get hashCode => Object.hash(
+    id,
+    motivations,
+    dailyGoalMinutes,
+    routine,
+    routineHour,
+    completedAt,
+  );
   @override
   bool operator ==(Object other) =>
       identical(this, other) ||
@@ -1442,6 +1489,7 @@ class ReaderProfile extends DataClass implements Insertable<ReaderProfile> {
           other.motivations == this.motivations &&
           other.dailyGoalMinutes == this.dailyGoalMinutes &&
           other.routine == this.routine &&
+          other.routineHour == this.routineHour &&
           other.completedAt == this.completedAt);
 }
 
@@ -1450,12 +1498,14 @@ class ReaderProfilesCompanion extends UpdateCompanion<ReaderProfile> {
   final Value<String> motivations;
   final Value<int> dailyGoalMinutes;
   final Value<String> routine;
+  final Value<int?> routineHour;
   final Value<DateTime> completedAt;
   const ReaderProfilesCompanion({
     this.id = const Value.absent(),
     this.motivations = const Value.absent(),
     this.dailyGoalMinutes = const Value.absent(),
     this.routine = const Value.absent(),
+    this.routineHour = const Value.absent(),
     this.completedAt = const Value.absent(),
   });
   ReaderProfilesCompanion.insert({
@@ -1463,6 +1513,7 @@ class ReaderProfilesCompanion extends UpdateCompanion<ReaderProfile> {
     required String motivations,
     required int dailyGoalMinutes,
     required String routine,
+    this.routineHour = const Value.absent(),
     required DateTime completedAt,
   }) : motivations = Value(motivations),
        dailyGoalMinutes = Value(dailyGoalMinutes),
@@ -1473,6 +1524,7 @@ class ReaderProfilesCompanion extends UpdateCompanion<ReaderProfile> {
     Expression<String>? motivations,
     Expression<int>? dailyGoalMinutes,
     Expression<String>? routine,
+    Expression<int>? routineHour,
     Expression<DateTime>? completedAt,
   }) {
     return RawValuesInsertable({
@@ -1480,6 +1532,7 @@ class ReaderProfilesCompanion extends UpdateCompanion<ReaderProfile> {
       if (motivations != null) 'motivations': motivations,
       if (dailyGoalMinutes != null) 'daily_goal_minutes': dailyGoalMinutes,
       if (routine != null) 'routine': routine,
+      if (routineHour != null) 'routine_hour': routineHour,
       if (completedAt != null) 'completed_at': completedAt,
     });
   }
@@ -1489,6 +1542,7 @@ class ReaderProfilesCompanion extends UpdateCompanion<ReaderProfile> {
     Value<String>? motivations,
     Value<int>? dailyGoalMinutes,
     Value<String>? routine,
+    Value<int?>? routineHour,
     Value<DateTime>? completedAt,
   }) {
     return ReaderProfilesCompanion(
@@ -1496,6 +1550,7 @@ class ReaderProfilesCompanion extends UpdateCompanion<ReaderProfile> {
       motivations: motivations ?? this.motivations,
       dailyGoalMinutes: dailyGoalMinutes ?? this.dailyGoalMinutes,
       routine: routine ?? this.routine,
+      routineHour: routineHour ?? this.routineHour,
       completedAt: completedAt ?? this.completedAt,
     );
   }
@@ -1515,6 +1570,9 @@ class ReaderProfilesCompanion extends UpdateCompanion<ReaderProfile> {
     if (routine.present) {
       map['routine'] = Variable<String>(routine.value);
     }
+    if (routineHour.present) {
+      map['routine_hour'] = Variable<int>(routineHour.value);
+    }
     if (completedAt.present) {
       map['completed_at'] = Variable<DateTime>(completedAt.value);
     }
@@ -1528,6 +1586,7 @@ class ReaderProfilesCompanion extends UpdateCompanion<ReaderProfile> {
           ..write('motivations: $motivations, ')
           ..write('dailyGoalMinutes: $dailyGoalMinutes, ')
           ..write('routine: $routine, ')
+          ..write('routineHour: $routineHour, ')
           ..write('completedAt: $completedAt')
           ..write(')'))
         .toString();
@@ -2351,6 +2410,7 @@ typedef $$ReaderProfilesTableCreateCompanionBuilder =
       required String motivations,
       required int dailyGoalMinutes,
       required String routine,
+      Value<int?> routineHour,
       required DateTime completedAt,
     });
 typedef $$ReaderProfilesTableUpdateCompanionBuilder =
@@ -2359,6 +2419,7 @@ typedef $$ReaderProfilesTableUpdateCompanionBuilder =
       Value<String> motivations,
       Value<int> dailyGoalMinutes,
       Value<String> routine,
+      Value<int?> routineHour,
       Value<DateTime> completedAt,
     });
 
@@ -2388,6 +2449,11 @@ class $$ReaderProfilesTableFilterComposer
 
   ColumnFilters<String> get routine => $composableBuilder(
     column: $table.routine,
+    builder: (column) => ColumnFilters(column),
+  );
+
+  ColumnFilters<int> get routineHour => $composableBuilder(
+    column: $table.routineHour,
     builder: (column) => ColumnFilters(column),
   );
 
@@ -2426,6 +2492,11 @@ class $$ReaderProfilesTableOrderingComposer
     builder: (column) => ColumnOrderings(column),
   );
 
+  ColumnOrderings<int> get routineHour => $composableBuilder(
+    column: $table.routineHour,
+    builder: (column) => ColumnOrderings(column),
+  );
+
   ColumnOrderings<DateTime> get completedAt => $composableBuilder(
     column: $table.completedAt,
     builder: (column) => ColumnOrderings(column),
@@ -2456,6 +2527,11 @@ class $$ReaderProfilesTableAnnotationComposer
 
   GeneratedColumn<String> get routine =>
       $composableBuilder(column: $table.routine, builder: (column) => column);
+
+  GeneratedColumn<int> get routineHour => $composableBuilder(
+    column: $table.routineHour,
+    builder: (column) => column,
+  );
 
   GeneratedColumn<DateTime> get completedAt => $composableBuilder(
     column: $table.completedAt,
@@ -2500,12 +2576,14 @@ class $$ReaderProfilesTableTableManager
                 Value<String> motivations = const Value.absent(),
                 Value<int> dailyGoalMinutes = const Value.absent(),
                 Value<String> routine = const Value.absent(),
+                Value<int?> routineHour = const Value.absent(),
                 Value<DateTime> completedAt = const Value.absent(),
               }) => ReaderProfilesCompanion(
                 id: id,
                 motivations: motivations,
                 dailyGoalMinutes: dailyGoalMinutes,
                 routine: routine,
+                routineHour: routineHour,
                 completedAt: completedAt,
               ),
           createCompanionCallback:
@@ -2514,12 +2592,14 @@ class $$ReaderProfilesTableTableManager
                 required String motivations,
                 required int dailyGoalMinutes,
                 required String routine,
+                Value<int?> routineHour = const Value.absent(),
                 required DateTime completedAt,
               }) => ReaderProfilesCompanion.insert(
                 id: id,
                 motivations: motivations,
                 dailyGoalMinutes: dailyGoalMinutes,
                 routine: routine,
+                routineHour: routineHour,
                 completedAt: completedAt,
               ),
           withReferenceMapper: (p0) => p0

@@ -1,4 +1,5 @@
 import 'package:epub_reader/features/profile/reading_goal.dart';
+import 'package:epub_reader/features/profile/reading_routine.dart';
 
 enum ReadingMotivation {
   readMore('read_more', 'Leer más'),
@@ -20,52 +21,53 @@ enum ReadingMotivation {
   }
 }
 
-enum ReadingRoutine {
-  morning('morning', 'Mañana'),
-  afternoon('afternoon', 'Tarde'),
-  night('night', 'Noche');
-
-  const ReadingRoutine(this.id, this.label);
-
-  final String id;
-  final String label;
-
-  static ReadingRoutine? byId(String id) {
-    for (final routine in values) {
-      if (routine.id == id) return routine;
-    }
-    return null;
-  }
-}
-
 class OnboardingAnswers {
   const OnboardingAnswers({
     this.motivations = const {},
     this.dailyGoalMinutes,
     this.routine,
+    this.routineHour,
   });
 
   final Set<ReadingMotivation> motivations;
   final int? dailyGoalMinutes;
   final ReadingRoutine? routine;
+  final int? routineHour;
 
   bool get hasMotivations => motivations.isNotEmpty;
 
   bool get hasGoal => readingGoalMinutes.contains(dailyGoalMinutes);
 
-  bool get hasRoutine => routine != null;
+  bool get hasReadingTime {
+    final period = routine;
+    final hour = routineHour;
+    if (period == null || hour == null) return false;
+    return period.allows(hour);
+  }
 
-  bool get isComplete => hasMotivations && hasGoal && hasRoutine;
+  bool get isComplete => hasMotivations && hasGoal && hasReadingTime;
 
   OnboardingAnswers copyWith({
     Set<ReadingMotivation>? motivations,
     int? dailyGoalMinutes,
     ReadingRoutine? routine,
+    int? routineHour,
   }) {
     return OnboardingAnswers(
       motivations: motivations ?? this.motivations,
       dailyGoalMinutes: dailyGoalMinutes ?? this.dailyGoalMinutes,
       routine: routine ?? this.routine,
+      routineHour: routineHour ?? this.routineHour,
+    );
+  }
+
+  OnboardingAnswers withRoutine(ReadingRoutine period) {
+    final hour = routineHour;
+    return OnboardingAnswers(
+      motivations: motivations,
+      dailyGoalMinutes: dailyGoalMinutes,
+      routine: period,
+      routineHour: hour != null && period.allows(hour) ? hour : null,
     );
   }
 

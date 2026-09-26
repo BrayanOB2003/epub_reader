@@ -2,6 +2,7 @@ import 'package:drift/drift.dart';
 import 'package:epub_reader/app/providers.dart';
 import 'package:epub_reader/core/database/app_database.dart';
 import 'package:epub_reader/features/profile/reading_goal.dart';
+import 'package:epub_reader/features/profile/reading_routine.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 
 final readerProfileStoreProvider = Provider<ReaderProfileStore>((ref) {
@@ -31,12 +32,21 @@ class ReaderProfileStore {
     required String motivations,
     required int dailyGoalMinutes,
     required String routine,
+    required int routineHour,
   }) async {
+    final period = ReadingRoutine.byId(routine);
     if (!readingGoalMinutes.contains(dailyGoalMinutes)) {
       throw ArgumentError.value(
         dailyGoalMinutes,
         'dailyGoalMinutes',
         'La meta no es una de las opciones.',
+      );
+    }
+    if (period == null || !period.allows(routineHour)) {
+      throw ArgumentError.value(
+        routineHour,
+        'routineHour',
+        'La hora no corresponde a ese momento del día.',
       );
     }
     await _database.delete(_database.readerProfiles).go();
@@ -47,9 +57,14 @@ class ReaderProfileStore {
             motivations: motivations,
             dailyGoalMinutes: dailyGoalMinutes,
             routine: routine,
+            routineHour: Value(routineHour),
             completedAt: DateTime.now().toUtc(),
           ),
         );
+  }
+
+  Future<void> clear() {
+    return _database.delete(_database.readerProfiles).go();
   }
 
   Future<void> updateDailyGoal(int minutes) {

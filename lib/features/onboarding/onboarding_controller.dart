@@ -21,7 +21,13 @@ class OnboardingController extends AsyncNotifier<bool> {
           motivations: answers.motivationsStorage,
           dailyGoalMinutes: answers.dailyGoalMinutes!,
           routine: answers.routine!.id,
+          routineHour: answers.routineHour!,
         );
     state = const AsyncData(true);
+  }
+
+  Future<void> reset() async {
+    await ref.read(readerProfileStoreProvider).clear();
+    state = const AsyncData(false);
   }
 }

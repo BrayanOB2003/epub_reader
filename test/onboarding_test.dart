@@ -5,6 +5,7 @@ import 'package:epub_reader/core/database/app_database.dart';
 import 'package:epub_reader/features/discover/data/catalog.dart';
 import 'package:epub_reader/features/onboarding/onboarding_answers.dart';
 import 'package:epub_reader/features/profile/reader_profile_store.dart';
+import 'package:epub_reader/features/profile/reading_routine.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:flutter_test/flutter_test.dart';
@@ -37,9 +38,20 @@ void main() {
         motivations: {ReadingMotivation.readMore, ReadingMotivation.habit},
         dailyGoalMinutes: 10,
         routine: ReadingRoutine.night,
+        routineHour: 21,
       );
 
       expect(answers.isComplete, isTrue);
+      expect(
+        const OnboardingAnswers(
+          motivations: {ReadingMotivation.readMore},
+          dailyGoalMinutes: 10,
+          routine: ReadingRoutine.night,
+          routineHour: 7,
+        ).isComplete,
+        isFalse,
+      );
+      expect(answers.withRoutine(ReadingRoutine.morning).routineHour, isNull);
       expect(answers.motivationsStorage, 'habit,read_more');
       expect(const OnboardingAnswers().isComplete, isFalse);
 
@@ -49,6 +61,7 @@ void main() {
         motivations: answers.motivationsStorage,
         dailyGoalMinutes: answers.dailyGoalMinutes!,
         routine: answers.routine!.id,
+        routineHour: answers.routineHour!,
       );
       expect(await store.exists(), isTrue);
 
@@ -56,7 +69,17 @@ void main() {
       expect(saved.motivations, 'habit,read_more');
       expect(saved.dailyGoalMinutes, 10);
       expect(saved.routine, 'night');
+      expect(saved.routineHour, 21);
 
+      await store.clear();
+      expect(await store.exists(), isFalse);
+
+      await store.save(
+        motivations: answers.motivationsStorage,
+        dailyGoalMinutes: answers.dailyGoalMinutes!,
+        routine: answers.routine!.id,
+        routineHour: answers.routineHour!,
+      );
       await store.updateDailyGoal(20);
       final updated = await database
           .select(database.readerProfiles)
@@ -64,6 +87,7 @@ void main() {
       expect(updated.dailyGoalMinutes, 20);
       expect(updated.motivations, 'habit,read_more');
       expect(updated.routine, 'night');
+      expect(updated.routineHour, 21);
     },
   );
 
@@ -121,11 +145,16 @@ void main() {
       await tester.pumpAndSettle();
 
       expect(find.text('3 de 3'), findsOneWidget);
-      expect(
-        find.text('Más adelante podrás elegir los días y una hora.'),
-        findsOneWidget,
-      );
+      expect(find.text('Más adelante podrás elegir los días.'), findsOneWidget);
       await tester.tap(find.text('Noche'));
+      await tester.pump();
+      expect(find.text('07:00'), findsNothing);
+      expect(find.text('21:00'), findsOneWidget);
+      await tester.tap(find.text('Quiero empezar a leer'));
+      await tester.pumpAndSettle();
+      expect(find.text('3 de 3'), findsOneWidget);
+
+      await tester.tap(find.text('21:00'));
       await tester.pump();
       await tester.tap(find.text('Quiero empezar a leer'));
       await tester.pumpAndSettle();

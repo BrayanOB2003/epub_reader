@@ -82,12 +82,21 @@ void main() {
     await tester.pumpAndSettle();
 
     expect(find.text('Meta de lectura diaria'), findsOneWidget);
+    expect(find.text('Resetear onboarding'), findsOneWidget);
 
+    await tester.tap(find.text('Meta de lectura diaria'));
+    await tester.pumpAndSettle();
     await tester.tap(find.text('30 minutos'));
     await tester.pumpAndSettle();
     final saved = await database.select(database.readerProfiles).getSingle();
     expect(saved.dailyGoalMinutes, 30);
     expect(saved.routine, 'night');
+
+    await tester.tap(find.text('Resetear onboarding'));
+    await tester.pumpAndSettle();
+    await tester.tap(find.text('Resetear'));
+    await tester.pumpAndSettle();
+    expect(find.text('Crea el hábito de leer'), findsOneWidget);
 
     await tester.pumpWidget(const SizedBox.shrink());
     await tester.pump(Duration.zero);

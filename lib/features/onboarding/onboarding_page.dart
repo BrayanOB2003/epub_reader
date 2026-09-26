@@ -1,5 +1,6 @@
 import 'package:epub_reader/features/onboarding/onboarding_answers.dart';
 import 'package:epub_reader/features/profile/reading_goal.dart';
+import 'package:epub_reader/features/profile/reading_routine.dart';
 import 'package:epub_reader/features/onboarding/onboarding_controller.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
@@ -21,7 +22,7 @@ class _OnboardingPageState extends ConsumerState<OnboardingPage> {
     return switch (_step) {
       1 => _answers.hasMotivations,
       2 => _answers.hasGoal,
-      3 => _answers.hasRoutine,
+      3 => _answers.hasReadingTime,
       _ => true,
     };
   }
@@ -144,16 +145,34 @@ class _OnboardingPageState extends ConsumerState<OnboardingPage> {
       _ => _Question(
         theme: theme,
         title: '¿Cuándo te gustaría leer?',
-        note: 'Más adelante podrás elegir los días y una hora.',
+        note: 'Más adelante podrás elegir los días.',
         children: [
           for (final routine in ReadingRoutine.values)
             _ChoiceTile(
               label: routine.label,
               selected: _answers.routine == routine,
-              onTap: () => setState(
-                () => _answers = _answers.copyWith(routine: routine),
-              ),
+              onTap: () =>
+                  setState(() => _answers = _answers.withRoutine(routine)),
             ),
+          if (_answers.routine != null) ...[
+            const SizedBox(height: 16),
+            Text('¿A qué hora?', style: theme.textTheme.titleMedium),
+            const SizedBox(height: 12),
+            Wrap(
+              spacing: 8,
+              runSpacing: 8,
+              children: [
+                for (final hour in _answers.routine!.hours)
+                  _HourChip(
+                    label: readingHourLabel(hour),
+                    selected: _answers.routineHour == hour,
+                    onTap: () => setState(
+                      () => _answers = _answers.copyWith(routineHour: hour),
+                    ),
+                  ),
+              ],
+            ),
+          ],
         ],
       ),
     };
@@ -220,6 +239,41 @@ class _Question extends StatelessWidget {
         const SizedBox(height: 24),
         ...children,
       ],
+    );
+  }
+}
+
+class _HourChip extends StatelessWidget {
+  const _HourChip({
+    required this.label,
+    required this.selected,
+    required this.onTap,
+  });
+
+  final String label;
+  final bool selected;
+  final VoidCallback onTap;
+
+  @override
+  Widget build(BuildContext context) {
+    final theme = Theme.of(context);
+    final color = theme.colorScheme;
+    return Material(
+      color: selected ? color.primaryContainer : color.surface,
+      shape: RoundedRectangleBorder(
+        borderRadius: BorderRadius.circular(20),
+        side: BorderSide(
+          color: selected ? color.primary : color.outlineVariant,
+        ),
+      ),
+      child: InkWell(
+        onTap: onTap,
+        borderRadius: BorderRadius.circular(20),
+        child: Padding(
+          padding: const EdgeInsets.symmetric(horizontal: 14, vertical: 10),
+          child: Text(label, style: theme.textTheme.bodyLarge),
+        ),
+      ),
     );
   }
 }
