@@ -33,11 +33,21 @@ void main() {
   });
 
   testWidgets('navbar switches between discovery and library', (tester) async {
+    final database = AppDatabase(NativeDatabase.memory());
+    await database
+        .into(database.readerProfiles)
+        .insert(
+          ReaderProfilesCompanion.insert(
+            motivations: 'habit',
+            dailyGoalMinutes: 10,
+            routine: 'night',
+            completedAt: DateTime.utc(2026, 9, 26),
+          ),
+        );
     await tester.pumpWidget(
       ProviderScope(
         overrides: [
           databaseProvider.overrideWith((ref) {
-            final database = AppDatabase(NativeDatabase.memory());
             ref.onDispose(database.close);
             return database;
           }),

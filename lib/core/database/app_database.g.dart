@@ -1166,6 +1166,374 @@ class ReadingSessionsCompanion extends UpdateCompanion<ReadingSession> {
   }
 }
 
+class $ReaderProfilesTable extends ReaderProfiles
+    with TableInfo<$ReaderProfilesTable, ReaderProfile> {
+  @override
+  final GeneratedDatabase attachedDatabase;
+  final String? _alias;
+  $ReaderProfilesTable(this.attachedDatabase, [this._alias]);
+  static const VerificationMeta _idMeta = const VerificationMeta('id');
+  @override
+  late final GeneratedColumn<int> id = GeneratedColumn<int>(
+    'id',
+    aliasedName,
+    false,
+    hasAutoIncrement: true,
+    type: DriftSqlType.int,
+    requiredDuringInsert: false,
+    defaultConstraints: GeneratedColumn.constraintIsAlways(
+      'PRIMARY KEY AUTOINCREMENT',
+    ),
+  );
+  static const VerificationMeta _motivationsMeta = const VerificationMeta(
+    'motivations',
+  );
+  @override
+  late final GeneratedColumn<String> motivations = GeneratedColumn<String>(
+    'motivations',
+    aliasedName,
+    false,
+    type: DriftSqlType.string,
+    requiredDuringInsert: true,
+  );
+  static const VerificationMeta _dailyGoalMinutesMeta = const VerificationMeta(
+    'dailyGoalMinutes',
+  );
+  @override
+  late final GeneratedColumn<int> dailyGoalMinutes = GeneratedColumn<int>(
+    'daily_goal_minutes',
+    aliasedName,
+    false,
+    type: DriftSqlType.int,
+    requiredDuringInsert: true,
+  );
+  static const VerificationMeta _routineMeta = const VerificationMeta(
+    'routine',
+  );
+  @override
+  late final GeneratedColumn<String> routine = GeneratedColumn<String>(
+    'routine',
+    aliasedName,
+    false,
+    type: DriftSqlType.string,
+    requiredDuringInsert: true,
+  );
+  static const VerificationMeta _completedAtMeta = const VerificationMeta(
+    'completedAt',
+  );
+  @override
+  late final GeneratedColumn<DateTime> completedAt = GeneratedColumn<DateTime>(
+    'completed_at',
+    aliasedName,
+    false,
+    type: DriftSqlType.dateTime,
+    requiredDuringInsert: true,
+  );
+  @override
+  List<GeneratedColumn> get $columns => [
+    id,
+    motivations,
+    dailyGoalMinutes,
+    routine,
+    completedAt,
+  ];
+  @override
+  String get aliasedName => _alias ?? actualTableName;
+  @override
+  String get actualTableName => $name;
+  static const String $name = 'reader_profiles';
+  @override
+  VerificationContext validateIntegrity(
+    Insertable<ReaderProfile> instance, {
+    bool isInserting = false,
+  }) {
+    final context = VerificationContext();
+    final data = instance.toColumns(true);
+    if (data.containsKey('id')) {
+      context.handle(_idMeta, id.isAcceptableOrUnknown(data['id']!, _idMeta));
+    }
+    if (data.containsKey('motivations')) {
+      context.handle(
+        _motivationsMeta,
+        motivations.isAcceptableOrUnknown(
+          data['motivations']!,
+          _motivationsMeta,
+        ),
+      );
+    } else if (isInserting) {
+      context.missing(_motivationsMeta);
+    }
+    if (data.containsKey('daily_goal_minutes')) {
+      context.handle(
+        _dailyGoalMinutesMeta,
+        dailyGoalMinutes.isAcceptableOrUnknown(
+          data['daily_goal_minutes']!,
+          _dailyGoalMinutesMeta,
+        ),
+      );
+    } else if (isInserting) {
+      context.missing(_dailyGoalMinutesMeta);
+    }
+    if (data.containsKey('routine')) {
+      context.handle(
+        _routineMeta,
+        routine.isAcceptableOrUnknown(data['routine']!, _routineMeta),
+      );
+    } else if (isInserting) {
+      context.missing(_routineMeta);
+    }
+    if (data.containsKey('completed_at')) {
+      context.handle(
+        _completedAtMeta,
+        completedAt.isAcceptableOrUnknown(
+          data['completed_at']!,
+          _completedAtMeta,
+        ),
+      );
+    } else if (isInserting) {
+      context.missing(_completedAtMeta);
+    }
+    return context;
+  }
+
+  @override
+  Set<GeneratedColumn> get $primaryKey => {id};
+  @override
+  ReaderProfile map(Map<String, dynamic> data, {String? tablePrefix}) {
+    final effectivePrefix = tablePrefix != null ? '$tablePrefix.' : '';
+    return ReaderProfile(
+      id: attachedDatabase.typeMapping.read(
+        DriftSqlType.int,
+        data['${effectivePrefix}id'],
+      )!,
+      motivations: attachedDatabase.typeMapping.read(
+        DriftSqlType.string,
+        data['${effectivePrefix}motivations'],
+      )!,
+      dailyGoalMinutes: attachedDatabase.typeMapping.read(
+        DriftSqlType.int,
+        data['${effectivePrefix}daily_goal_minutes'],
+      )!,
+      routine: attachedDatabase.typeMapping.read(
+        DriftSqlType.string,
+        data['${effectivePrefix}routine'],
+      )!,
+      completedAt: attachedDatabase.typeMapping.read(
+        DriftSqlType.dateTime,
+        data['${effectivePrefix}completed_at'],
+      )!,
+    );
+  }
+
+  @override
+  $ReaderProfilesTable createAlias(String alias) {
+    return $ReaderProfilesTable(attachedDatabase, alias);
+  }
+}
+
+class ReaderProfile extends DataClass implements Insertable<ReaderProfile> {
+  final int id;
+  final String motivations;
+  final int dailyGoalMinutes;
+  final String routine;
+  final DateTime completedAt;
+  const ReaderProfile({
+    required this.id,
+    required this.motivations,
+    required this.dailyGoalMinutes,
+    required this.routine,
+    required this.completedAt,
+  });
+  @override
+  Map<String, Expression> toColumns(bool nullToAbsent) {
+    final map = <String, Expression>{};
+    map['id'] = Variable<int>(id);
+    map['motivations'] = Variable<String>(motivations);
+    map['daily_goal_minutes'] = Variable<int>(dailyGoalMinutes);
+    map['routine'] = Variable<String>(routine);
+    map['completed_at'] = Variable<DateTime>(completedAt);
+    return map;
+  }
+
+  ReaderProfilesCompanion toCompanion(bool nullToAbsent) {
+    return ReaderProfilesCompanion(
+      id: Value(id),
+      motivations: Value(motivations),
+      dailyGoalMinutes: Value(dailyGoalMinutes),
+      routine: Value(routine),
+      completedAt: Value(completedAt),
+    );
+  }
+
+  factory ReaderProfile.fromJson(
+    Map<String, dynamic> json, {
+    ValueSerializer? serializer,
+  }) {
+    serializer ??= driftRuntimeOptions.defaultSerializer;
+    return ReaderProfile(
+      id: serializer.fromJson<int>(json['id']),
+      motivations: serializer.fromJson<String>(json['motivations']),
+      dailyGoalMinutes: serializer.fromJson<int>(json['dailyGoalMinutes']),
+      routine: serializer.fromJson<String>(json['routine']),
+      completedAt: serializer.fromJson<DateTime>(json['completedAt']),
+    );
+  }
+  @override
+  Map<String, dynamic> toJson({ValueSerializer? serializer}) {
+    serializer ??= driftRuntimeOptions.defaultSerializer;
+    return <String, dynamic>{
+      'id': serializer.toJson<int>(id),
+      'motivations': serializer.toJson<String>(motivations),
+      'dailyGoalMinutes': serializer.toJson<int>(dailyGoalMinutes),
+      'routine': serializer.toJson<String>(routine),
+      'completedAt': serializer.toJson<DateTime>(completedAt),
+    };
+  }
+
+  ReaderProfile copyWith({
+    int? id,
+    String? motivations,
+    int? dailyGoalMinutes,
+    String? routine,
+    DateTime? completedAt,
+  }) => ReaderProfile(
+    id: id ?? this.id,
+    motivations: motivations ?? this.motivations,
+    dailyGoalMinutes: dailyGoalMinutes ?? this.dailyGoalMinutes,
+    routine: routine ?? this.routine,
+    completedAt: completedAt ?? this.completedAt,
+  );
+  ReaderProfile copyWithCompanion(ReaderProfilesCompanion data) {
+    return ReaderProfile(
+      id: data.id.present ? data.id.value : this.id,
+      motivations: data.motivations.present
+          ? data.motivations.value
+          : this.motivations,
+      dailyGoalMinutes: data.dailyGoalMinutes.present
+          ? data.dailyGoalMinutes.value
+          : this.dailyGoalMinutes,
+      routine: data.routine.present ? data.routine.value : this.routine,
+      completedAt: data.completedAt.present
+          ? data.completedAt.value
+          : this.completedAt,
+    );
+  }
+
+  @override
+  String toString() {
+    return (StringBuffer('ReaderProfile(')
+          ..write('id: $id, ')
+          ..write('motivations: $motivations, ')
+          ..write('dailyGoalMinutes: $dailyGoalMinutes, ')
+          ..write('routine: $routine, ')
+          ..write('completedAt: $completedAt')
+          ..write(')'))
+        .toString();
+  }
+
+  @override
+  int get hashCode =>
+      Object.hash(id, motivations, dailyGoalMinutes, routine, completedAt);
+  @override
+  bool operator ==(Object other) =>
+      identical(this, other) ||
+      (other is ReaderProfile &&
+          other.id == this.id &&
+          other.motivations == this.motivations &&
+          other.dailyGoalMinutes == this.dailyGoalMinutes &&
+          other.routine == this.routine &&
+          other.completedAt == this.completedAt);
+}
+
+class ReaderProfilesCompanion extends UpdateCompanion<ReaderProfile> {
+  final Value<int> id;
+  final Value<String> motivations;
+  final Value<int> dailyGoalMinutes;
+  final Value<String> routine;
+  final Value<DateTime> completedAt;
+  const ReaderProfilesCompanion({
+    this.id = const Value.absent(),
+    this.motivations = const Value.absent(),
+    this.dailyGoalMinutes = const Value.absent(),
+    this.routine = const Value.absent(),
+    this.completedAt = const Value.absent(),
+  });
+  ReaderProfilesCompanion.insert({
+    this.id = const Value.absent(),
+    required String motivations,
+    required int dailyGoalMinutes,
+    required String routine,
+    required DateTime completedAt,
+  }) : motivations = Value(motivations),
+       dailyGoalMinutes = Value(dailyGoalMinutes),
+       routine = Value(routine),
+       completedAt = Value(completedAt);
+  static Insertable<ReaderProfile> custom({
+    Expression<int>? id,
+    Expression<String>? motivations,
+    Expression<int>? dailyGoalMinutes,
+    Expression<String>? routine,
+    Expression<DateTime>? completedAt,
+  }) {
+    return RawValuesInsertable({
+      if (id != null) 'id': id,
+      if (motivations != null) 'motivations': motivations,
+      if (dailyGoalMinutes != null) 'daily_goal_minutes': dailyGoalMinutes,
+      if (routine != null) 'routine': routine,
+      if (completedAt != null) 'completed_at': completedAt,
+    });
+  }
+
+  ReaderProfilesCompanion copyWith({
+    Value<int>? id,
+    Value<String>? motivations,
+    Value<int>? dailyGoalMinutes,
+    Value<String>? routine,
+    Value<DateTime>? completedAt,
+  }) {
+    return ReaderProfilesCompanion(
+      id: id ?? this.id,
+      motivations: motivations ?? this.motivations,
+      dailyGoalMinutes: dailyGoalMinutes ?? this.dailyGoalMinutes,
+      routine: routine ?? this.routine,
+      completedAt: completedAt ?? this.completedAt,
+    );
+  }
+
+  @override
+  Map<String, Expression> toColumns(bool nullToAbsent) {
+    final map = <String, Expression>{};
+    if (id.present) {
+      map['id'] = Variable<int>(id.value);
+    }
+    if (motivations.present) {
+      map['motivations'] = Variable<String>(motivations.value);
+    }
+    if (dailyGoalMinutes.present) {
+      map['daily_goal_minutes'] = Variable<int>(dailyGoalMinutes.value);
+    }
+    if (routine.present) {
+      map['routine'] = Variable<String>(routine.value);
+    }
+    if (completedAt.present) {
+      map['completed_at'] = Variable<DateTime>(completedAt.value);
+    }
+    return map;
+  }
+
+  @override
+  String toString() {
+    return (StringBuffer('ReaderProfilesCompanion(')
+          ..write('id: $id, ')
+          ..write('motivations: $motivations, ')
+          ..write('dailyGoalMinutes: $dailyGoalMinutes, ')
+          ..write('routine: $routine, ')
+          ..write('completedAt: $completedAt')
+          ..write(')'))
+        .toString();
+  }
+}
+
 abstract class _$AppDatabase extends GeneratedDatabase {
   _$AppDatabase(QueryExecutor e) : super(e);
   $AppDatabaseManager get managers => $AppDatabaseManager(this);
@@ -1173,11 +1541,16 @@ abstract class _$AppDatabase extends GeneratedDatabase {
   late final $ReadingSessionsTable readingSessions = $ReadingSessionsTable(
     this,
   );
+  late final $ReaderProfilesTable readerProfiles = $ReaderProfilesTable(this);
   @override
   Iterable<TableInfo<Table, Object?>> get allTables =>
       allSchemaEntities.whereType<TableInfo<Table, Object?>>();
   @override
-  List<DatabaseSchemaEntity> get allSchemaEntities => [books, readingSessions];
+  List<DatabaseSchemaEntity> get allSchemaEntities => [
+    books,
+    readingSessions,
+    readerProfiles,
+  ];
 }
 
 typedef $$BooksTableCreateCompanionBuilder = BooksCompanion Function({
@@ -1972,6 +2345,217 @@ typedef $$ReadingSessionsTableProcessedTableManager =
       ReadingSession,
       PrefetchHooks Function({bool bookId})
     >;
+typedef $$ReaderProfilesTableCreateCompanionBuilder =
+    ReaderProfilesCompanion Function({
+      Value<int> id,
+      required String motivations,
+      required int dailyGoalMinutes,
+      required String routine,
+      required DateTime completedAt,
+    });
+typedef $$ReaderProfilesTableUpdateCompanionBuilder =
+    ReaderProfilesCompanion Function({
+      Value<int> id,
+      Value<String> motivations,
+      Value<int> dailyGoalMinutes,
+      Value<String> routine,
+      Value<DateTime> completedAt,
+    });
+
+class $$ReaderProfilesTableFilterComposer
+    extends Composer<_$AppDatabase, $ReaderProfilesTable> {
+  $$ReaderProfilesTableFilterComposer({
+    required super.$db,
+    required super.$table,
+    super.joinBuilder,
+    super.$addJoinBuilderToRootComposer,
+    super.$removeJoinBuilderFromRootComposer,
+  });
+  ColumnFilters<int> get id => $composableBuilder(
+    column: $table.id,
+    builder: (column) => ColumnFilters(column),
+  );
+
+  ColumnFilters<String> get motivations => $composableBuilder(
+    column: $table.motivations,
+    builder: (column) => ColumnFilters(column),
+  );
+
+  ColumnFilters<int> get dailyGoalMinutes => $composableBuilder(
+    column: $table.dailyGoalMinutes,
+    builder: (column) => ColumnFilters(column),
+  );
+
+  ColumnFilters<String> get routine => $composableBuilder(
+    column: $table.routine,
+    builder: (column) => ColumnFilters(column),
+  );
+
+  ColumnFilters<DateTime> get completedAt => $composableBuilder(
+    column: $table.completedAt,
+    builder: (column) => ColumnFilters(column),
+  );
+}
+
+class $$ReaderProfilesTableOrderingComposer
+    extends Composer<_$AppDatabase, $ReaderProfilesTable> {
+  $$ReaderProfilesTableOrderingComposer({
+    required super.$db,
+    required super.$table,
+    super.joinBuilder,
+    super.$addJoinBuilderToRootComposer,
+    super.$removeJoinBuilderFromRootComposer,
+  });
+  ColumnOrderings<int> get id => $composableBuilder(
+    column: $table.id,
+    builder: (column) => ColumnOrderings(column),
+  );
+
+  ColumnOrderings<String> get motivations => $composableBuilder(
+    column: $table.motivations,
+    builder: (column) => ColumnOrderings(column),
+  );
+
+  ColumnOrderings<int> get dailyGoalMinutes => $composableBuilder(
+    column: $table.dailyGoalMinutes,
+    builder: (column) => ColumnOrderings(column),
+  );
+
+  ColumnOrderings<String> get routine => $composableBuilder(
+    column: $table.routine,
+    builder: (column) => ColumnOrderings(column),
+  );
+
+  ColumnOrderings<DateTime> get completedAt => $composableBuilder(
+    column: $table.completedAt,
+    builder: (column) => ColumnOrderings(column),
+  );
+}
+
+class $$ReaderProfilesTableAnnotationComposer
+    extends Composer<_$AppDatabase, $ReaderProfilesTable> {
+  $$ReaderProfilesTableAnnotationComposer({
+    required super.$db,
+    required super.$table,
+    super.joinBuilder,
+    super.$addJoinBuilderToRootComposer,
+    super.$removeJoinBuilderFromRootComposer,
+  });
+  GeneratedColumn<int> get id =>
+      $composableBuilder(column: $table.id, builder: (column) => column);
+
+  GeneratedColumn<String> get motivations => $composableBuilder(
+    column: $table.motivations,
+    builder: (column) => column,
+  );
+
+  GeneratedColumn<int> get dailyGoalMinutes => $composableBuilder(
+    column: $table.dailyGoalMinutes,
+    builder: (column) => column,
+  );
+
+  GeneratedColumn<String> get routine =>
+      $composableBuilder(column: $table.routine, builder: (column) => column);
+
+  GeneratedColumn<DateTime> get completedAt => $composableBuilder(
+    column: $table.completedAt,
+    builder: (column) => column,
+  );
+}
+
+class $$ReaderProfilesTableTableManager
+    extends
+        RootTableManager<
+          _$AppDatabase,
+          $ReaderProfilesTable,
+          ReaderProfile,
+          $$ReaderProfilesTableFilterComposer,
+          $$ReaderProfilesTableOrderingComposer,
+          $$ReaderProfilesTableAnnotationComposer,
+          $$ReaderProfilesTableCreateCompanionBuilder,
+          $$ReaderProfilesTableUpdateCompanionBuilder,
+          (
+            ReaderProfile,
+            BaseReferences<_$AppDatabase, $ReaderProfilesTable, ReaderProfile>,
+          ),
+          ReaderProfile,
+          PrefetchHooks Function()
+        > {
+  $$ReaderProfilesTableTableManager(
+    _$AppDatabase db,
+    $ReaderProfilesTable table,
+  ) : super(
+        TableManagerState(
+          db: db,
+          table: table,
+          createFilteringComposer: () =>
+              $$ReaderProfilesTableFilterComposer($db: db, $table: table),
+          createOrderingComposer: () =>
+              $$ReaderProfilesTableOrderingComposer($db: db, $table: table),
+          createComputedFieldComposer: () =>
+              $$ReaderProfilesTableAnnotationComposer($db: db, $table: table),
+          updateCompanionCallback:
+              ({
+                Value<int> id = const Value.absent(),
+                Value<String> motivations = const Value.absent(),
+                Value<int> dailyGoalMinutes = const Value.absent(),
+                Value<String> routine = const Value.absent(),
+                Value<DateTime> completedAt = const Value.absent(),
+              }) => ReaderProfilesCompanion(
+                id: id,
+                motivations: motivations,
+                dailyGoalMinutes: dailyGoalMinutes,
+                routine: routine,
+                completedAt: completedAt,
+              ),
+          createCompanionCallback:
+              ({
+                Value<int> id = const Value.absent(),
+                required String motivations,
+                required int dailyGoalMinutes,
+                required String routine,
+                required DateTime completedAt,
+              }) => ReaderProfilesCompanion.insert(
+                id: id,
+                motivations: motivations,
+                dailyGoalMinutes: dailyGoalMinutes,
+                routine: routine,
+                completedAt: completedAt,
+              ),
+          withReferenceMapper: (p0) => p0
+              .map(
+                (e) => (
+                  e.readTable<$ReaderProfilesTable, ReaderProfile>(table),
+                  BaseReferences<
+                    _$AppDatabase,
+                    $ReaderProfilesTable,
+                    ReaderProfile
+                  >(db, table, e),
+                ),
+              )
+              .toList(),
+          prefetchHooksCallback: null,
+        ),
+      );
+}
+
+typedef $$ReaderProfilesTableProcessedTableManager =
+    ProcessedTableManager<
+      _$AppDatabase,
+      $ReaderProfilesTable,
+      ReaderProfile,
+      $$ReaderProfilesTableFilterComposer,
+      $$ReaderProfilesTableOrderingComposer,
+      $$ReaderProfilesTableAnnotationComposer,
+      $$ReaderProfilesTableCreateCompanionBuilder,
+      $$ReaderProfilesTableUpdateCompanionBuilder,
+      (
+        ReaderProfile,
+        BaseReferences<_$AppDatabase, $ReaderProfilesTable, ReaderProfile>,
+      ),
+      ReaderProfile,
+      PrefetchHooks Function()
+    >;
 
 class $AppDatabaseManager {
   final _$AppDatabase _db;
@@ -1980,4 +2564,6 @@ class $AppDatabaseManager {
       $$BooksTableTableManager(_db, _db.books);
   $$ReadingSessionsTableTableManager get readingSessions =>
       $$ReadingSessionsTableTableManager(_db, _db.readingSessions);
+  $$ReaderProfilesTableTableManager get readerProfiles =>
+      $$ReaderProfilesTableTableManager(_db, _db.readerProfiles);
 }
