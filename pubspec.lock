@@ -345,10 +345,11 @@ packages:
   flutter_readium:
     dependency: "direct main"
     description:
-      name: flutter_readium
-      sha256: "6fafb70ccd8bcecfaf37308fb155bb3e8d298453f972ecaa6e7b419e02a3a628"
-      url: "https://pub.dev"
-    source: hosted
+      path: flutter_readium
+      ref: main
+      resolved-ref: faa62c8fcd590505c3c9e895dbadd372795384f8
+      url: "https://github.com/BrayanOB2003/flutter_readium.git"
+    source: git
     version: "0.6.0"
   flutter_readium_platform_interface:
     dependency: transitive
