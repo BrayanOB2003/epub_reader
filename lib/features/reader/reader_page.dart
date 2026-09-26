@@ -7,10 +7,13 @@ import 'package:epub_reader/core/reading/readium_reading_engine.dart';
 import 'package:epub_reader/features/library/data/book_repository.dart';
 import 'package:epub_reader/features/reader/reader_gestures.dart';
 import 'package:epub_reader/features/reader/reader_preferences.dart';
+import 'package:flutter/foundation.dart';
 import 'package:flutter/material.dart';
+import 'package:flutter/services.dart';
 import 'package:flutter_readium/flutter_readium.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:go_router/go_router.dart';
+import 'package:share_plus/share_plus.dart';
 
 class ReaderPage extends ConsumerStatefulWidget {
   const ReaderPage({required this.bookId, super.key});
@@ -87,12 +90,14 @@ class _ReaderPageState extends ConsumerState<ReaderPage> {
   void _onLocator(Locator locator) {
     final previous = _latestLocator;
     _latestLocator = locator;
-    if (_textSelected && _readingPositionChanged(previous, locator)) {
-      _textSelected = false;
-    }
+    final leftChapter = _textSelected && previous != null && previous.href != locator.href;
+    if (leftChapter) _textSelected = false;
     final progression = locator.locations?.totalProgression;
-    if (progression != null && mounted) {
-      setState(() => _progress = progression);
+    final progressChanged = progression != null && progression != _progress;
+    if (mounted && (leftChapter || progressChanged)) {
+      setState(() {
+        if (progressChanged) _progress = progression;
+      });
     }
     _saveTimer?.cancel();
     _saveTimer = Timer(const Duration(milliseconds: 400), _persist);
@@ -171,6 +176,18 @@ class _ReaderPageState extends ConsumerState<ReaderPage> {
   void _onSelectionTap() {
     if (!_textSelected || !mounted) return;
     setState(() => _textSelected = false);
+  }
+
+  Future<void> _onSelectionAction(SelectionActionEvent event) async {
+    if (mounted) setState(() => _textSelected = false);
+    final text = event.selectedText?.trim();
+    if (text == null || text.isEmpty) return;
+    switch (event.actionId) {
+      case 'copy':
+        await Clipboard.setData(ClipboardData(text: text));
+      case 'share':
+        await SharePlus.instance.share(ShareParams(text: text));
+    }
   }
 
   Future<void> _persist() async {
@@ -267,7 +284,9 @@ class _ReaderPageState extends ConsumerState<ReaderPage> {
             publication: publication,
             initialLocator: _savedLocator(book),
             allowedDefaultActions: const {DefaultSelectionAction.copy, DefaultSelectionAction.share},
+            selectionActions: defaultTargetPlatform == TargetPlatform.android ? _androidSelectionActions : const [],
             onTextSelected: _onTextSelected,
+            onSelectionAction: _onSelectionAction,
           ),
         ),
         Positioned.fill(
@@ -361,10 +380,12 @@ class _ReaderPageState extends ConsumerState<ReaderPage> {
   }
 }
 
-bool _readingPositionChanged(Locator? previous, Locator next) {
-  if (previous == null) return false;
-  return previous.href != next.href || previous.locations?.progression != next.locations?.progression;
-}
+/// Android ignores [DefaultSelectionAction] and only reports a selection when
+/// custom actions replace its system menu.
+const _androidSelectionActions = [
+  SelectionAction(id: 'copy', title: 'Copiar'),
+  SelectionAction(id: 'share', title: 'Compartir'),
+];
 
 class _TocEntry {
   const _TocEntry({required this.link, required this.depth});

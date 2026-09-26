@@ -47,13 +47,10 @@ class ReaderGestureLayer extends StatelessWidget {
           (recognizer) {
             recognizer.shouldClaim = (position) => _claims(context, position);
             recognizer.onShortTap = (position) => _dispatch(context, position);
-            recognizer.onReleasedToReader = () {
-              if (textSelected) onSelectionTap();
-            };
           },
         ),
       },
-      child: const SizedBox.expand(),
+      child: _SelectionTapObserver(enabled: textSelected, onShortTap: onSelectionTap),
     );
   }
 
@@ -79,16 +76,21 @@ class _ShortTapRecognizer extends PrimaryPointerGestureRecognizer {
 
   bool Function(Offset globalPosition)? shouldClaim;
   void Function(Offset globalPosition)? onShortTap;
-  VoidCallback? onReleasedToReader;
 
   @override
   void handlePrimaryPointer(PointerEvent event) {
+    if (event is PointerDownEvent) {
+      final claim = shouldClaim?.call(event.position) ?? true;
+      if (!claim) {
+        resolve(GestureDisposition.rejected);
+      }
+      return;
+    }
     if (event is! PointerUpEvent) return;
     final position = event.position;
     final claim = shouldClaim?.call(position) ?? true;
     if (!claim) {
       resolve(GestureDisposition.rejected);
-      onReleasedToReader?.call();
       return;
     }
     resolve(GestureDisposition.accepted);
@@ -104,4 +106,46 @@ class _ShortTapRecognizer extends PrimaryPointerGestureRecognizer {
 
   @override
   String get debugDescription => 'short tap';
+}
+
+/// Sees the tap that was given to Readium and clears the selection flag only
+/// when it was a short tap. A drag that adjusts the selection keeps the flag.
+class _SelectionTapObserver extends StatefulWidget {
+  const _SelectionTapObserver({required this.enabled, required this.onShortTap});
+
+  final bool enabled;
+  final VoidCallback onShortTap;
+
+  @override
+  State<_SelectionTapObserver> createState() => _SelectionTapObserverState();
+}
+
+class _SelectionTapObserverState extends State<_SelectionTapObserver> {
+  Offset? _origin;
+  Duration? _started;
+
+  @override
+  Widget build(BuildContext context) {
+    return Listener(
+      behavior: HitTestBehavior.translucent,
+      onPointerDown: (event) {
+        if (!widget.enabled) return;
+        _origin = event.position;
+        _started = event.timeStamp;
+      },
+      onPointerUp: (event) {
+        final origin = _origin;
+        final started = _started;
+        _origin = null;
+        _started = null;
+        if (!widget.enabled || origin == null || started == null) return;
+        final distance = (event.position - origin).distance;
+        final elapsed = event.timeStamp - started;
+        if (distance <= kTouchSlop && elapsed <= shortTapDeadline) {
+          widget.onShortTap();
+        }
+      },
+      child: const SizedBox.expand(),
+    );
+  }
 }
