@@ -1,4 +1,5 @@
 import 'package:epub_reader/features/onboarding/onboarding_answers.dart';
+import 'package:epub_reader/features/profile/reading_goal.dart';
 import 'package:epub_reader/features/onboarding/onboarding_controller.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';

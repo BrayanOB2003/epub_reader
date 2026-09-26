@@ -78,6 +78,17 @@ void main() {
 
     expect(find.text('Todavía no hay registros'), findsOneWidget);
 
+    await tester.tap(find.text('Perfil'));
+    await tester.pumpAndSettle();
+
+    expect(find.text('Meta de lectura diaria'), findsOneWidget);
+
+    await tester.tap(find.text('30 minutos'));
+    await tester.pumpAndSettle();
+    final saved = await database.select(database.readerProfiles).getSingle();
+    expect(saved.dailyGoalMinutes, 30);
+    expect(saved.routine, 'night');
+
     await tester.pumpWidget(const SizedBox.shrink());
     await tester.pump(Duration.zero);
   });

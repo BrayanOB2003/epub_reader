@@ -1,11 +1,6 @@
-import 'package:epub_reader/app/providers.dart';
 import 'package:epub_reader/features/onboarding/onboarding_answers.dart';
-import 'package:epub_reader/features/onboarding/onboarding_store.dart';
+import 'package:epub_reader/features/profile/reader_profile_store.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
-
-final onboardingStoreProvider = Provider<OnboardingStore>((ref) {
-  return OnboardingStore(ref.watch(databaseProvider));
-});
 
 final onboardingControllerProvider =
     AsyncNotifierProvider<OnboardingController, bool>(OnboardingController.new);
@@ -13,11 +8,20 @@ final onboardingControllerProvider =
 class OnboardingController extends AsyncNotifier<bool> {
   @override
   Future<bool> build() {
-    return ref.watch(onboardingStoreProvider).isComplete();
+    return ref.watch(readerProfileStoreProvider).exists();
   }
 
   Future<void> complete(OnboardingAnswers answers) async {
-    await ref.read(onboardingStoreProvider).save(answers);
+    if (!answers.isComplete) {
+      throw StateError('El onboarding todavía no está completo.');
+    }
+    await ref
+        .read(readerProfileStoreProvider)
+        .save(
+          motivations: answers.motivationsStorage,
+          dailyGoalMinutes: answers.dailyGoalMinutes!,
+          routine: answers.routine!.id,
+        );
     state = const AsyncData(true);
   }
 }

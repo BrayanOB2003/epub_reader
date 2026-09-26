@@ -1,3 +1,5 @@
+import 'package:epub_reader/features/profile/reading_goal.dart';
+
 enum ReadingMotivation {
   readMore('read_more', 'Leer más'),
   habit('habit', 'Crear un hábito'),
@@ -35,8 +37,6 @@ enum ReadingRoutine {
     return null;
   }
 }
-
-const readingGoalMinutes = [5, 10, 20, 30];
 
 class OnboardingAnswers {
   const OnboardingAnswers({

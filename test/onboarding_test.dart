@@ -4,7 +4,7 @@ import 'package:epub_reader/app/providers.dart';
 import 'package:epub_reader/core/database/app_database.dart';
 import 'package:epub_reader/features/discover/data/catalog.dart';
 import 'package:epub_reader/features/onboarding/onboarding_answers.dart';
-import 'package:epub_reader/features/onboarding/onboarding_store.dart';
+import 'package:epub_reader/features/profile/reader_profile_store.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:flutter_test/flutter_test.dart';
@@ -43,15 +43,27 @@ void main() {
       expect(answers.motivationsStorage, 'habit,read_more');
       expect(const OnboardingAnswers().isComplete, isFalse);
 
-      final store = OnboardingStore(database);
-      expect(await store.isComplete(), isFalse);
-      await store.save(answers);
-      expect(await store.isComplete(), isTrue);
+      final store = ReaderProfileStore(database);
+      expect(await store.exists(), isFalse);
+      await store.save(
+        motivations: answers.motivationsStorage,
+        dailyGoalMinutes: answers.dailyGoalMinutes!,
+        routine: answers.routine!.id,
+      );
+      expect(await store.exists(), isTrue);
 
       final saved = await database.select(database.readerProfiles).getSingle();
       expect(saved.motivations, 'habit,read_more');
       expect(saved.dailyGoalMinutes, 10);
       expect(saved.routine, 'night');
+
+      await store.updateDailyGoal(20);
+      final updated = await database
+          .select(database.readerProfiles)
+          .getSingle();
+      expect(updated.dailyGoalMinutes, 20);
+      expect(updated.motivations, 'habit,read_more');
+      expect(updated.routine, 'night');
     },
   );
 
@@ -120,7 +132,7 @@ void main() {
 
       expect(find.text('Todavía no hay libros'), findsOneWidget);
       expect(find.text('Importar'), findsOneWidget);
-      expect(await OnboardingStore(database).isComplete(), isTrue);
+      expect(await ReaderProfileStore(database).exists(), isTrue);
 
       await tester.pumpWidget(const SizedBox.shrink());
       await tester.pump(Duration.zero);

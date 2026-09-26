@@ -34,6 +34,11 @@ class AppShell extends StatelessWidget {
             selectedIcon: Icon(Icons.timer),
             label: 'Tiempo',
           ),
+          NavigationDestination(
+            icon: Icon(Icons.person_outline),
+            selectedIcon: Icon(Icons.person),
+            label: 'Perfil',
+          ),
         ],
       ),
     );
