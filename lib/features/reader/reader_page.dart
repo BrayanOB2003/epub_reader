@@ -38,6 +38,7 @@ class _ReaderPageState extends ConsumerState<ReaderPage> {
   var _chromeVisible = false;
   var _dark = false;
   var _scroll = false;
+  var _fontSize = readerFontSizeDefault;
   var _fixedLayout = false;
   var _textSelected = false;
   DateTime? _lastPageTurn;
@@ -65,7 +66,14 @@ class _ReaderPageState extends ConsumerState<ReaderPage> {
     try {
       final publication = await _engine.open(book.filePath);
       final fixedLayout = publicationIsFixed(publication);
-      await _engine.setPreferences(readerPreferences(dark: _dark, scroll: _scroll, fixedLayout: fixedLayout));
+      await _engine.setPreferences(
+        readerPreferences(
+          dark: _dark,
+          scroll: _scroll,
+          fixedLayout: fixedLayout,
+          fontSize: _fontSize,
+        ),
+      );
       _locatorSubscription = _engine.onLocator.listen(_onLocator);
       if (!mounted) {
         await _engine.close();
@@ -90,7 +98,8 @@ class _ReaderPageState extends ConsumerState<ReaderPage> {
   void _onLocator(Locator locator) {
     final previous = _latestLocator;
     _latestLocator = locator;
-    final leftChapter = _textSelected && previous != null && previous.href != locator.href;
+    final leftChapter =
+        _textSelected && previous != null && previous.href != locator.href;
     if (leftChapter) _textSelected = false;
     final progression = locator.locations?.totalProgression;
     final progressChanged = progression != null && progression != _progress;
@@ -128,20 +137,32 @@ class _ReaderPageState extends ConsumerState<ReaderPage> {
   }
 
   void _showMessage(String message) {
-    ScaffoldMessenger.of(context).showSnackBar(SnackBar(content: Text(message)));
+    ScaffoldMessenger.of(context)
+        .showSnackBar(SnackBar(content: Text(message)));
   }
 
   Future<void> _applyPreferences() async {
     try {
-      await _engine.setPreferences(readerPreferences(dark: _dark, scroll: _scroll, fixedLayout: _fixedLayout));
+      await _engine.setPreferences(
+        readerPreferences(
+          dark: _dark,
+          scroll: _scroll,
+          fixedLayout: _fixedLayout,
+          fontSize: _fontSize,
+        ),
+      );
     } catch (_) {
-      if (mounted) _showMessage('No se pudieron aplicar los ajustes de lectura.');
+      if (mounted) {
+        _showMessage('No se pudieron aplicar los ajustes de lectura.');
+      }
     }
   }
 
   Future<void> _toggleDark() async {
     if (_fixedLayout) {
-      _showMessage('En un libro de maquetación fija el color del texto no cambia.');
+      _showMessage(
+        'En un libro de maquetación fija el color del texto no cambia.',
+      );
       return;
     }
     setState(() => _dark = !_dark);
@@ -154,6 +175,31 @@ class _ReaderPageState extends ConsumerState<ReaderPage> {
       return;
     }
     setState(() => _scroll = !_scroll);
+    await _applyPreferences();
+  }
+
+  Future<void> _changeFontSize({required bool larger}) async {
+    if (_fixedLayout) {
+      _showMessage(
+        'En un libro de maquetación fija el tamaño del texto no cambia.',
+      );
+      return;
+    }
+    final next = stepReaderFontSize(_fontSize, larger: larger);
+    if (next == _fontSize) return;
+    setState(() => _fontSize = next);
+    await _applyPreferences();
+  }
+
+  Future<void> _resetFontSize() async {
+    if (_fixedLayout) {
+      _showMessage(
+        'En un libro de maquetación fija el tamaño del texto no cambia.',
+      );
+      return;
+    }
+    if (_fontSize == readerFontSizeDefault) return;
+    setState(() => _fontSize = readerFontSizeDefault);
     await _applyPreferences();
   }
 
@@ -220,7 +266,10 @@ class _ReaderPageState extends ConsumerState<ReaderPage> {
   Future<void> _turnPage({required bool forward}) async {
     final now = DateTime.now();
     final last = _lastPageTurn;
-    if (last != null && now.difference(last) < const Duration(milliseconds: 350)) return;
+    if (last != null &&
+        now.difference(last) < const Duration(milliseconds: 350)) {
+      return;
+    }
     _lastPageTurn = now;
     if (_chromeVisible) setState(() => _chromeVisible = false);
     if (_scroll) {
@@ -238,7 +287,9 @@ class _ReaderPageState extends ConsumerState<ReaderPage> {
     final publication = _publication;
     final href = _latestLocator?.href;
     if (publication == null || href == null) return;
-    final chapters = publication.readingOrder.isNotEmpty ? publication.readingOrder : publication.tableOfContents;
+    final chapters = publication.readingOrder.isNotEmpty
+        ? publication.readingOrder
+        : publication.tableOfContents;
     final index = adjacentChapterIndex(
       hrefs: [for (final link in chapters) link.href],
       currentHref: href,
@@ -275,7 +326,9 @@ class _ReaderPageState extends ConsumerState<ReaderPage> {
 
   @override
   Widget build(BuildContext context) {
-    final pageColor = _dark && !_fixedLayout ? readerDarkBackground : readerLightBackground;
+    final pageColor = _dark && !_fixedLayout
+        ? readerDarkBackground
+        : readerLightBackground;
     return Scaffold(
       backgroundColor: _loading || _error != null ? Colors.black : pageColor,
       body: SafeArea(child: _buildBody()),
@@ -300,29 +353,43 @@ class _ReaderPageState extends ConsumerState<ReaderPage> {
       return _statusLayer(child: const Text('No se pudo abrir el libro.'));
     }
 
-    final rtl = publication.metadata.readingProgression == ReadingProgression.rtl;
+    final rtl =
+        publication.metadata.readingProgression == ReadingProgression.rtl;
 
     return Stack(
       children: [
-        Positioned.fill(
+        Positioned(
+          top: readerProgressClearance,
+          left: 0,
+          right: 0,
+          bottom: 0,
           child: ReadiumReaderWidget(
             publication: publication,
             initialLocator: _savedLocator(book),
-            allowedDefaultActions: const {DefaultSelectionAction.copy, DefaultSelectionAction.share},
-            selectionActions: defaultTargetPlatform == TargetPlatform.android ? _androidSelectionActions : const [],
+            allowedDefaultActions: const {
+              DefaultSelectionAction.copy,
+              DefaultSelectionAction.share,
+            },
+            selectionActions: defaultTargetPlatform == TargetPlatform.android
+                ? _androidSelectionActions
+                : const [],
             onTextSelected: _onTextSelected,
             onSelectionAction: _onSelectionAction,
           ),
         ),
-        Positioned.fill(
-            child: ReaderGestureLayer(
-              rtl: rtl,
-              scroll: _scroll,
-              textSelected: _textSelected,
-              onZone: _onZone,
-              onSwipe: (forward) => _turnPage(forward: forward),
-              onSelectionTap: _onSelectionTap,
-            ),
+        Positioned(
+          top: readerProgressClearance,
+          left: 0,
+          right: 0,
+          bottom: 0,
+          child: ReaderGestureLayer(
+            rtl: rtl,
+            scroll: _scroll,
+            textSelected: _textSelected,
+            onZone: _onZone,
+            onSwipe: (forward) => _turnPage(forward: forward),
+            onSelectionTap: _onSelectionTap,
+          ),
         ),
         Positioned(top: 0, left: 0, right: 0, child: _readerChrome()),
       ],
@@ -338,7 +405,12 @@ class _ReaderPageState extends ConsumerState<ReaderPage> {
             child: child,
           ),
         ),
-        Positioned(top: 0, left: 0, right: 0, child: _readerChrome(forceVisible: true)),
+        Positioned(
+          top: 0,
+          left: 0,
+          right: 0,
+          child: _readerChrome(forceVisible: true),
+        ),
       ],
     );
   }
@@ -384,9 +456,32 @@ class _ReaderPageState extends ConsumerState<ReaderPage> {
                       IconButton(
                         tooltip: _fixedLayout
                             ? 'Este libro se lee por páginas'
-                            : (_scroll ? 'Lectura por páginas' : 'Lectura con scroll'),
+                            : (_scroll
+                                  ? 'Lectura por páginas'
+                                  : 'Lectura con scroll'),
                         onPressed: _toggleScroll,
                         icon: Icon(_scroll ? Icons.menu_book : Icons.swap_vert),
+                      ),
+                      IconButton(
+                        tooltip: _fixedLayout
+                            ? 'En este libro el tamaño del texto no cambia'
+                            : 'Reducir texto',
+                        onPressed: () => _changeFontSize(larger: false),
+                        icon: const Icon(Icons.text_decrease),
+                      ),
+                      IconButton(
+                        tooltip: _fixedLayout
+                            ? 'En este libro el tamaño del texto no cambia'
+                            : 'Tamaño original',
+                        onPressed: _resetFontSize,
+                        icon: const _OriginalFontMark(),
+                      ),
+                      IconButton(
+                        tooltip: _fixedLayout
+                            ? 'En este libro el tamaño del texto no cambia'
+                            : 'Aumentar texto',
+                        onPressed: () => _changeFontSize(larger: true),
+                        icon: const Icon(Icons.text_increase),
                       ),
                     ],
                     const Spacer(),
@@ -402,6 +497,23 @@ class _ReaderPageState extends ConsumerState<ReaderPage> {
           ),
         ),
       ],
+    );
+  }
+}
+
+class _OriginalFontMark extends StatelessWidget {
+  const _OriginalFontMark();
+
+  @override
+  Widget build(BuildContext context) {
+    return Text(
+      'A0',
+      style: TextStyle(
+        color: IconTheme.of(context).color,
+        fontSize: 16,
+        fontWeight: FontWeight.w600,
+        height: 1,
+      ),
     );
   }
 }
@@ -427,7 +539,9 @@ class _TocEntry {
 }
 
 List<_TocEntry> _contentsOf(Publication publication) {
-  final source = publication.tableOfContents.isNotEmpty ? publication.tableOfContents : publication.readingOrder;
+  final source = publication.tableOfContents.isNotEmpty
+      ? publication.tableOfContents
+      : publication.readingOrder;
   final entries = <_TocEntry>[];
   void walk(List<Link> links, int depth) {
     for (final link in links) {
@@ -460,21 +574,30 @@ class _ContentsDialog extends StatelessWidget {
                 itemBuilder: (context, index) {
                   final entry = entries[index];
                   return ListTile(
-                    contentPadding: EdgeInsets.only(left: 16 + entry.depth * 16, right: 16),
+                    contentPadding: EdgeInsets.only(
+                      left: 16 + entry.depth * 16,
+                      right: 16,
+                    ),
                     title: Text(entry.title),
                     onTap: () => Navigator.pop(context, entry.link),
                   );
                 },
               ),
       ),
-      actions: [TextButton(onPressed: () => Navigator.pop(context), child: const Text('Cerrar'))],
+      actions: [
+        TextButton(
+          onPressed: () => Navigator.pop(context),
+          child: const Text('Cerrar'),
+        ),
+      ],
     );
   }
 }
 
 String _openErrorMessage(Object error) {
   final text = error.toString();
-  if (text.contains('MethodNotImplemented') || text.contains('not implemented')) {
+  if (text.contains('MethodNotImplemented') ||
+      text.contains('not implemented')) {
     return 'El lector funciona en iOS y Android. En el escritorio de macOS Readium no abre el EPUB.';
   }
   return 'No se pudo abrir el libro.';
