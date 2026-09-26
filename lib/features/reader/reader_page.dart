@@ -5,6 +5,7 @@ import 'package:epub_reader/app/providers.dart';
 import 'package:epub_reader/core/database/app_database.dart';
 import 'package:epub_reader/core/reading/readium_reading_engine.dart';
 import 'package:epub_reader/features/library/data/book_repository.dart';
+import 'package:epub_reader/features/habits/reading_engagement.dart';
 import 'package:epub_reader/features/reader/reader_gestures.dart';
 import 'package:epub_reader/features/reader/reader_preferences.dart';
 import 'package:flutter/foundation.dart';
@@ -24,7 +25,8 @@ class ReaderPage extends ConsumerStatefulWidget {
   ConsumerState<ReaderPage> createState() => _ReaderPageState();
 }
 
-class _ReaderPageState extends ConsumerState<ReaderPage> {
+class _ReaderPageState extends ConsumerState<ReaderPage>
+    with WidgetsBindingObserver {
   late final BookRepository _repository;
   late final ReadiumReadingEngine _engine;
 
@@ -43,13 +45,32 @@ class _ReaderPageState extends ConsumerState<ReaderPage> {
   var _textSelected = false;
   DateTime? _lastPageTurn;
   String? _error;
+  ReadingEngagement? _engagement;
+  int? _readingSessionId;
+  Future<void> _sessionWrite = Future<void>.value();
 
   @override
   void initState() {
     super.initState();
+    WidgetsBinding.instance.addObserver(this);
     _repository = ref.read(bookRepositoryProvider);
     _engine = ref.read(readingEngineProvider);
     _open();
+  }
+
+  @override
+  void didChangeAppLifecycleState(AppLifecycleState state) {
+    final engagement = _engagement;
+    if (engagement == null) return;
+    if (state == AppLifecycleState.paused ||
+        state == AppLifecycleState.hidden) {
+      engagement.background();
+      _syncEngagement();
+      return;
+    }
+    if (state == AppLifecycleState.resumed) {
+      engagement.resume();
+    }
   }
 
   Future<void> _open() async {
@@ -77,8 +98,10 @@ class _ReaderPageState extends ConsumerState<ReaderPage> {
           fontSize: _fontSize,
         ),
       );
+      _engagement = ReadingEngagement();
       _locatorSubscription = _engine.onLocator.listen(_onLocator);
       if (!mounted) {
+        _engagement?.abandon();
         await _engine.close();
         return;
       }
@@ -113,6 +136,8 @@ class _ReaderPageState extends ConsumerState<ReaderPage> {
     }
     _saveTimer?.cancel();
     _saveTimer = Timer(const Duration(milliseconds: 400), _persist);
+    _engagement?.onSpot(readingSpotFromLocator(locator));
+    _syncEngagement();
   }
 
   Future<void> _openContents() async {
@@ -145,6 +170,7 @@ class _ReaderPageState extends ConsumerState<ReaderPage> {
   }
 
   Future<void> _applyPreferences() async {
+    _engagement?.preferencesChanged();
     try {
       await _engine.setPreferences(
         readerPreferences(
@@ -275,11 +301,40 @@ class _ReaderPageState extends ConsumerState<ReaderPage> {
   }
 
   void _close() {
+    _engagement?.close();
+    _syncEngagement();
     if (context.canPop()) {
       context.pop();
     } else {
       context.go('/library');
     }
+  }
+
+  void _syncEngagement() {
+    final engagement = _engagement;
+    if (engagement == null || !engagement.shouldPersist) return;
+    final startedAt = engagement.startedAt;
+    final endedAt = engagement.endedAt ?? startedAt;
+    _sessionWrite = _sessionWrite.then((_) async {
+      if (!engagement.shouldPersist) return;
+      try {
+        final existing = _readingSessionId;
+        if (existing == null) {
+          _readingSessionId = await _repository.insertReadingSession(
+            bookId: widget.bookId,
+            startedAt: startedAt,
+            endedAt: engagement.endedAt ?? endedAt,
+            engagedSeconds: engagement.engagedSeconds,
+          );
+        } else {
+          await _repository.updateReadingSession(
+            id: existing,
+            endedAt: engagement.endedAt ?? endedAt,
+            engagedSeconds: engagement.engagedSeconds,
+          );
+        }
+      } catch (_) {}
+    });
   }
 
   Future<void> _turnPage({required bool forward}) async {
@@ -327,6 +382,9 @@ class _ReaderPageState extends ConsumerState<ReaderPage> {
 
   @override
   void dispose() {
+    WidgetsBinding.instance.removeObserver(this);
+    _engagement?.close();
+    _syncEngagement();
     _saveTimer?.cancel();
     final locator = _latestLocator;
     if (locator != null) {

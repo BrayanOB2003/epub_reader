@@ -37,12 +37,24 @@ class Books extends Table {
   DateTimeColumn get addedAt => dateTime()();
 }
 
-@DriftDatabase(tables: [Books])
+class ReadingSessions extends Table {
+  IntColumn get id => integer().autoIncrement()();
+
+  IntColumn get bookId => integer().references(Books, #id)();
+
+  DateTimeColumn get startedAt => dateTime()();
+
+  DateTimeColumn get endedAt => dateTime()();
+
+  IntColumn get engagedSeconds => integer()();
+}
+
+@DriftDatabase(tables: [Books, ReadingSessions])
 class AppDatabase extends _$AppDatabase {
   AppDatabase(super.e);
 
   @override
-  int get schemaVersion => 3;
+  int get schemaVersion => 4;
 
   @override
   MigrationStrategy get migration {
@@ -57,6 +69,9 @@ class AppDatabase extends _$AppDatabase {
           await migrator.addColumn(books, books.darkMode);
           await migrator.addColumn(books, books.scrollMode);
           await migrator.addColumn(books, books.fontSize);
+        }
+        if (from < 4) {
+          await migrator.createTable(readingSessions);
         }
       },
     );

@@ -16,6 +16,15 @@ class BookRepository {
   final Future<Directory> Function() _documentsDirectory;
   Directory? _documents;
 
+  Stream<List<ReadingSession>> watchReadingSessions() {
+    final query = _database.select(_database.readingSessions)
+      ..orderBy([
+        (table) =>
+            OrderingTerm(expression: table.endedAt, mode: OrderingMode.desc),
+      ]);
+    return query.watch();
+  }
+
   Stream<List<Book>> watchBooks() {
     final query = _database.select(_database.books)
       ..orderBy([
@@ -151,7 +160,43 @@ class BookRepository {
     );
   }
 
+  Future<int> insertReadingSession({
+    required int bookId,
+    required DateTime startedAt,
+    required DateTime endedAt,
+    required int engagedSeconds,
+  }) {
+    return _database
+        .into(_database.readingSessions)
+        .insert(
+          ReadingSessionsCompanion.insert(
+            bookId: bookId,
+            startedAt: startedAt,
+            endedAt: endedAt,
+            engagedSeconds: engagedSeconds,
+          ),
+        );
+  }
+
+  Future<void> updateReadingSession({
+    required int id,
+    required DateTime endedAt,
+    required int engagedSeconds,
+  }) {
+    return (_database.update(
+      _database.readingSessions,
+    )..where((table) => table.id.equals(id))).write(
+      ReadingSessionsCompanion(
+        endedAt: Value(endedAt),
+        engagedSeconds: Value(engagedSeconds),
+      ),
+    );
+  }
+
   Future<void> delete(Book book) async {
+    await (_database.delete(
+      _database.readingSessions,
+    )..where((table) => table.bookId.equals(book.id))).go();
     await (_database.delete(
       _database.books,
     )..where((table) => table.id.equals(book.id))).go();

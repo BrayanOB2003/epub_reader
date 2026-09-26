@@ -63,6 +63,11 @@ void main() {
 
     expect(find.text('El catálogo está vacío'), findsOneWidget);
 
+    await tester.tap(find.text('Tiempo'));
+    await tester.pumpAndSettle();
+
+    expect(find.text('Todavía no hay registros'), findsOneWidget);
+
     await tester.pumpWidget(const SizedBox.shrink());
     await tester.pump(Duration.zero);
   });
