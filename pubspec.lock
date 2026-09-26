@@ -347,7 +347,7 @@ packages:
     description:
       path: flutter_readium
       ref: prod
-      resolved-ref: "6fecf343e10b6c56b6aca88e62f163f5d3e02e0d"
+      resolved-ref: c1d9bc01ffd2914f3dd6c7c12bdd16b589007492
       url: "https://github.com/BrayanOB2003/flutter_readium.git"
     source: git
     version: "0.6.0"

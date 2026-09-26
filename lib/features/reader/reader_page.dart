@@ -223,11 +223,36 @@ class _ReaderPageState extends ConsumerState<ReaderPage> {
     if (last != null && now.difference(last) < const Duration(milliseconds: 350)) return;
     _lastPageTurn = now;
     if (_chromeVisible) setState(() => _chromeVisible = false);
+    if (_scroll) {
+      await _turnChapter(forward: forward);
+      return;
+    }
     if (forward) {
       await _engine.goForward();
     } else {
       await _engine.goBackward();
     }
+  }
+
+  Future<void> _turnChapter({required bool forward}) async {
+    final publication = _publication;
+    final href = _latestLocator?.href;
+    if (publication == null || href == null) return;
+    final chapters = publication.readingOrder.isNotEmpty ? publication.readingOrder : publication.tableOfContents;
+    final index = adjacentChapterIndex(
+      hrefs: [for (final link in chapters) link.href],
+      currentHref: href,
+      forward: forward,
+    );
+    if (index == null) return;
+    final locator = publication.locatorFromLink(chapters[index]);
+    if (locator == null) {
+      _showMessage('No se pudo abrir este capítulo.');
+      return;
+    }
+    final moved = await _engine.goToLocator(locator);
+    if (!mounted) return;
+    if (!moved) _showMessage('No se pudo abrir este capítulo.');
   }
 
   @override
@@ -290,13 +315,12 @@ class _ReaderPageState extends ConsumerState<ReaderPage> {
           ),
         ),
         Positioned.fill(
-          child: ReaderGestureLayer(
-            rtl: rtl,
-            scroll: _scroll,
-            textSelected: _textSelected,
-            onZone: _onZone,
-            onSelectionTap: _onSelectionTap,
-          ),
+            child: ReaderGestureLayer(
+              rtl: rtl,
+              textSelected: _textSelected,
+              onZone: _onZone,
+              onSelectionTap: _onSelectionTap,
+            ),
         ),
         Positioned(top: 0, left: 0, right: 0, child: _readerChrome()),
       ],

@@ -5,13 +5,26 @@ enum ReaderZone { previous, menu, next }
 
 /// While text is selected, taps belong to Readium: it clears the selection
 /// and ignores the tap, so the page never turns under an active selection.
-bool readerClaimsTap({required bool textSelected, required bool scroll, required ReaderZone zone}) {
-  if (textSelected) return false;
-  if (!scroll) return true;
-  return zone == ReaderZone.menu;
-}
+/// Side taps are claimed in both modes. In scroll mode they change chapter.
+bool readerClaimsTap({required bool textSelected}) => !textSelected;
 
 const shortTapDeadline = Duration(milliseconds: 200);
+
+/// Index of the spine resource a side tap opens while scrolling.
+///
+/// Scroll mode lays out one reading-order resource at a time. Fragments are
+/// ignored so a locator inside `chapter.xhtml#p3` still matches that chapter.
+int? adjacentChapterIndex({required List<String> hrefs, required String currentHref, required bool forward}) {
+  if (hrefs.isEmpty) return null;
+  final resource = _resourceHref(currentHref);
+  final index = hrefs.indexWhere((href) => _resourceHref(href) == resource);
+  if (index < 0) return null;
+  final next = index + (forward ? 1 : -1);
+  if (next < 0 || next >= hrefs.length) return null;
+  return next;
+}
+
+String _resourceHref(String href) => href.split('#').first;
 
 ReaderZone readerZoneAt({required double x, required double width, required bool rtl}) {
   if (width <= 0) return ReaderZone.menu;
@@ -24,7 +37,6 @@ ReaderZone readerZoneAt({required double x, required double width, required bool
 class ReaderGestureLayer extends StatelessWidget {
   const ReaderGestureLayer({
     required this.rtl,
-    required this.scroll,
     required this.textSelected,
     required this.onZone,
     required this.onSelectionTap,
@@ -32,7 +44,6 @@ class ReaderGestureLayer extends StatelessWidget {
   });
 
   final bool rtl;
-  final bool scroll;
   final bool textSelected;
   final ValueChanged<ReaderZone> onZone;
   final VoidCallback onSelectionTap;
@@ -55,12 +66,10 @@ class ReaderGestureLayer extends StatelessWidget {
   }
 
   bool _claims(BuildContext context, Offset global) =>
-      readerClaimsTap(textSelected: textSelected, scroll: scroll, zone: _zone(context, global));
+      readerClaimsTap(textSelected: textSelected);
 
   void _dispatch(BuildContext context, Offset global) {
-    final zone = _zone(context, global);
-    if (scroll && zone != ReaderZone.menu) return;
-    onZone(scroll ? ReaderZone.menu : zone);
+    onZone(_zone(context, global));
   }
 
   ReaderZone _zone(BuildContext context, Offset global) {

@@ -13,13 +13,17 @@ void main() {
   });
 
   test('taps go to Readium while text is selected, so the page does not turn', () {
-    for (final zone in ReaderZone.values) {
-      expect(readerClaimsTap(textSelected: true, scroll: false, zone: zone), isFalse);
-      expect(readerClaimsTap(textSelected: true, scroll: true, zone: zone), isFalse);
-      expect(readerClaimsTap(textSelected: false, scroll: false, zone: zone), isTrue);
-    }
-    expect(readerClaimsTap(textSelected: false, scroll: true, zone: ReaderZone.menu), isTrue);
-    expect(readerClaimsTap(textSelected: false, scroll: true, zone: ReaderZone.next), isFalse);
+    expect(readerClaimsTap(textSelected: true), isFalse);
+    expect(readerClaimsTap(textSelected: false), isTrue);
+  });
+
+  test('a side tap while scrolling opens the neighboring chapter', () {
+    const hrefs = ['c1.xhtml', 'c2.xhtml#start', 'c3.xhtml'];
+    expect(adjacentChapterIndex(hrefs: hrefs, currentHref: 'c2.xhtml#p4', forward: true), 2);
+    expect(adjacentChapterIndex(hrefs: hrefs, currentHref: 'c2.xhtml', forward: false), 0);
+    expect(adjacentChapterIndex(hrefs: hrefs, currentHref: 'c1.xhtml', forward: false), isNull);
+    expect(adjacentChapterIndex(hrefs: hrefs, currentHref: 'c3.xhtml', forward: true), isNull);
+    expect(adjacentChapterIndex(hrefs: hrefs, currentHref: 'missing.xhtml', forward: true), isNull);
   });
 
   test('light and dark themes set text colors only for reflowable books', () {
