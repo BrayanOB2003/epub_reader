@@ -37,7 +37,7 @@ dependencies:
   flutter_readium:
     git:
       url: https://github.com/BrayanOB2003/flutter_readium.git
-      ref: main
+      ref: prod
       path: flutter_readium
   flutter_riverpod: ^3.3.2
   go_router: ^17.5.0
