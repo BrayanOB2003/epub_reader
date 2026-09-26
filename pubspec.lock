@@ -346,8 +346,8 @@ packages:
     dependency: "direct main"
     description:
       path: flutter_readium
-      ref: main
-      resolved-ref: faa62c8fcd590505c3c9e895dbadd372795384f8
+      ref: prod
+      resolved-ref: "6fecf343e10b6c56b6aca88e62f163f5d3e02e0d"
       url: "https://github.com/BrayanOB2003/flutter_readium.git"
     source: git
     version: "0.6.0"
