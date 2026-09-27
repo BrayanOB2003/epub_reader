@@ -52,6 +52,9 @@ void main() {
         isFalse,
       );
       expect(answers.withRoutine(ReadingRoutine.morning).routineHour, isNull);
+      expect(answers.weekdays, defaultReadingWeekdays);
+      expect(answers.weekdaysStorage, '1,2,3,4,5,6,7');
+      expect(answers.copyWith(weekdays: const {}).isComplete, isFalse);
       expect(answers.motivationsStorage, 'habit,read_more');
       expect(const OnboardingAnswers().isComplete, isFalse);
 
@@ -62,6 +65,7 @@ void main() {
         dailyGoalMinutes: answers.dailyGoalMinutes!,
         routine: answers.routine!.id,
         routineHour: answers.routineHour!,
+        routineDays: answers.weekdaysStorage,
       );
       expect(await store.exists(), isTrue);
 
@@ -70,6 +74,7 @@ void main() {
       expect(saved.dailyGoalMinutes, 10);
       expect(saved.routine, 'night');
       expect(saved.routineHour, 21);
+      expect(saved.routineDays, '1,2,3,4,5,6,7');
 
       await store.clear();
       expect(await store.exists(), isFalse);
@@ -79,6 +84,7 @@ void main() {
         dailyGoalMinutes: answers.dailyGoalMinutes!,
         routine: answers.routine!.id,
         routineHour: answers.routineHour!,
+        routineDays: answers.weekdaysStorage,
       );
       await store.updateDailyGoal(20);
       final updated = await database
@@ -145,9 +151,13 @@ void main() {
       await tester.pumpAndSettle();
 
       expect(find.text('3 de 3'), findsOneWidget);
-      expect(find.text('Más adelante podrás elegir los días.'), findsOneWidget);
+      expect(find.text('¿Qué días?'), findsNothing);
       await tester.tap(find.text('Noche'));
       await tester.pump();
+      expect(find.text('¿Qué días?'), findsOneWidget);
+      expect(find.text('L'), findsOneWidget);
+      expect(find.text('X'), findsOneWidget);
+      expect(find.text('D'), findsOneWidget);
       expect(find.text('07:00'), findsNothing);
       expect(find.text('21:00'), findsOneWidget);
       await tester.tap(find.text('Quiero empezar a leer'));
@@ -161,7 +171,8 @@ void main() {
 
       expect(find.text('Todavía no hay libros'), findsOneWidget);
       expect(find.text('Importar'), findsOneWidget);
-      expect(await ReaderProfileStore(database).exists(), isTrue);
+      final saved = await database.select(database.readerProfiles).getSingle();
+      expect(saved.routineDays, '1,2,3,4,5,6,7');
 
       await tester.pumpWidget(const SizedBox.shrink());
       await tester.pump(Duration.zero);

@@ -48,6 +48,8 @@ class ReaderProfiles extends Table {
 
   IntColumn get routineHour => integer().nullable()();
 
+  TextColumn get routineDays => text().nullable()();
+
   DateTimeColumn get completedAt => dateTime()();
 }
 
@@ -68,7 +70,7 @@ class AppDatabase extends _$AppDatabase {
   AppDatabase(super.e);
 
   @override
-  int get schemaVersion => 6;
+  int get schemaVersion => 7;
 
   @override
   MigrationStrategy get migration {
@@ -92,6 +94,9 @@ class AppDatabase extends _$AppDatabase {
         }
         if (from < 6) {
           await migrator.addColumn(readerProfiles, readerProfiles.routineHour);
+        }
+        if (from < 7) {
+          await migrator.addColumn(readerProfiles, readerProfiles.routineDays);
         }
       },
     );

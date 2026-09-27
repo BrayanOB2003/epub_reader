@@ -33,6 +33,7 @@ class ReaderProfileStore {
     required int dailyGoalMinutes,
     required String routine,
     required int routineHour,
+    required String routineDays,
   }) async {
     final period = ReadingRoutine.byId(routine);
     if (!readingGoalMinutes.contains(dailyGoalMinutes)) {
@@ -40,6 +41,13 @@ class ReaderProfileStore {
         dailyGoalMinutes,
         'dailyGoalMinutes',
         'La meta no es una de las opciones.',
+      );
+    }
+    if (!isReadingWeekdaysStorage(routineDays)) {
+      throw ArgumentError.value(
+        routineDays,
+        'routineDays',
+        'Los días no son una selección válida.',
       );
     }
     if (period == null || !period.allows(routineHour)) {
@@ -58,6 +66,7 @@ class ReaderProfileStore {
             dailyGoalMinutes: dailyGoalMinutes,
             routine: routine,
             routineHour: Value(routineHour),
+            routineDays: Value(routineDays),
             completedAt: DateTime.now().toUtc(),
           ),
         );

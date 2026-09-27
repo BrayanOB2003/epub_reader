@@ -145,7 +145,6 @@ class _OnboardingPageState extends ConsumerState<OnboardingPage> {
       _ => _Question(
         theme: theme,
         title: '¿Cuándo te gustaría leer?',
-        note: 'Más adelante podrás elegir los días.',
         children: [
           for (final routine in ReadingRoutine.values)
             _ChoiceTile(
@@ -155,6 +154,31 @@ class _OnboardingPageState extends ConsumerState<OnboardingPage> {
                   setState(() => _answers = _answers.withRoutine(routine)),
             ),
           if (_answers.routine != null) ...[
+            const SizedBox(height: 16),
+            Text('¿Qué días?', style: theme.textTheme.titleMedium),
+            const SizedBox(height: 12),
+            Row(
+              children: [
+                for (final day in ReadingWeekday.values)
+                  Expanded(
+                    child: Padding(
+                      padding: const EdgeInsets.symmetric(horizontal: 3),
+                      child: _DayLetter(
+                        letter: day.letter,
+                        label: day.label,
+                        selected: _answers.weekdays.contains(day),
+                        onTap: () {
+                          final next = {..._answers.weekdays};
+                          if (!next.add(day)) next.remove(day);
+                          setState(
+                            () => _answers = _answers.copyWith(weekdays: next),
+                          );
+                        },
+                      ),
+                    ),
+                  ),
+              ],
+            ),
             const SizedBox(height: 16),
             Text('¿A qué hora?', style: theme.textTheme.titleMedium),
             const SizedBox(height: 12),
@@ -214,12 +238,10 @@ class _Question extends StatelessWidget {
     required this.theme,
     required this.title,
     required this.children,
-    this.note,
   });
 
   final ThemeData theme;
   final String title;
-  final String? note;
   final List<Widget> children;
 
   @override
@@ -227,18 +249,52 @@ class _Question extends StatelessWidget {
     return ListView(
       children: [
         Text(title, style: theme.textTheme.headlineSmall),
-        if (note != null) ...[
-          const SizedBox(height: 8),
-          Text(
-            note!,
-            style: theme.textTheme.bodyMedium?.copyWith(
-              color: theme.colorScheme.onSurfaceVariant,
-            ),
-          ),
-        ],
         const SizedBox(height: 24),
         ...children,
       ],
+    );
+  }
+}
+
+class _DayLetter extends StatelessWidget {
+  const _DayLetter({
+    required this.letter,
+    required this.label,
+    required this.selected,
+    required this.onTap,
+  });
+
+  final String letter;
+  final String label;
+  final bool selected;
+  final VoidCallback onTap;
+
+  @override
+  Widget build(BuildContext context) {
+    final theme = Theme.of(context);
+    final color = theme.colorScheme;
+    return Semantics(
+      button: true,
+      selected: selected,
+      label: label,
+      child: Material(
+        color: selected ? color.primaryContainer : color.surface,
+        shape: CircleBorder(
+          side: BorderSide(
+            color: selected ? color.primary : color.outlineVariant,
+          ),
+        ),
+        child: InkWell(
+          onTap: onTap,
+          customBorder: const CircleBorder(),
+          child: SizedBox(
+            height: 40,
+            child: Center(
+              child: Text(letter, style: theme.textTheme.titleMedium),
+            ),
+          ),
+        ),
+      ),
     );
   }
 }

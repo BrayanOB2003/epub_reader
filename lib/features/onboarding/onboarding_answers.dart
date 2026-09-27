@@ -27,12 +27,14 @@ class OnboardingAnswers {
     this.dailyGoalMinutes,
     this.routine,
     this.routineHour,
+    this.weekdays = defaultReadingWeekdays,
   });
 
   final Set<ReadingMotivation> motivations;
   final int? dailyGoalMinutes;
   final ReadingRoutine? routine;
   final int? routineHour;
+  final Set<ReadingWeekday> weekdays;
 
   bool get hasMotivations => motivations.isNotEmpty;
 
@@ -41,7 +43,7 @@ class OnboardingAnswers {
   bool get hasReadingTime {
     final period = routine;
     final hour = routineHour;
-    if (period == null || hour == null) return false;
+    if (period == null || hour == null || weekdays.isEmpty) return false;
     return period.allows(hour);
   }
 
@@ -52,12 +54,14 @@ class OnboardingAnswers {
     int? dailyGoalMinutes,
     ReadingRoutine? routine,
     int? routineHour,
+    Set<ReadingWeekday>? weekdays,
   }) {
     return OnboardingAnswers(
       motivations: motivations ?? this.motivations,
       dailyGoalMinutes: dailyGoalMinutes ?? this.dailyGoalMinutes,
       routine: routine ?? this.routine,
       routineHour: routineHour ?? this.routineHour,
+      weekdays: weekdays ?? this.weekdays,
     );
   }
 
@@ -68,8 +72,11 @@ class OnboardingAnswers {
       dailyGoalMinutes: dailyGoalMinutes,
       routine: period,
       routineHour: hour != null && period.allows(hour) ? hour : null,
+      weekdays: weekdays,
     );
   }
+
+  String get weekdaysStorage => readingWeekdaysStorage(weekdays);
 
   String get motivationsStorage =>
       (motivations.map((motivation) => motivation.id).toList()..sort()).join(

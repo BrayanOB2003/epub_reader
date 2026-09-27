@@ -22,6 +22,7 @@ class OnboardingController extends AsyncNotifier<bool> {
           dailyGoalMinutes: answers.dailyGoalMinutes!,
           routine: answers.routine!.id,
           routineHour: answers.routineHour!,
+          routineDays: answers.weekdaysStorage,
         );
     state = const AsyncData(true);
   }
