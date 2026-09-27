@@ -94,7 +94,7 @@ void main() {
 
     expect(find.text('Hábito de lectura'), findsOneWidget);
     expect(find.text('Generar lecturas de ejemplo'), findsOneWidget);
-    expect(find.text('Resetear onboarding'), findsOneWidget);
+    expect(find.text('Resetear onboarding'), findsNothing);
 
     await tester.tap(find.text('Hábito de lectura'));
     await tester.pumpAndSettle();
@@ -117,12 +117,6 @@ void main() {
     expect(saved.motivations, 'habit');
     expect(saved.routine, 'night');
     expect(saved.routineHour, 21);
-
-    await tester.tap(find.text('Resetear onboarding'));
-    await tester.pumpAndSettle();
-    await tester.tap(find.text('Resetear'));
-    await tester.pumpAndSettle();
-    expect(find.text('Crea el hábito de leer'), findsOneWidget);
 
     await tester.pumpWidget(const SizedBox.shrink());
     await tester.pump(Duration.zero);

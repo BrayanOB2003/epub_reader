@@ -1,5 +1,4 @@
 import 'package:epub_reader/app/providers.dart';
-import 'package:epub_reader/features/onboarding/onboarding_controller.dart';
 import 'package:epub_reader/features/profile/reader_profile_store.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
@@ -48,11 +47,6 @@ class ProfilePage extends ConsumerWidget {
                 onTap: () => _addSampleReadings(context, ref),
               ),
               const Divider(height: 1),
-              ListTile(
-                title: const Text('Resetear onboarding'),
-                onTap: () => _resetOnboarding(context, ref),
-              ),
-              const Divider(height: 1),
             ],
           );
         },
@@ -91,35 +85,6 @@ class ProfilePage extends ConsumerWidget {
       if (!context.mounted) return;
       ScaffoldMessenger.of(context).showSnackBar(
         const SnackBar(content: Text('No se pudieron generar las lecturas.')),
-      );
-    }
-  }
-
-  Future<void> _resetOnboarding(BuildContext context, WidgetRef ref) async {
-    final confirmed = await showDialog<bool>(
-      context: context,
-      builder: (context) => AlertDialog(
-        title: const Text('Resetear onboarding'),
-        content: const Text('Volverás a ver la bienvenida y las preguntas.'),
-        actions: [
-          TextButton(
-            onPressed: () => Navigator.pop(context, false),
-            child: const Text('Cancelar'),
-          ),
-          TextButton(
-            onPressed: () => Navigator.pop(context, true),
-            child: const Text('Resetear'),
-          ),
-        ],
-      ),
-    );
-    if (confirmed != true || !context.mounted) return;
-    try {
-      await ref.read(onboardingControllerProvider.notifier).reset();
-    } catch (_) {
-      if (!context.mounted) return;
-      ScaffoldMessenger.of(context).showSnackBar(
-        const SnackBar(content: Text('No se pudo resetear el onboarding.')),
       );
     }
   }

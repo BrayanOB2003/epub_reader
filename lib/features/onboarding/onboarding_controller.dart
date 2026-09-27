@@ -26,9 +26,4 @@ class OnboardingController extends AsyncNotifier<bool> {
         );
     state = const AsyncData(true);
   }
-
-  Future<void> reset() async {
-    await ref.read(readerProfileStoreProvider).clear();
-    state = const AsyncData(false);
-  }
 }
