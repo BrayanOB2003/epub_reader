@@ -1,3 +1,4 @@
+import 'package:epub_reader/app/providers.dart';
 import 'package:epub_reader/features/onboarding/onboarding_controller.dart';
 import 'package:epub_reader/features/profile/reader_profile_store.dart';
 import 'package:epub_reader/features/profile/reading_goal.dart';
@@ -40,6 +41,14 @@ class ProfilePage extends ConsumerWidget {
               ),
               const Divider(height: 1),
               ListTile(
+                title: const Text('Generar lecturas de ejemplo'),
+                subtitle: const Text(
+                  'Desde hoy, un mes y medio atrás, de 0 a 15 minutos.',
+                ),
+                onTap: () => _addSampleReadings(context, ref),
+              ),
+              const Divider(height: 1),
+              ListTile(
                 title: const Text('Resetear onboarding'),
                 onTap: () => _resetOnboarding(context, ref),
               ),
@@ -76,6 +85,41 @@ class ProfilePage extends ConsumerWidget {
       if (!context.mounted) return;
       ScaffoldMessenger.of(context).showSnackBar(
         const SnackBar(content: Text('No se pudo guardar la meta de lectura.')),
+      );
+    }
+  }
+
+  Future<void> _addSampleReadings(BuildContext context, WidgetRef ref) async {
+    final confirmed = await showDialog<bool>(
+      context: context,
+      builder: (context) => AlertDialog(
+        title: const Text('Generar lecturas de ejemplo'),
+        content: const Text(
+          'Se agregará una lectura al azar por cada día, desde hoy hasta un mes y medio atrás. Cada una dura entre 0 y 15 minutos.',
+        ),
+        actions: [
+          TextButton(
+            onPressed: () => Navigator.pop(context, false),
+            child: const Text('Cancelar'),
+          ),
+          TextButton(
+            onPressed: () => Navigator.pop(context, true),
+            child: const Text('Generar'),
+          ),
+        ],
+      ),
+    );
+    if (confirmed != true || !context.mounted) return;
+    try {
+      final count = await ref.read(bookRepositoryProvider).addSampleReadings();
+      if (!context.mounted) return;
+      ScaffoldMessenger.of(context).showSnackBar(
+        SnackBar(content: Text('Se agregaron $count lecturas de ejemplo.')),
+      );
+    } catch (_) {
+      if (!context.mounted) return;
+      ScaffoldMessenger.of(context).showSnackBar(
+        const SnackBar(content: Text('No se pudieron generar las lecturas.')),
       );
     }
   }

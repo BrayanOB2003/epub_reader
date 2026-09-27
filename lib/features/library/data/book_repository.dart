@@ -1,7 +1,9 @@
 import 'dart:io';
+import 'dart:math';
 
 import 'package:drift/drift.dart';
 import 'package:epub_reader/core/database/app_database.dart';
+import 'package:epub_reader/features/habits/sample_reading.dart';
 import 'package:epub_reader/features/library/data/book_paths.dart';
 import 'package:path_provider/path_provider.dart';
 
@@ -158,6 +160,39 @@ class BookRepository {
         fontSize: Value(fontSize),
       ),
     );
+  }
+
+  Future<int> addSampleReadings({DateTime? now, Random? random}) async {
+    final source = random ?? Random();
+    final moment = now ?? DateTime.now();
+    final books = await _database.select(_database.books).get();
+    final bookIds = [for (final book in books) book.id];
+    if (bookIds.isEmpty) {
+      bookIds.add(
+        await _database
+            .into(_database.books)
+            .insert(
+              BooksCompanion.insert(
+                title: 'Lectura de ejemplo',
+                filePath: 'sample/lectura-de-ejemplo.epub',
+                addedAt: moment.toUtc(),
+              ),
+            ),
+      );
+    }
+    final readings = sampleReadings(now: moment, random: source);
+    await _database.transaction(() async {
+      for (var index = 0; index < readings.length; index++) {
+        final reading = readings[index];
+        await insertReadingSession(
+          bookId: bookIds[index % bookIds.length],
+          startedAt: reading.startedAt,
+          endedAt: reading.endedAt,
+          engagedSeconds: reading.engagedSeconds,
+        );
+      }
+    });
+    return readings.length;
   }
 
   Future<int> insertReadingSession({

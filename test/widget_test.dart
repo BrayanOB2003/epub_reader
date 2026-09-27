@@ -86,6 +86,7 @@ void main() {
     await tester.pumpAndSettle();
 
     expect(find.text('Meta de lectura diaria'), findsOneWidget);
+    expect(find.text('Generar lecturas de ejemplo'), findsOneWidget);
     expect(find.text('Resetear onboarding'), findsOneWidget);
 
     await tester.tap(find.text('Meta de lectura diaria'));
