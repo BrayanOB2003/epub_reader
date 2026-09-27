@@ -1,4 +1,5 @@
 import 'package:epub_reader/app/providers.dart';
+import 'package:epub_reader/features/habits/reading_calendar.dart';
 import 'package:epub_reader/features/habits/reading_time.dart';
 import 'package:epub_reader/features/habits/weekly_reading_chart.dart';
 import 'package:epub_reader/features/profile/reader_profile_store.dart';
@@ -39,6 +40,12 @@ class ReadingTimePage extends ConsumerWidget {
               children: [
                 WeeklyReadingChart(
                   days: weeklyReading(sessions: sessionList, now: now),
+                  goalSeconds: goalMinutes == null ? null : goalMinutes * 60,
+                  today: now,
+                ),
+                const SizedBox(height: 12),
+                ReadingCalendar(
+                  sessions: sessionList,
                   goalSeconds: goalMinutes == null ? null : goalMinutes * 60,
                   today: now,
                 ),

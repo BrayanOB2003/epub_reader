@@ -47,6 +47,66 @@ class DailyReading {
   final int engagedSeconds;
 }
 
+enum ReadingDayMark { none, partial, met }
+
+class ReadingCalendarDay {
+  const ReadingCalendarDay({required this.day, required this.mark});
+
+  final DateTime day;
+  final ReadingDayMark mark;
+}
+
+class ReadingMonth {
+  const ReadingMonth({
+    required this.month,
+    required this.leadingBlanks,
+    required this.days,
+  });
+
+  final DateTime month;
+  final int leadingBlanks;
+  final List<ReadingCalendarDay> days;
+}
+
+ReadingDayMark readingDayMark({
+  required int engagedSeconds,
+  required int? goalSeconds,
+}) {
+  if (engagedSeconds <= 0) return ReadingDayMark.none;
+  if (goalSeconds == null || goalSeconds <= 0) return ReadingDayMark.partial;
+  if (engagedSeconds >= goalSeconds) return ReadingDayMark.met;
+  return ReadingDayMark.partial;
+}
+
+ReadingMonth readingMonth({
+  required Iterable<ReadingSession> sessions,
+  required DateTime month,
+  required int? goalSeconds,
+}) {
+  final first = DateTime(month.year, month.month);
+  final totals = <int, int>{};
+  for (final session in sessions) {
+    final day = _localDate(session.startedAt);
+    if (day.year != first.year || day.month != first.month) continue;
+    totals[day.day] = (totals[day.day] ?? 0) + session.engagedSeconds;
+  }
+  final lastDay = DateTime(first.year, first.month + 1, 0).day;
+  return ReadingMonth(
+    month: first,
+    leadingBlanks: first.weekday - DateTime.monday,
+    days: [
+      for (var day = 1; day <= lastDay; day++)
+        ReadingCalendarDay(
+          day: DateTime(first.year, first.month, day),
+          mark: readingDayMark(
+            engagedSeconds: totals[day] ?? 0,
+            goalSeconds: goalSeconds,
+          ),
+        ),
+    ],
+  );
+}
+
 List<DailyReading> weeklyReading({
   required Iterable<ReadingSession> sessions,
   required DateTime now,
@@ -105,21 +165,42 @@ String formatReadingMoment(DateTime instant, {required DateTime now}) {
   final today = DateTime(current.year, current.month, current.day);
   if (day == today) return 'Hoy, $time';
   if (day == today.subtract(const Duration(days: 1))) return 'Ayer, $time';
-  const months = [
-    'ene',
-    'feb',
-    'mar',
-    'abr',
-    'may',
-    'jun',
-    'jul',
-    'ago',
-    'sep',
-    'oct',
-    'nov',
-    'dic',
-  ];
-  return '${local.day} ${months[local.month - 1]}, $time';
+  return '${local.day} ${_shortMonths[local.month - 1]}, $time';
+}
+
+const _shortMonths = [
+  'ene',
+  'feb',
+  'mar',
+  'abr',
+  'may',
+  'jun',
+  'jul',
+  'ago',
+  'sep',
+  'oct',
+  'nov',
+  'dic',
+];
+
+const _monthNames = [
+  'enero',
+  'febrero',
+  'marzo',
+  'abril',
+  'mayo',
+  'junio',
+  'julio',
+  'agosto',
+  'septiembre',
+  'octubre',
+  'noviembre',
+  'diciembre',
+];
+
+String formatReadingMonth(DateTime month) {
+  final name = _monthNames[month.month - 1];
+  return '${name[0].toUpperCase()}${name.substring(1)} ${month.year}';
 }
 
 String _two(int value) => value.toString().padLeft(2, '0');

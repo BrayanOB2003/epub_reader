@@ -3,6 +3,7 @@ import 'package:epub_reader/app/app.dart';
 import 'package:epub_reader/app/providers.dart';
 import 'package:epub_reader/core/database/app_database.dart';
 import 'package:epub_reader/features/discover/data/catalog.dart';
+import 'package:epub_reader/features/habits/reading_time.dart';
 import 'package:epub_reader/features/library/home_page.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
@@ -77,10 +78,16 @@ void main() {
     await tester.pumpAndSettle();
 
     expect(find.text('Esta semana'), findsOneWidget);
-    expect(find.text('Lun'), findsOneWidget);
-    expect(find.text('Dom'), findsOneWidget);
+    expect(find.text('Lun'), findsNWidgets(2));
+    expect(find.text('Dom'), findsNWidgets(2));
+    expect(find.text(formatReadingMonth(DateTime.now())), findsOneWidget);
     expect(find.text('Meta · 10 min'), findsOneWidget);
+    await tester.scrollUntilVisible(
+      find.text('Todavía no hay registros'),
+      200,
+    );
     expect(find.text('Todavía no hay registros'), findsOneWidget);
+    await tester.scrollUntilVisible(find.text('Esta semana'), -200);
 
     await tester.tap(find.text('Perfil'));
     await tester.pumpAndSettle();
