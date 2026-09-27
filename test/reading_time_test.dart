@@ -26,6 +26,55 @@ void main() {
     expect(records.last.sessions.map((session) => session.id), [3, 1]);
   });
 
+  test('the weekly chart sums the current Monday to Sunday', () {
+    final now = DateTime(2026, 9, 26, 18);
+    final monday = DateTime(2026, 9, 21, 8, 30);
+    final days = weeklyReading(
+      now: now,
+      sessions: [
+        _session(
+          id: 1,
+          bookId: 1,
+          startedAt: monday.toUtc(),
+          endedAt: monday.toUtc(),
+          seconds: 600,
+        ),
+        _session(
+          id: 2,
+          bookId: 1,
+          startedAt: DateTime(2026, 9, 21, 21).toUtc(),
+          endedAt: DateTime(2026, 9, 21, 21, 20).toUtc(),
+          seconds: 120,
+        ),
+        _session(
+          id: 3,
+          bookId: 2,
+          startedAt: DateTime(2026, 9, 20, 23).toUtc(),
+          endedAt: DateTime(2026, 9, 20, 23, 10).toUtc(),
+          seconds: 400,
+        ),
+        _session(
+          id: 4,
+          bookId: 1,
+          startedAt: DateTime(2026, 9, 27, 9).toUtc(),
+          endedAt: DateTime(2026, 9, 27, 9, 15).toUtc(),
+          seconds: 90,
+        ),
+        _session(
+          id: 5,
+          bookId: 1,
+          startedAt: DateTime(2026, 9, 28, 8).toUtc(),
+          endedAt: DateTime(2026, 9, 28, 8, 10).toUtc(),
+          seconds: 300,
+        ),
+      ],
+    );
+
+    expect(days.first.day, DateTime(2026, 9, 21));
+    expect(days.last.day, DateTime(2026, 9, 27));
+    expect(days.map((day) => day.engagedSeconds), [720, 0, 0, 0, 0, 0, 90]);
+  });
+
   test('durations and moments are readable', () {
     expect(formatReadingDuration(45), '45 s');
     expect(formatReadingDuration(90), '1 min 30 s');
@@ -53,11 +102,12 @@ ReadingSession _session({
   required int bookId,
   required DateTime endedAt,
   required int seconds,
+  DateTime? startedAt,
 }) {
   return ReadingSession(
     id: id,
     bookId: bookId,
-    startedAt: endedAt.subtract(Duration(seconds: seconds)),
+    startedAt: startedAt ?? endedAt.subtract(Duration(seconds: seconds)),
     endedAt: endedAt,
     engagedSeconds: seconds,
   );

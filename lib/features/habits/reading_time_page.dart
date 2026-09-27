@@ -1,5 +1,7 @@
 import 'package:epub_reader/app/providers.dart';
 import 'package:epub_reader/features/habits/reading_time.dart';
+import 'package:epub_reader/features/habits/weekly_reading_chart.dart';
+import 'package:epub_reader/features/profile/reader_profile_store.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 
@@ -10,6 +12,11 @@ class ReadingTimePage extends ConsumerWidget {
   Widget build(BuildContext context, WidgetRef ref) {
     final books = ref.watch(booksProvider);
     final sessions = ref.watch(readingSessionsProvider);
+    final goalMinutes = ref
+        .watch(readerProfileProvider)
+        .asData
+        ?.value
+        ?.dailyGoalMinutes;
 
     return Scaffold(
       appBar: AppBar(title: const Text('Tiempo')),
@@ -26,13 +33,23 @@ class ReadingTimePage extends ConsumerWidget {
               titles: {for (final book in bookList) book.id: book.title},
               sessions: sessionList,
             );
-            if (records.isEmpty) return const _EmptyTime();
-            return ListView.separated(
+            final now = DateTime.now();
+            return ListView(
               padding: const EdgeInsets.fromLTRB(16, 8, 16, 24),
-              itemCount: records.length,
-              separatorBuilder: (_, _) => const SizedBox(height: 12),
-              itemBuilder: (context, index) =>
-                  _BookTimeCard(record: records[index]),
+              children: [
+                WeeklyReadingChart(
+                  days: weeklyReading(sessions: sessionList, now: now),
+                  goalSeconds: goalMinutes == null ? null : goalMinutes * 60,
+                  today: now,
+                ),
+                if (records.isEmpty)
+                  const _EmptyTime()
+                else
+                  for (final record in records) ...[
+                    const SizedBox(height: 12),
+                    _BookTimeCard(record: record),
+                  ],
+              ],
             );
           },
         ),
@@ -47,27 +64,24 @@ class _EmptyTime extends StatelessWidget {
   @override
   Widget build(BuildContext context) {
     final theme = Theme.of(context);
-    return Center(
-      child: Padding(
-        padding: const EdgeInsets.all(32),
-        child: Column(
-          mainAxisSize: MainAxisSize.min,
-          children: [
-            Icon(
-              Icons.timer_outlined,
-              size: 56,
-              color: theme.colorScheme.primary,
-            ),
-            const SizedBox(height: 16),
-            Text('Todavía no hay registros', style: theme.textTheme.titleLarge),
-            const SizedBox(height: 8),
-            Text(
-              'El tiempo se guarda cuando una lectura pasa de 30 segundos.',
-              style: theme.textTheme.bodyMedium,
-              textAlign: TextAlign.center,
-            ),
-          ],
-        ),
+    return Padding(
+      padding: const EdgeInsets.fromLTRB(16, 48, 16, 24),
+      child: Column(
+        children: [
+          Icon(
+            Icons.timer_outlined,
+            size: 56,
+            color: theme.colorScheme.primary,
+          ),
+          const SizedBox(height: 16),
+          Text('Todavía no hay registros', style: theme.textTheme.titleLarge),
+          const SizedBox(height: 8),
+          Text(
+            'El tiempo se guarda cuando una lectura pasa de 30 segundos.',
+            style: theme.textTheme.bodyMedium,
+            textAlign: TextAlign.center,
+          ),
+        ],
       ),
     );
   }

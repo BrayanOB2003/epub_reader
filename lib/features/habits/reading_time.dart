@@ -40,6 +40,49 @@ List<BookReadingTime> readingTimeByBook({
   return records;
 }
 
+class DailyReading {
+  const DailyReading({required this.day, required this.engagedSeconds});
+
+  final DateTime day;
+  final int engagedSeconds;
+}
+
+List<DailyReading> weeklyReading({
+  required Iterable<ReadingSession> sessions,
+  required DateTime now,
+}) {
+  final today = _localDate(now);
+  final monday = DateTime(
+    today.year,
+    today.month,
+    today.day - (today.weekday - 1),
+  );
+  final totals = List<int>.filled(7, 0);
+  for (final session in sessions) {
+    final index = _calendarDaysBetween(monday, _localDate(session.startedAt));
+    if (index < 0 || index > 6) continue;
+    totals[index] += session.engagedSeconds;
+  }
+  return [
+    for (var index = 0; index < 7; index++)
+      DailyReading(
+        day: DateTime(monday.year, monday.month, monday.day + index),
+        engagedSeconds: totals[index],
+      ),
+  ];
+}
+
+DateTime _localDate(DateTime instant) {
+  final local = instant.toLocal();
+  return DateTime(local.year, local.month, local.day);
+}
+
+int _calendarDaysBetween(DateTime start, DateTime day) {
+  final first = DateTime.utc(start.year, start.month, start.day);
+  final second = DateTime.utc(day.year, day.month, day.day);
+  return second.difference(first).inDays;
+}
+
 String formatReadingDuration(int seconds) {
   final safe = seconds < 0 ? 0 : seconds;
   final hours = safe ~/ 3600;

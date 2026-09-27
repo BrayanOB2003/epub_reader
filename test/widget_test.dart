@@ -76,6 +76,10 @@ void main() {
     await tester.tap(find.text('Tiempo'));
     await tester.pumpAndSettle();
 
+    expect(find.text('Esta semana'), findsOneWidget);
+    expect(find.text('Lun'), findsOneWidget);
+    expect(find.text('Dom'), findsOneWidget);
+    expect(find.text('Meta · 10 min'), findsOneWidget);
     expect(find.text('Todavía no hay registros'), findsOneWidget);
 
     await tester.tap(find.text('Perfil'));
