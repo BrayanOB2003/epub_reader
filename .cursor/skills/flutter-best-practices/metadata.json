@@ -1,0 +1,15 @@
+{
+  "version": "0.1.0",
+  "organization": "Flutter Community",
+  "date": "January 2026",
+  "abstract": "Comprehensive performance optimization guide for Flutter applications, designed for AI agents and LLMs. Contains 20+ rules across 8 categories, prioritized by impact from critical (widget builds, list rendering) to incremental (app size). Each rule includes detailed explanations, real-world examples comparing incorrect vs. correct implementations, and specific impact metrics to guide automated refactoring and code generation.",
+  "references": [
+    "https://docs.flutter.dev",
+    "https://docs.flutter.dev/perf/best-practices",
+    "https://pub.dev/packages/go_router",
+    "https://pub.dev/packages/provider",
+    "https://pub.dev/packages/riverpod",
+    "https://pub.dev/packages/cached_network_image",
+    "https://dart.dev/language/concurrency"
+  ]
+}
