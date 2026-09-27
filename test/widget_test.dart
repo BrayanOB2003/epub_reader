@@ -1,3 +1,4 @@
+import 'package:drift/drift.dart';
 import 'package:drift/native.dart';
 import 'package:epub_reader/app/app.dart';
 import 'package:epub_reader/app/providers.dart';
@@ -42,6 +43,8 @@ void main() {
             motivations: 'habit',
             dailyGoalMinutes: 10,
             routine: 'night',
+            routineHour: const Value(21),
+            routineDays: const Value('1,2,3,4,5,6,7'),
             completedAt: DateTime.utc(2026, 9, 26),
           ),
         );
@@ -82,27 +85,38 @@ void main() {
     expect(find.text('Dom'), findsNWidgets(2));
     expect(find.text(formatReadingMonth(DateTime.now())), findsOneWidget);
     expect(find.text('Meta · 10 min'), findsOneWidget);
-    await tester.scrollUntilVisible(
-      find.text('Todavía no hay registros'),
-      200,
-    );
+    await tester.scrollUntilVisible(find.text('Todavía no hay registros'), 200);
     expect(find.text('Todavía no hay registros'), findsOneWidget);
     await tester.scrollUntilVisible(find.text('Esta semana'), -200);
 
     await tester.tap(find.text('Perfil'));
     await tester.pumpAndSettle();
 
-    expect(find.text('Meta de lectura diaria'), findsOneWidget);
+    expect(find.text('Hábito de lectura'), findsOneWidget);
     expect(find.text('Generar lecturas de ejemplo'), findsOneWidget);
     expect(find.text('Resetear onboarding'), findsOneWidget);
 
-    await tester.tap(find.text('Meta de lectura diaria'));
+    await tester.tap(find.text('Hábito de lectura'));
     await tester.pumpAndSettle();
+    expect(find.text('Crea el hábito de leer'), findsNothing);
+    expect(find.text('¿Qué quieres conseguir con la lectura?'), findsOneWidget);
+    await tester.tap(find.text('Siguiente'));
+    await tester.pumpAndSettle();
+    expect(find.text('2 de 3'), findsOneWidget);
     await tester.tap(find.text('30 minutos'));
+    await tester.pump();
+    await tester.tap(find.text('Siguiente'));
     await tester.pumpAndSettle();
+    expect(find.text('Noche'), findsOneWidget);
+    expect(find.text('21:00'), findsOneWidget);
+    await tester.tap(find.text('Quiero empezar a leer'));
+    await tester.pumpAndSettle();
+    expect(find.text('Hábito de lectura'), findsOneWidget);
     final saved = await database.select(database.readerProfiles).getSingle();
     expect(saved.dailyGoalMinutes, 30);
+    expect(saved.motivations, 'habit');
     expect(saved.routine, 'night');
+    expect(saved.routineHour, 21);
 
     await tester.tap(find.text('Resetear onboarding'));
     await tester.pumpAndSettle();

@@ -76,6 +76,27 @@ class OnboardingAnswers {
     );
   }
 
+  factory OnboardingAnswers.fromStored({
+    required String motivations,
+    required int dailyGoalMinutes,
+    required String routine,
+    int? routineHour,
+    String? routineDays,
+  }) {
+    return OnboardingAnswers(
+      motivations: {
+        for (final id in motivations.split(','))
+          if (ReadingMotivation.byId(id) != null) ReadingMotivation.byId(id)!,
+      },
+      dailyGoalMinutes: readingGoalMinutes.contains(dailyGoalMinutes)
+          ? dailyGoalMinutes
+          : null,
+      routine: ReadingRoutine.byId(routine),
+      routineHour: routineHour,
+      weekdays: _storedWeekdays(routineDays),
+    );
+  }
+
   String get weekdaysStorage => readingWeekdaysStorage(weekdays);
 
   String get motivationsStorage =>
@@ -84,15 +105,26 @@ class OnboardingAnswers {
       );
 }
 
+Set<ReadingWeekday> _storedWeekdays(String? value) {
+  if (value == null || !isReadingWeekdaysStorage(value)) {
+    return defaultReadingWeekdays;
+  }
+  return {
+    for (final part in value.split(',')) ReadingWeekday.byId(int.parse(part))!,
+  };
+}
+
 String? onboardingRedirect({
   required bool? completed,
   required String location,
+  bool editing = false,
 }) {
   const boot = '/boot';
   const onboarding = '/onboarding';
   const library = '/library';
   if (completed == null) return location == boot ? null : boot;
   if (!completed) return location == onboarding ? null : onboarding;
+  if (editing && location == onboarding) return null;
   if (location == boot || location == onboarding) return library;
   return null;
 }

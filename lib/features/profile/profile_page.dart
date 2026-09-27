@@ -1,9 +1,9 @@
 import 'package:epub_reader/app/providers.dart';
 import 'package:epub_reader/features/onboarding/onboarding_controller.dart';
 import 'package:epub_reader/features/profile/reader_profile_store.dart';
-import 'package:epub_reader/features/profile/reading_goal.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
+import 'package:go_router/go_router.dart';
 
 class ProfilePage extends ConsumerWidget {
   const ProfilePage({super.key});
@@ -33,11 +33,11 @@ class ProfilePage extends ConsumerWidget {
             children: [
               const Divider(height: 1),
               ListTile(
-                title: const Text('Meta de lectura diaria'),
+                title: const Text('Hábito de lectura'),
                 trailing: Text(goal),
                 onTap: saved == null
                     ? null
-                    : () => _pickGoal(context, ref, saved.dailyGoalMinutes),
+                    : () => context.push('/onboarding?editar=1'),
               ),
               const Divider(height: 1),
               ListTile(
@@ -58,35 +58,6 @@ class ProfilePage extends ConsumerWidget {
         },
       ),
     );
-  }
-
-  Future<void> _pickGoal(
-    BuildContext context,
-    WidgetRef ref,
-    int current,
-  ) async {
-    final selected = await showDialog<int>(
-      context: context,
-      builder: (context) => SimpleDialog(
-        title: const Text('Meta de lectura diaria'),
-        children: [
-          for (final minutes in readingGoalMinutes)
-            SimpleDialogOption(
-              onPressed: () => Navigator.pop(context, minutes),
-              child: Text('$minutes minutos'),
-            ),
-        ],
-      ),
-    );
-    if (selected == null || selected == current || !context.mounted) return;
-    try {
-      await ref.read(readerProfileStoreProvider).updateDailyGoal(selected);
-    } catch (_) {
-      if (!context.mounted) return;
-      ScaffoldMessenger.of(context).showSnackBar(
-        const SnackBar(content: Text('No se pudo guardar la meta de lectura.')),
-      );
-    }
   }
 
   Future<void> _addSampleReadings(BuildContext context, WidgetRef ref) async {

@@ -29,6 +29,7 @@ final appRouterProvider = Provider<GoRouter>((ref) {
       return onboardingRedirect(
         completed: completed,
         location: state.matchedLocation,
+        editing: state.uri.queryParameters['editar'] == '1',
       );
     },
     routes: [
@@ -36,7 +37,9 @@ final appRouterProvider = Provider<GoRouter>((ref) {
       GoRoute(path: '/boot', builder: (context, state) => const _BootPage()),
       GoRoute(
         path: '/onboarding',
-        builder: (context, state) => const OnboardingPage(),
+        builder: (context, state) => OnboardingRoute(
+          editing: state.uri.queryParameters['editar'] == '1',
+        ),
       ),
       StatefulShellRoute.indexedStack(
         builder: (context, state, navigationShell) =>

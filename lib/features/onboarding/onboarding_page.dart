@@ -1,4 +1,5 @@
 import 'package:epub_reader/features/onboarding/onboarding_answers.dart';
+import 'package:epub_reader/features/profile/reader_profile_store.dart';
 import 'package:epub_reader/features/profile/reading_goal.dart';
 import 'package:epub_reader/features/profile/reading_routine.dart';
 import 'package:epub_reader/features/onboarding/onboarding_controller.dart';
@@ -6,17 +7,69 @@ import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:go_router/go_router.dart';
 
+class OnboardingRoute extends ConsumerWidget {
+  const OnboardingRoute({super.key, required this.editing});
+
+  final bool editing;
+
+  @override
+  Widget build(BuildContext context, WidgetRef ref) {
+    if (!editing) return const OnboardingPage();
+    final profile = ref.watch(readerProfileProvider);
+    return profile.when(
+      loading: () =>
+          const Scaffold(body: Center(child: CircularProgressIndicator())),
+      error: (error, _) => Scaffold(
+        body: Center(
+          child: Text(
+            'No se pudo cargar el perfil.\n$error',
+            textAlign: TextAlign.center,
+          ),
+        ),
+      ),
+      data: (saved) {
+        if (saved == null) {
+          return const Scaffold(
+            body: Center(child: CircularProgressIndicator()),
+          );
+        }
+        return OnboardingPage(
+          key: const ValueKey('edit-onboarding'),
+          editing: true,
+          initial: OnboardingAnswers.fromStored(
+            motivations: saved.motivations,
+            dailyGoalMinutes: saved.dailyGoalMinutes,
+            routine: saved.routine,
+            routineHour: saved.routineHour,
+            routineDays: saved.routineDays,
+          ),
+        );
+      },
+    );
+  }
+}
+
 class OnboardingPage extends ConsumerStatefulWidget {
-  const OnboardingPage({super.key});
+  const OnboardingPage({super.key, this.initial, this.editing = false});
+
+  final OnboardingAnswers? initial;
+  final bool editing;
 
   @override
   ConsumerState<OnboardingPage> createState() => _OnboardingPageState();
 }
 
 class _OnboardingPageState extends ConsumerState<OnboardingPage> {
-  var _step = 0;
+  late int _step;
+  late OnboardingAnswers _answers;
   var _saving = false;
-  var _answers = const OnboardingAnswers();
+
+  @override
+  void initState() {
+    super.initState();
+    _step = widget.editing ? 1 : 0;
+    _answers = widget.initial ?? const OnboardingAnswers();
+  }
 
   bool get _canContinue {
     return switch (_step) {
@@ -27,8 +80,14 @@ class _OnboardingPageState extends ConsumerState<OnboardingPage> {
     };
   }
 
+  bool get _atStart => widget.editing ? _step <= 1 : _step == 0;
+
   void _back() {
-    if (_step == 0 || _saving) return;
+    if (_saving) return;
+    if (_atStart) {
+      if (widget.editing) context.pop();
+      return;
+    }
     setState(() => _step -= 1);
   }
 
@@ -42,7 +101,7 @@ class _OnboardingPageState extends ConsumerState<OnboardingPage> {
     try {
       await ref.read(onboardingControllerProvider.notifier).complete(_answers);
       if (!mounted) return;
-      context.go('/library');
+      context.go(widget.editing ? '/profile' : '/library');
     } catch (_) {
       if (!mounted) return;
       setState(() => _saving = false);
@@ -56,7 +115,7 @@ class _OnboardingPageState extends ConsumerState<OnboardingPage> {
   Widget build(BuildContext context) {
     final theme = Theme.of(context);
     return PopScope(
-      canPop: _step == 0,
+      canPop: _atStart,
       onPopInvokedWithResult: (didPop, _) {
         if (!didPop) _back();
       },

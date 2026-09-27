@@ -57,35 +57,24 @@ class ReaderProfileStore {
         'La hora no corresponde a ese momento del día.',
       );
     }
-    await _database.delete(_database.readerProfiles).go();
-    await _database
-        .into(_database.readerProfiles)
-        .insert(
-          ReaderProfilesCompanion.insert(
-            motivations: motivations,
-            dailyGoalMinutes: dailyGoalMinutes,
-            routine: routine,
-            routineHour: Value(routineHour),
-            routineDays: Value(routineDays),
-            completedAt: DateTime.now().toUtc(),
-          ),
-        );
+    await _database.transaction(() async {
+      await _database.delete(_database.readerProfiles).go();
+      await _database
+          .into(_database.readerProfiles)
+          .insert(
+            ReaderProfilesCompanion.insert(
+              motivations: motivations,
+              dailyGoalMinutes: dailyGoalMinutes,
+              routine: routine,
+              routineHour: Value(routineHour),
+              routineDays: Value(routineDays),
+              completedAt: DateTime.now().toUtc(),
+            ),
+          );
+    });
   }
 
   Future<void> clear() {
     return _database.delete(_database.readerProfiles).go();
-  }
-
-  Future<void> updateDailyGoal(int minutes) {
-    if (!readingGoalMinutes.contains(minutes)) {
-      throw ArgumentError.value(
-        minutes,
-        'minutes',
-        'La meta no es una de las opciones.',
-      );
-    }
-    return _database
-        .update(_database.readerProfiles)
-        .write(ReaderProfilesCompanion(dailyGoalMinutes: Value(minutes)));
   }
 }

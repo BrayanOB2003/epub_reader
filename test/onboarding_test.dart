@@ -26,6 +26,14 @@ void main() {
       onboardingRedirect(completed: true, location: '/onboarding'),
       '/library',
     );
+    expect(
+      onboardingRedirect(
+        completed: true,
+        location: '/onboarding',
+        editing: true,
+      ),
+      isNull,
+    );
     expect(onboardingRedirect(completed: true, location: '/library'), isNull);
   });
 
@@ -54,6 +62,16 @@ void main() {
       expect(answers.withRoutine(ReadingRoutine.morning).routineHour, isNull);
       expect(answers.weekdays, defaultReadingWeekdays);
       expect(answers.weekdaysStorage, '1,2,3,4,5,6,7');
+      final restored = OnboardingAnswers.fromStored(
+        motivations: answers.motivationsStorage,
+        dailyGoalMinutes: 10,
+        routine: 'night',
+        routineHour: 21,
+        routineDays: '1,2,3,4,5,6,7',
+      );
+      expect(restored.isComplete, isTrue);
+      expect(restored.motivations, answers.motivations);
+      expect(restored.routine, ReadingRoutine.night);
       expect(answers.copyWith(weekdays: const {}).isComplete, isFalse);
       expect(answers.motivationsStorage, 'habit,read_more');
       expect(const OnboardingAnswers().isComplete, isFalse);
@@ -81,12 +99,11 @@ void main() {
 
       await store.save(
         motivations: answers.motivationsStorage,
-        dailyGoalMinutes: answers.dailyGoalMinutes!,
+        dailyGoalMinutes: 20,
         routine: answers.routine!.id,
         routineHour: answers.routineHour!,
         routineDays: answers.weekdaysStorage,
       );
-      await store.updateDailyGoal(20);
       final updated = await database
           .select(database.readerProfiles)
           .getSingle();
