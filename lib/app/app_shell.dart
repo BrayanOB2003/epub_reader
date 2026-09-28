@@ -25,10 +25,7 @@ class AppShell extends StatelessWidget {
           ? Column(
               mainAxisSize: MainAxisSize.min,
               children: [
-                _IosBar(
-                  index: navigationShell.currentIndex,
-                  onSelect: _select,
-                ),
+                _IosBar(index: navigationShell.currentIndex, onSelect: _select),
               ],
             )
           : _AndroidBar(index: navigationShell.currentIndex, onSelect: _select),

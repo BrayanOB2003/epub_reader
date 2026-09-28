@@ -287,7 +287,8 @@
       "Do separate bands and listings with a 1px rule, and keep authored corners square (0).",
       "Do keep Importar as one fixed line under the live band when the library has books, and keep the empty-library line Un EPUB de este dispositivo.",
       "Do put Eliminar on each book, on the live band and on each listing.",
-      "Do leave the Spanish labels as they ship, including Leer, Importar, and the date line. Do show a book's cover once on the live band (72×108) and as a 36×52 mark on its listing, square and flat. A missing file keeps that frame and shows the title's first letter."
+      "Do leave the Spanish labels as they ship, including Leer, Importar, and the date line. Do show a book's cover once on the live band (72×108) and as a 36×52 mark on its listing, square and flat. A missing file keeps that frame and shows the title's first letter.",
+      "Do group Por añadir by the book's specific genre. The genre is a muted label on the row and on the group. En tu biblioteca keeps that label on each row."
     ],
     "donts": [
       "Don't add a second accent, a card, a cover grid, or a drop shadow to the log. A cover is the object in the row, not the way the library is organized.",

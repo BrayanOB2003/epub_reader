@@ -8,6 +8,7 @@ import 'package:epub_reader/features/library/data/book_repository.dart';
 import 'package:epub_reader/features/habits/reading_engagement.dart';
 import 'package:epub_reader/features/reader/reader_gestures.dart';
 import 'package:epub_reader/features/reader/reader_preferences.dart';
+import 'package:epub_reader/l10n/app_localizations.dart';
 import 'package:flutter/foundation.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter/services.dart';
@@ -74,12 +75,13 @@ class _ReaderPageState extends ConsumerState<ReaderPage>
   }
 
   Future<void> _open() async {
+    final l10n = AppLocalizations.of(context);
     final book = await _repository.getBook(widget.bookId);
     if (!mounted) return;
     if (book == null) {
       setState(() {
         _loading = false;
-        _error = 'Este libro ya no está en la biblioteca.';
+        _error = l10n.bookGone;
       });
       return;
     }
@@ -116,7 +118,7 @@ class _ReaderPageState extends ConsumerState<ReaderPage>
       if (!mounted) return;
       setState(() {
         _loading = false;
-        _error = _openErrorMessage(error);
+        _error = _openErrorMessage(l10n, error);
       });
     }
   }
@@ -151,14 +153,14 @@ class _ReaderPageState extends ConsumerState<ReaderPage>
     if (selected == null || !mounted) return;
     final locator = publication.locatorFromLink(selected);
     if (locator == null) {
-      _showMessage('No se pudo abrir este capítulo.');
+      _showMessage(AppLocalizations.of(context).chapterFailed);
       return;
     }
     _textSelected = false;
     final moved = await _engine.goToLocator(locator);
     if (!mounted) return;
     if (!moved) {
-      _showMessage('No se pudo abrir este capítulo.');
+      _showMessage(AppLocalizations.of(context).chapterFailed);
       return;
     }
     setState(() => _chromeVisible = false);
@@ -182,16 +184,14 @@ class _ReaderPageState extends ConsumerState<ReaderPage>
       );
     } catch (_) {
       if (mounted) {
-        _showMessage('No se pudieron aplicar los ajustes de lectura.');
+        _showMessage(AppLocalizations.of(context).preferencesFailed);
       }
     }
   }
 
   Future<void> _toggleDark() async {
     if (_fixedLayout) {
-      _showMessage(
-        'En un libro de maquetación fija el color del texto no cambia.',
-      );
+      _showMessage(AppLocalizations.of(context).fixedColor);
       return;
     }
     setState(() => _dark = !_dark);
@@ -200,7 +200,7 @@ class _ReaderPageState extends ConsumerState<ReaderPage>
 
   Future<void> _toggleScroll() async {
     if (_fixedLayout) {
-      _showMessage('Este libro se lee por páginas.');
+      _showMessage(AppLocalizations.of(context).fixedPages);
       return;
     }
     setState(() => _scroll = !_scroll);
@@ -209,9 +209,7 @@ class _ReaderPageState extends ConsumerState<ReaderPage>
 
   Future<void> _changeFontSize({required bool larger}) async {
     if (_fixedLayout) {
-      _showMessage(
-        'En un libro de maquetación fija el tamaño del texto no cambia.',
-      );
+      _showMessage(AppLocalizations.of(context).fixedSize);
       return;
     }
     final next = stepReaderFontSize(_fontSize, larger: larger);
@@ -222,9 +220,7 @@ class _ReaderPageState extends ConsumerState<ReaderPage>
 
   Future<void> _resetFontSize() async {
     if (_fixedLayout) {
-      _showMessage(
-        'En un libro de maquetación fija el tamaño del texto no cambia.',
-      );
+      _showMessage(AppLocalizations.of(context).fixedSize);
       return;
     }
     if (_fontSize == readerFontSizeDefault) return;
@@ -243,7 +239,7 @@ class _ReaderPageState extends ConsumerState<ReaderPage>
       );
     } catch (_) {
       if (mounted) {
-        _showMessage('No se pudieron guardar los ajustes de lectura.');
+        _showMessage(AppLocalizations.of(context).preferencesSaveFailed);
       }
     }
   }
@@ -372,12 +368,14 @@ class _ReaderPageState extends ConsumerState<ReaderPage>
     if (index == null) return;
     final locator = publication.locatorFromLink(chapters[index]);
     if (locator == null) {
-      _showMessage('No se pudo abrir este capítulo.');
+      _showMessage(AppLocalizations.of(context).chapterFailed);
       return;
     }
     final moved = await _engine.goToLocator(locator);
     if (!mounted) return;
-    if (!moved) _showMessage('No se pudo abrir este capítulo.');
+    if (!moved) {
+      _showMessage(AppLocalizations.of(context).chapterFailed);
+    }
   }
 
   @override
@@ -427,7 +425,7 @@ class _ReaderPageState extends ConsumerState<ReaderPage>
     final publication = _publication;
     final book = _book;
     if (publication == null || book == null) {
-      return _statusLayer(child: const Text('No se pudo abrir el libro.'));
+      return _statusLayer(child: Text(AppLocalizations.of(context).openFailed));
     }
 
     final rtl =
@@ -448,7 +446,7 @@ class _ReaderPageState extends ConsumerState<ReaderPage>
               DefaultSelectionAction.share,
             },
             selectionActions: defaultTargetPlatform == TargetPlatform.android
-                ? _androidSelectionActions
+                ? _androidSelectionActions(AppLocalizations.of(context))
                 : const [],
             onTextSelected: _onTextSelected,
             onSelectionAction: _onSelectionAction,
@@ -493,6 +491,7 @@ class _ReaderPageState extends ConsumerState<ReaderPage>
   }
 
   Widget _readerChrome({bool forceVisible = false}) {
+    final l10n = AppLocalizations.of(context);
     final visible = forceVisible || _chromeVisible;
     return Column(
       mainAxisSize: MainAxisSize.min,
@@ -519,51 +518,49 @@ class _ReaderPageState extends ConsumerState<ReaderPage>
                   children: [
                     if (_publication != null) ...[
                       IconButton(
-                        tooltip: 'Índice',
+                        tooltip: l10n.contents,
                         onPressed: _openContents,
                         icon: const Icon(Icons.format_list_bulleted),
                       ),
                       IconButton(
                         tooltip: _fixedLayout
-                            ? 'En este libro el color del texto no cambia'
-                            : (_dark ? 'Modo claro' : 'Modo oscuro'),
+                            ? l10n.fixedColorShort
+                            : (_dark ? l10n.lightMode : l10n.darkMode),
                         onPressed: _toggleDark,
                         icon: Icon(_dark ? Icons.light_mode : Icons.dark_mode),
                       ),
                       IconButton(
                         tooltip: _fixedLayout
-                            ? 'Este libro se lee por páginas'
-                            : (_scroll
-                                  ? 'Lectura por páginas'
-                                  : 'Lectura con scroll'),
+                            ? l10n.fixedPagesShort
+                            : (_scroll ? l10n.pageMode : l10n.scrollMode),
                         onPressed: _toggleScroll,
                         icon: Icon(_scroll ? Icons.menu_book : Icons.swap_vert),
                       ),
                       IconButton(
                         tooltip: _fixedLayout
-                            ? 'En este libro el tamaño del texto no cambia'
-                            : 'Reducir texto',
+                            ? l10n.fixedSizeShort
+                            : l10n.smallerText,
                         onPressed: () => _changeFontSize(larger: false),
                         icon: const Icon(Icons.text_decrease),
                       ),
                       IconButton(
                         tooltip: _fixedLayout
-                            ? 'En este libro el tamaño del texto no cambia'
-                            : 'Tamaño original',
+                            ? l10n.fixedSizeShort
+                            : l10n.originalSize,
                         onPressed: _resetFontSize,
                         icon: const _OriginalFontMark(),
                       ),
                       IconButton(
                         tooltip: _fixedLayout
-                            ? 'En este libro el tamaño del texto no cambia'
-                            : 'Aumentar texto',
+                            ? l10n.fixedSizeShort
+                            : l10n.largerText,
                         onPressed: () => _changeFontSize(larger: true),
                         icon: const Icon(Icons.text_increase),
                       ),
                     ],
                     const Spacer(),
                     IconButton(
-                      tooltip: 'Cerrar',
+                      tooltip: l10n.close,
                       onPressed: _close,
                       icon: const Icon(Icons.close),
                     ),
@@ -597,9 +594,9 @@ class _OriginalFontMark extends StatelessWidget {
 
 /// Android ignores [DefaultSelectionAction] and only reports a selection when
 /// custom actions replace its system menu.
-const _androidSelectionActions = [
-  SelectionAction(id: 'copy', title: 'Copiar'),
-  SelectionAction(id: 'share', title: 'Compartir'),
+List<SelectionAction> _androidSelectionActions(AppLocalizations l10n) => [
+  SelectionAction(id: 'copy', title: l10n.copy),
+  SelectionAction(id: 'share', title: l10n.share),
 ];
 
 class _TocEntry {
@@ -608,10 +605,10 @@ class _TocEntry {
   final Link link;
   final int depth;
 
-  String get title {
+  String title(String untitled) {
     final title = link.title?.trim();
     if (title != null && title.isNotEmpty) return title;
-    return 'Sin título';
+    return untitled;
   }
 }
 
@@ -638,14 +635,15 @@ class _ContentsDialog extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) {
+    final l10n = AppLocalizations.of(context);
     final height = MediaQuery.sizeOf(context).height * 0.6;
     return AlertDialog(
-      title: const Text('Índice'),
+      title: Text(l10n.contents),
       content: SizedBox(
         width: double.maxFinite,
         height: height,
         child: entries.isEmpty
-            ? const Text('Este libro no tiene índice.')
+            ? Text(l10n.noContents)
             : ListView.builder(
                 itemCount: entries.length,
                 itemBuilder: (context, index) {
@@ -655,7 +653,7 @@ class _ContentsDialog extends StatelessWidget {
                       left: 16 + entry.depth * 16,
                       right: 16,
                     ),
-                    title: Text(entry.title),
+                    title: Text(entry.title(l10n.untitled)),
                     onTap: () => Navigator.pop(context, entry.link),
                   );
                 },
@@ -664,18 +662,18 @@ class _ContentsDialog extends StatelessWidget {
       actions: [
         TextButton(
           onPressed: () => Navigator.pop(context),
-          child: const Text('Cerrar'),
+          child: Text(l10n.close),
         ),
       ],
     );
   }
 }
 
-String _openErrorMessage(Object error) {
+String _openErrorMessage(AppLocalizations l10n, Object error) {
   final text = error.toString();
   if (text.contains('MethodNotImplemented') ||
       text.contains('not implemented')) {
-    return 'El lector funciona en iOS y Android. En el escritorio de macOS Readium no abre el EPUB.';
+    return l10n.readerDesktopOnly;
   }
-  return 'No se pudo abrir el libro.';
+  return l10n.openFailed;
 }

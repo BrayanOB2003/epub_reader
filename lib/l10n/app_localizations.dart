@@ -835,6 +835,18 @@ abstract class AppLocalizations {
   /// In es, this message translates to:
   /// **'{day} de {month}, {state}'**
   String calendarDay(int day, String month, String state);
+
+  /// No description provided for @libraryLoadFailed.
+  ///
+  /// In es, this message translates to:
+  /// **'No se pudo cargar la biblioteca.\n{error}'**
+  String libraryLoadFailed(String error);
+
+  /// No description provided for @sampleBookTitle.
+  ///
+  /// In es, this message translates to:
+  /// **'Lectura de ejemplo'**
+  String get sampleBookTitle;
 }
 
 class _AppLocalizationsDelegate

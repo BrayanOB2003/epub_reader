@@ -162,7 +162,11 @@ class BookRepository {
     );
   }
 
-  Future<int> addSampleReadings({DateTime? now, Random? random}) async {
+  Future<int> addSampleReadings({
+    DateTime? now,
+    Random? random,
+    String sampleTitle = 'Lectura de ejemplo',
+  }) async {
     final source = random ?? Random();
     final moment = now ?? DateTime.now();
     final books = await _database.select(_database.books).get();
@@ -173,7 +177,7 @@ class BookRepository {
             .into(_database.books)
             .insert(
               BooksCompanion.insert(
-                title: 'Lectura de ejemplo',
+                title: sampleTitle,
                 filePath: 'sample/lectura-de-ejemplo.epub',
                 addedAt: moment.toUtc(),
               ),

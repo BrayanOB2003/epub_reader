@@ -1,6 +1,7 @@
 import 'package:epub_reader/core/database/app_database.dart';
 import 'package:epub_reader/features/habits/reading_time.dart';
 import 'package:epub_reader/features/habits/weekly_reading_chart.dart';
+import 'package:epub_reader/l10n/app_localizations.dart';
 import 'package:flutter/material.dart';
 
 class ReadingCalendar extends StatefulWidget {
@@ -55,74 +56,83 @@ class _ReadingCalendarState extends State<ReadingCalendar> {
       cells.add(null);
     }
 
+    final l10n = AppLocalizations.of(context);
+    final languageCode = Localizations.localeOf(context).languageCode;
+    final labels = weekdayLabels(languageCode);
     return Padding(
       padding: const EdgeInsets.fromLTRB(8, 8, 8, 12),
       child: Column(
-          children: [
-            Row(
-              children: [
-                IconButton(
-                  tooltip: 'Mes anterior',
-                  onPressed: () => _shift(-1),
-                  icon: const Icon(Icons.chevron_left),
+        children: [
+          Row(
+            children: [
+              IconButton(
+                tooltip: l10n.previousMonth,
+                onPressed: () => _shift(-1),
+                icon: const Icon(Icons.chevron_left),
+              ),
+              Expanded(
+                child: Text(
+                  formatReadingMonth(_month, languageCode: languageCode),
+                  textAlign: TextAlign.center,
+                  style: theme.textTheme.titleMedium,
                 ),
+              ),
+              IconButton(
+                tooltip: l10n.nextMonth,
+                onPressed: _canGoForward ? () => _shift(1) : null,
+                icon: const Icon(Icons.chevron_right),
+              ),
+            ],
+          ),
+          const SizedBox(height: 4),
+          Row(
+            children: [
+              for (final label in labels)
                 Expanded(
                   child: Text(
-                    formatReadingMonth(_month),
+                    label,
                     textAlign: TextAlign.center,
-                    style: theme.textTheme.titleMedium,
+                    style: theme.textTheme.labelMedium?.copyWith(
+                      color: color.onSurfaceVariant,
+                    ),
                   ),
                 ),
-                IconButton(
-                  tooltip: 'Mes siguiente',
-                  onPressed: _canGoForward ? () => _shift(1) : null,
-                  icon: const Icon(Icons.chevron_right),
-                ),
+            ],
+          ),
+          const SizedBox(height: 8),
+          for (var index = 0; index < cells.length; index += 7) ...[
+            Row(
+              children: [
+                for (final day in cells.sublist(index, index + 7))
+                  Expanded(
+                    child: day == null
+                        ? const SizedBox(height: 40)
+                        : _DayCell(
+                            day: day,
+                            isToday: _sameDay(day.day, widget.today),
+                            label: _dayLabel(day, l10n, languageCode),
+                          ),
+                  ),
               ],
             ),
             const SizedBox(height: 4),
-            Row(
-              children: [
-                for (final label in weekdayLabels)
-                  Expanded(
-                    child: Text(
-                      label,
-                      textAlign: TextAlign.center,
-                      style: theme.textTheme.labelMedium?.copyWith(
-                        color: color.onSurfaceVariant,
-                      ),
-                    ),
-                  ),
-              ],
-            ),
-            const SizedBox(height: 8),
-            for (var index = 0; index < cells.length; index += 7) ...[
-              Row(
-                children: [
-                  for (final day in cells.sublist(index, index + 7))
-                    Expanded(
-                      child: day == null
-                          ? const SizedBox(height: 40)
-                          : _DayCell(
-                              day: day,
-                              isToday: _sameDay(day.day, widget.today),
-                            ),
-                    ),
-                ],
-              ),
-              const SizedBox(height: 4),
-            ],
           ],
-        ),
+        ],
+      ),
     );
   }
 }
 
 class _DayCell extends StatelessWidget {
-  const _DayCell({required this.day, required this.isToday});
+  const _DayCell({
+    required this.day,
+    required this.isToday,
+    required this.label,
+  });
 
   final ReadingCalendarDay day;
   final bool isToday;
+  final String label;
 
   @override
   Widget build(BuildContext context) {
@@ -141,7 +151,7 @@ class _DayCell extends StatelessWidget {
 
     return Semantics(
       container: true,
-      label: _dayLabel(day),
+      label: label,
       excludeSemantics: true,
       child: SizedBox(
         height: 40,
@@ -172,28 +182,21 @@ class _DayCell extends StatelessWidget {
   }
 }
 
-String _dayLabel(ReadingCalendarDay day) {
-  const months = [
-    'enero',
-    'febrero',
-    'marzo',
-    'abril',
-    'mayo',
-    'junio',
-    'julio',
-    'agosto',
-    'septiembre',
-    'octubre',
-    'noviembre',
-    'diciembre',
-  ];
-  final date = '${day.day.day} de ${months[day.day.month - 1]}';
+String _dayLabel(
+  ReadingCalendarDay day,
+  AppLocalizations l10n,
+  String languageCode,
+) {
   final state = switch (day.mark) {
-    ReadingDayMark.met => 'meta cumplida',
-    ReadingDayMark.partial => 'leído sin cumplir la meta',
-    ReadingDayMark.none => 'sin lectura',
+    ReadingDayMark.met => l10n.goalMet,
+    ReadingDayMark.partial => l10n.partialReading,
+    ReadingDayMark.none => l10n.noReading,
   };
-  return '$date, $state';
+  return l10n.calendarDay(
+    day.day.day,
+    readingMonthName(day.day, languageCode),
+    state,
+  );
 }
 
 bool _sameDay(DateTime day, DateTime today) {

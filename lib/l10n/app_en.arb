@@ -122,5 +122,7 @@
   "goalMet": "goal met",
   "partialReading": "read, goal not met",
   "noReading": "no reading",
-  "calendarDay": "{month} {day}, {state}"
+  "calendarDay": "{month} {day}, {state}",
+  "libraryLoadFailed": "The library could not be loaded.\n{error}",
+  "sampleBookTitle": "Sample reading"
 }

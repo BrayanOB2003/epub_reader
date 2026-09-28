@@ -32,10 +32,7 @@ class EpubFormatException implements Exception {
   String toString() => 'EpubFormatException($failure)';
 }
 
-EpubMetadata readEpubMetadata(
-  Uint8List bytes, {
-  String fallbackTitle = 'Sin título',
-}) {
+EpubMetadata readEpubMetadata(Uint8List bytes, {String fallbackTitle = ''}) {
   final archive = ZipDecoder().decodeBytes(bytes);
   final containerFile = _findEntry(archive, 'META-INF/container.xml');
   if (containerFile == null) {

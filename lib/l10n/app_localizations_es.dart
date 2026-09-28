@@ -410,4 +410,12 @@ class AppLocalizationsEs extends AppLocalizations {
   String calendarDay(int day, String month, String state) {
     return '$day de $month, $state';
   }
+
+  @override
+  String libraryLoadFailed(String error) {
+    return 'No se pudo cargar la biblioteca.\n$error';
+  }
+
+  @override
+  String get sampleBookTitle => 'Lectura de ejemplo';
 }

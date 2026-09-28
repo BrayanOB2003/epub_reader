@@ -5,6 +5,7 @@ import 'package:epub_reader/app/schedule_theme.dart';
 import 'package:epub_reader/app/schedule_widgets.dart';
 import 'package:epub_reader/core/database/app_database.dart';
 import 'package:epub_reader/features/discover/data/catalog.dart';
+import 'package:epub_reader/l10n/app_localizations.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:go_router/go_router.dart';
@@ -22,6 +23,7 @@ class _DiscoverPageState extends ConsumerState<DiscoverPage> {
 
   Future<void> _open(CatalogBook book) async {
     if (_downloadingId != null) return;
+    final l10n = AppLocalizations.of(context);
     final identifier = book.identifier;
     if (identifier != null) {
       final saved = await ref
@@ -46,13 +48,15 @@ class _DiscoverPageState extends ConsumerState<DiscoverPage> {
       final bytes = await client.download(source.downloadUrl);
       final imported = await ref
           .read(epubImporterProvider)
-          .importBytes(bytes, fallbackTitle: source.title);
+          .importBytes(bytes, fallbackTitle: _shownTitle(source.title, l10n));
       if (!mounted) return;
       context.push('/read/${imported.bookId}');
     } on CatalogException catch (error) {
-      _showMessage(error.message);
+      if (!mounted) return;
+      _showMessage(_catalogMessage(l10n, error));
     } catch (_) {
-      _showMessage('No se pudo añadir el libro a la biblioteca.');
+      if (!mounted) return;
+      _showMessage(l10n.addFailed);
     } finally {
       if (mounted) setState(() => _downloadingId = null);
     }
@@ -76,27 +80,30 @@ class _DiscoverPageState extends ConsumerState<DiscoverPage> {
           loading: () => const Center(child: CircularProgressIndicator()),
           error: (error, _) => _CatalogError(
             message: error is CatalogException
-                ? error.message
-                : 'No se pudo cargar el catálogo.',
+                ? _catalogMessage(AppLocalizations.of(context), error)
+                : AppLocalizations.of(context).catalogLoadFailed,
             onRetry: () => ref.invalidate(catalogProvider),
           ),
           data: (data) {
+            final l10n = AppLocalizations.of(context);
             if (data.books.isEmpty) return const _CatalogEmpty();
             return RefreshIndicator(
               onRefresh: () async {
                 try {
                   await ref.read(catalogProvider.notifier).reload();
                 } on CatalogException catch (error) {
-                  _showMessage(error.message);
+                  if (!context.mounted) return;
+                  _showMessage(_catalogMessage(l10n, error));
                 } catch (_) {
-                  _showMessage('No se pudo cargar el catálogo.');
+                  if (!context.mounted) return;
+                  _showMessage(l10n.catalogLoadFailed);
                 }
               },
               child: CustomScrollView(
                 physics: const AlwaysScrollableScrollPhysics(),
                 slivers: [
-                  const SliverToBoxAdapter(
-                    child: ScheduleHeader(title: 'Descubrimiento'),
+                  SliverToBoxAdapter(
+                    child: ScheduleHeader(title: l10n.discover),
                   ),
                   const SliverToBoxAdapter(child: ScheduleRule()),
                   ..._catalogSlivers(data.books, library),
@@ -110,6 +117,7 @@ class _DiscoverPageState extends ConsumerState<DiscoverPage> {
   }
 
   List<Widget> _catalogSlivers(List<CatalogBook> books, List<Book> library) {
+    final l10n = AppLocalizations.of(context);
     final savedIds = library
         .map((book) => book.bookUid)
         .whereType<String>()
@@ -143,28 +151,11 @@ class _DiscoverPageState extends ConsumerState<DiscoverPage> {
           ),
         ),
       if (available.isNotEmpty) ...[
-        const SliverToBoxAdapter(child: _SectionTitle('Por añadir')),
-        SliverList.builder(
-          itemCount: available.length,
-          itemBuilder: (context, index) {
-            final book = available[index];
-            final downloading = _downloadingId == book.id;
-            final stored = _storedCover(library, book.identifier);
-            return ScheduleListing(
-              title: book.title,
-              subtitle: book.authors,
-              cover: stored,
-              coverUrl: stored == null ? book.coverUrl : null,
-              coverWidth: 72,
-              coverHeight: 108,
-              trailing: downloading ? '…' : 'Añadir',
-              onTap: downloading ? null : () => _open(book),
-            );
-          },
-        ),
+        SliverToBoxAdapter(child: _SectionTitle(l10n.toAdd)),
+        ..._genreSlivers(available, library),
       ],
       if (owned.isNotEmpty) ...[
-        const SliverToBoxAdapter(child: _SectionTitle('En tu biblioteca')),
+        SliverToBoxAdapter(child: _SectionTitle(l10n.inYourLibrary)),
         SliverList.builder(
           itemCount: owned.length,
           itemBuilder: (context, index) {
@@ -172,17 +163,49 @@ class _DiscoverPageState extends ConsumerState<DiscoverPage> {
             final downloading = _downloadingId == book.id;
             final stored = _storedCover(library, book.identifier);
             return ScheduleListing(
-              title: book.title,
+              title: _shownTitle(book.title, l10n),
               subtitle: book.authors,
+              caption: catalogGenreLabel(book.genres),
               cover: stored,
               coverUrl: stored == null ? book.coverUrl : null,
-              trailing: downloading ? '…' : 'Leer',
+              trailing: downloading ? '…' : l10n.read,
               onTap: downloading ? null : () => _open(book),
             );
           },
         ),
       ],
       const SliverToBoxAdapter(child: SizedBox(height: 24)),
+    ];
+  }
+
+  List<Widget> _genreSlivers(List<CatalogBook> books, List<Book> library) {
+    final l10n = AppLocalizations.of(context);
+    final grouped = groupCatalogBooks(books);
+    return [
+      for (final shelf in grouped.shelves) ...[
+        if (shelf.genre != null)
+          SliverToBoxAdapter(child: _GenreLabel(shelf.genre!)),
+        SliverList.builder(
+          itemCount: shelf.books.length,
+          itemBuilder: (context, index) {
+            final book = shelf.books[index];
+            final downloading = _downloadingId == book.id;
+            final stored = _storedCover(library, book.identifier);
+            return ScheduleListing(
+              key: ValueKey(book.id),
+              title: _shownTitle(book.title, l10n),
+              subtitle: book.authors,
+              caption: catalogGenreLabel(book.genres),
+              cover: stored,
+              coverUrl: stored == null ? book.coverUrl : null,
+              coverWidth: 72,
+              coverHeight: 108,
+              trailing: downloading ? '…' : l10n.add,
+              onTap: downloading ? null : () => _open(book),
+            );
+          },
+        ),
+      ],
     ];
   }
 }
@@ -204,6 +227,88 @@ class _SectionTitle extends StatelessWidget {
   }
 }
 
+class _GenreLabel extends StatelessWidget {
+  const _GenreLabel(this.label);
+
+  final String label;
+
+  @override
+  Widget build(BuildContext context) {
+    return Padding(
+      padding: const EdgeInsets.fromLTRB(20, 16, 20, 4),
+      child: Semantics(
+        header: true,
+        child: Text(
+          label,
+          style: Theme.of(context).textTheme.labelLarge
+              ?.copyWith(color: ScheduleColors.of(context).muted),
+        ),
+      ),
+    );
+  }
+}
+
+class CatalogShelf {
+  const CatalogShelf({required this.genre, required this.books});
+
+  final String? genre;
+  final List<CatalogBook> books;
+}
+
+class CatalogShelves {
+  const CatalogShelves({required this.shelves});
+
+  final List<CatalogShelf> shelves;
+}
+
+const _broadGenre = 'Fiction';
+
+/// Genres worth showing. A leading Fiction drops out when the book names
+/// something more specific.
+List<String> catalogGenreNames(List<String> genres) {
+  final specific = [
+    for (final genre in genres)
+      if (genre != _broadGenre) genre,
+  ];
+  if (specific.isNotEmpty) return specific;
+  return List<String>.from(genres);
+}
+
+String? catalogGenreLabel(List<String> genres) {
+  final names = catalogGenreNames(genres);
+  if (names.isEmpty) return null;
+  return names.join(' · ');
+}
+
+/// Groups books still to add by their specific genre, in catalog order.
+/// Books with no genre stay last.
+CatalogShelves groupCatalogBooks(List<CatalogBook> books) {
+  final order = <String>[];
+  final byGenre = <String, List<CatalogBook>>{};
+  final plain = <CatalogBook>[];
+  for (final book in books) {
+    final names = catalogGenreNames(book.genres);
+    if (names.isEmpty) {
+      plain.add(book);
+      continue;
+    }
+    final genre = names.first;
+    byGenre
+        .putIfAbsent(genre, () {
+          order.add(genre);
+          return <CatalogBook>[];
+        })
+        .add(book);
+  }
+  return CatalogShelves(
+    shelves: [
+      for (final genre in order)
+        CatalogShelf(genre: genre, books: byGenre[genre]!),
+      if (plain.isNotEmpty) CatalogShelf(genre: null, books: plain),
+    ],
+  );
+}
+
 class _LanguageRow extends StatelessWidget {
   const _LanguageRow({
     required this.languages,
@@ -218,9 +323,10 @@ class _LanguageRow extends StatelessWidget {
   @override
   Widget build(BuildContext context) {
     final colors = ScheduleColors.of(context);
+    final l10n = AppLocalizations.of(context);
     final choices = <(String?, String)>[
-      (null, 'Todos'),
-      for (final code in languages) (code, _languageName(code)),
+      (null, l10n.allLanguages),
+      for (final code in languages) (code, _languageName(l10n, code)),
     ];
     return Padding(
       padding: const EdgeInsets.fromLTRB(20, 12, 20, 4),
@@ -291,11 +397,29 @@ String? _languageFamily(String? code) {
   return lower;
 }
 
-String _languageName(String code) {
+String _languageName(AppLocalizations l10n, String code) {
   return switch (code) {
-    'es' => 'Español',
-    'en' => 'Inglés',
+    'es' => l10n.spanish,
+    'en' => l10n.english,
     _ => code,
+  };
+}
+
+String _shownTitle(String title, AppLocalizations l10n) {
+  final trimmed = title.trim();
+  return trimmed.isEmpty ? l10n.untitled : trimmed;
+}
+
+String _catalogMessage(AppLocalizations l10n, CatalogException error) {
+  return switch (error.failure) {
+    CatalogFailure.load =>
+      error.statusCode == null
+          ? l10n.catalogLoadFailed
+          : l10n.catalogLoadFailedStatus(error.statusCode!),
+    CatalogFailure.format => l10n.catalogInvalid,
+    CatalogFailure.missingUrl => l10n.missingDownload,
+    CatalogFailure.download => l10n.downloadFailed(error.statusCode ?? 0),
+    CatalogFailure.missingKey => l10n.missingApiKey,
   };
 }
 
@@ -316,10 +440,11 @@ class _CatalogEmpty extends StatelessWidget {
   @override
   Widget build(BuildContext context) {
     final theme = Theme.of(context);
+    final l10n = AppLocalizations.of(context);
     return Column(
       crossAxisAlignment: CrossAxisAlignment.start,
       children: [
-        const ScheduleHeader(title: 'Descubrimiento'),
+        ScheduleHeader(title: AppLocalizations.of(context).discover),
         const ScheduleRule(),
         Expanded(
           child: Padding(
@@ -327,13 +452,10 @@ class _CatalogEmpty extends StatelessWidget {
             child: Column(
               crossAxisAlignment: CrossAxisAlignment.start,
               children: [
-                Text(
-                  'El catálogo está vacío',
-                  style: theme.textTheme.headlineSmall,
-                ),
+                Text(l10n.catalogEmpty, style: theme.textTheme.headlineSmall),
                 const SizedBox(height: 8),
                 Text(
-                  'Cuando haya libros disponibles, aparecerán aquí.',
+                  l10n.catalogEmptyBody,
                   style: theme.textTheme.bodyLarge?.copyWith(
                     color: theme.colorScheme.onSurfaceVariant,
                   ),
@@ -363,7 +485,10 @@ class _CatalogError extends StatelessWidget {
           children: [
             Text(message, textAlign: TextAlign.center),
             const SizedBox(height: 16),
-            FilledButton(onPressed: onRetry, child: const Text('Reintentar')),
+            FilledButton(
+              onPressed: onRetry,
+              child: Text(AppLocalizations.of(context).retry),
+            ),
           ],
         ),
       ),

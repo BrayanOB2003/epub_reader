@@ -7,6 +7,7 @@ import 'package:epub_reader/features/onboarding/onboarding_controller.dart';
 import 'package:epub_reader/features/onboarding/onboarding_page.dart';
 import 'package:epub_reader/features/profile/profile_page.dart';
 import 'package:epub_reader/features/reader/reader_page.dart';
+import 'package:epub_reader/l10n/app_localizations.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:go_router/go_router.dart';
@@ -84,8 +85,10 @@ final appRouterProvider = Provider<GoRouter>((ref) {
         builder: (context, state) {
           final bookId = int.tryParse(state.pathParameters['bookId'] ?? '');
           if (bookId == null) {
-            return const Scaffold(
-              body: Center(child: Text('Libro no válido.')),
+            return Scaffold(
+              body: Center(
+                child: Text(AppLocalizations.of(context).invalidBook),
+              ),
             );
           }
           return ReaderPage(bookId: bookId);

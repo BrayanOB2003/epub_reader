@@ -1,5 +1,23 @@
+import 'package:drift/native.dart';
+import 'package:epub_reader/app/providers.dart' hide catalogProvider;
+import 'package:epub_reader/app/schedule_theme.dart';
+import 'package:epub_reader/core/database/app_database.dart';
 import 'package:epub_reader/features/discover/data/catalog.dart';
+import 'package:epub_reader/features/discover/data/catalog_notifier.dart';
+import 'package:epub_reader/features/discover/discover_page.dart';
+import 'package:epub_reader/l10n/app_localizations.dart';
+import 'package:flutter/material.dart';
+import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:flutter_test/flutter_test.dart';
+
+CatalogBook _book(String title, List<String> genres) {
+  return CatalogBook(
+    id: title,
+    title: title,
+    downloadUrl: 'https://example.test/$title',
+    genres: genres,
+  );
+}
 
 void main() {
   test('reads a catalog response', () {
@@ -80,4 +98,92 @@ void main() {
     expect(catalog.urlsExpireAt, isNull);
     expect(catalog.urlsExpired, isFalse);
   });
+
+  test('groups a book under its specific genre', () {
+    final grouped = groupCatalogBooks([
+      _book('Cities', ['Fiction', 'Adventure']),
+      _book('Plain', const []),
+      _book('Island', ['Horror', 'Science Fiction']),
+      _book('Cities again', ['Fiction']),
+    ]);
+
+    expect(grouped.shelves.map((shelf) => shelf.genre), [
+      'Adventure',
+      'Horror',
+      'Fiction',
+      null,
+    ]);
+    expect(grouped.shelves[0].books.single.title, 'Cities');
+    expect(grouped.shelves[1].books.single.title, 'Island');
+    expect(catalogGenreLabel(['Fiction', 'Horror']), 'Horror');
+    expect(
+      catalogGenreLabel(['Horror', 'Science Fiction']),
+      'Horror · Science Fiction',
+    );
+    expect(catalogGenreLabel(['Fiction']), 'Fiction');
+    expect(catalogGenreLabel(const []), isNull);
+  });
+
+  test('keeps a shared genre as its own label', () {
+    final grouped = groupCatalogBooks([
+      _book('Cities', ['Fiction']),
+      _book('Plain', const []),
+      _book('Other', ['Fiction']),
+    ]);
+
+    expect(grouped.shelves.map((shelf) => shelf.genre), ['Fiction', null]);
+    expect(grouped.shelves.first.books.map((book) => book.title), [
+      'Cities',
+      'Other',
+    ]);
+  });
+
+  testWidgets('discovery shows a genre label when several are present', (
+    tester,
+  ) async {
+    final database = AppDatabase(NativeDatabase.memory());
+    await tester.pumpWidget(
+      ProviderScope(
+        overrides: [
+          databaseProvider.overrideWith((ref) {
+            ref.onDispose(database.close);
+            return database;
+          }),
+          catalogProvider.overrideWith(_GenreCatalog.new),
+        ],
+        child: MaterialApp(
+          locale: const Locale('es'),
+          localizationsDelegates: AppLocalizations.localizationsDelegates,
+          supportedLocales: AppLocalizations.supportedLocales,
+          theme: scheduleTheme(Brightness.light),
+          home: const DiscoverPage(),
+        ),
+      ),
+    );
+    await tester.pumpAndSettle();
+
+    expect(find.text('Por añadir'), findsOneWidget);
+    expect(find.text('Adventure'), findsNWidgets(2));
+    expect(find.text('Horror'), findsOneWidget);
+    expect(find.text('Horror · Science Fiction'), findsOneWidget);
+    expect(find.text('Fiction'), findsNothing);
+    expect(find.text('En tu biblioteca'), findsNothing);
+
+    await tester.pumpWidget(const SizedBox.shrink());
+    await tester.pump(Duration.zero);
+  });
+}
+
+class _GenreCatalog extends CatalogNotifier {
+  @override
+  Future<Catalog> build() async {
+    return Catalog(
+      generatedAt: null,
+      urlsExpireAt: DateTime.utc(2026, 9, 28, 8),
+      books: [
+        _book('Cities', ['Fiction', 'Adventure']),
+        _book('Island', ['Horror', 'Science Fiction']),
+      ],
+    );
+  }
 }

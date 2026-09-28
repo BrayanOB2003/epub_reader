@@ -271,6 +271,8 @@ Hour chips and day letters are the choice, at a different size. Unselected: pape
 
 There is no card. A listing is paper (or station, when it is the live row) with a 1px rule under it. Internal padding is 8px by 20px. The leading time column is tabular. The title is the program face; the subtitle is muted body; the trailing status is a label in ink. On air, title and trailing switch to `onStation`, and the subtitle to `onStationMuted`.
 
+The catalog is two blocks. Por añadir lists books still to add, each with a 72×108 cover. A muted label names the book's genre, on the row and as the group heading. Fiction drops out of that label when the book names something more specific. A book appears once, under that genre, in catalog order. Books with no genre follow, without a label. En tu biblioteca stays a short listing, 36×52, and each of those rows keeps the same genre label.
+
 The minute field is an outline, not a card: transparent fill, 1px `onStationMuted` border, program type at 28px in `onStation`, padding 8px by 12px. When the day's minutes are met, the field fills with `onStation` and the numerals switch to station.
 
 Book time on the Tiempo screen is type on paper: the title and the total in platform titleMedium, the total in station, sessions in muted body. No border, radius, or shadow.
@@ -313,6 +315,7 @@ Week bars are square station columns. The plot is 96px tall. Today’s column ha
 - **Do** put Eliminar on each book, on the live band and on each listing.
 - **Do** leave the Spanish labels as they ship, including Leer, Importar, and the date line.
 - **Do** show a book's cover once on the live band (72×108) and as a 36×52 mark on its listing, square and flat, only when the file has one.
+- **Do** group Por añadir by the book's specific genre. The genre is a muted label on the row and on the group. A lone Fiction stays; it drops out when the book names something more specific. En tu biblioteca keeps the same label on each row.
 
 ### Don't:
 
