@@ -1,6 +1,7 @@
 import 'dart:convert';
 import 'dart:io';
 
+import 'package:epub_reader/app/app_locale.dart';
 import 'package:epub_reader/features/discover/data/catalog.dart';
 import 'package:epub_reader/features/discover/data/catalog_cache.dart';
 import 'package:epub_reader/features/discover/data/catalog_client.dart';
@@ -28,42 +29,47 @@ void main() {
         urlsExpireAt: DateTime.utc(2026, 9, 24, 6),
       );
 
-      await cache.write(catalog);
-      final saved = await cache.read();
+      await cache.write('es', catalog);
+      final saved = await cache.read('es');
 
       expect(saved, isNotNull);
       expect(saved!.savedAt, isNotNull);
       expect(saved.catalog.books.single.title, 'Don Quijote');
       expect(saved.catalog.urlsExpireAt, catalog.urlsExpireAt);
-      expect(File('${directory.path}/catalog.json.tmp').existsSync(), isFalse);
+      expect(
+        File('${directory.path}/catalog-es.json.tmp').existsSync(),
+        isFalse,
+      );
 
-      final raw =
-          jsonDecode(
-                await File('${directory.path}/catalog.json').readAsString(),
-              )
-              as Map;
+      final raw = jsonDecode(
+        await File('${directory.path}/catalog-es.json').readAsString(),
+      ) as Map;
       expect(raw['guardado_en'], isA<String>());
       expect(raw['catalogo'], isA<Map<String, dynamic>>());
     });
 
     test('replaces the previous copy', () async {
       await cache.write(
+        'es',
         _catalog(title: 'Viejo', urlsExpireAt: DateTime.utc(2026, 9, 24, 6)),
       );
       await cache.write(
+        'en',
         _catalog(title: 'Nuevo', urlsExpireAt: DateTime.utc(2026, 9, 24, 7)),
       );
 
-      final saved = await cache.read();
-      expect(saved!.catalog.books.single.title, 'Nuevo');
+      final saved = await cache.read('es');
+      expect(saved!.catalog.books.single.title, 'Viejo');
+      final english = await cache.read('en');
+      expect(english!.catalog.books.single.title, 'Nuevo');
     });
 
     test('returns null when the file is missing or damaged', () async {
-      expect(await cache.read(), isNull);
+      expect(await cache.read('es'), isNull);
 
-      await File('${directory.path}/catalog.json').writeAsString('{');
-      expect(await cache.read(), isNull);
-      expect(File('${directory.path}/catalog.json').existsSync(), isFalse);
+      await File('${directory.path}/catalog-es.json').writeAsString('{');
+      expect(await cache.read('es'), isNull);
+      expect(File('${directory.path}/catalog-es.json').existsSync(), isFalse);
     });
   });
 
@@ -84,6 +90,7 @@ void main() {
     test('uses a valid copy and does not call the network', () async {
       final cache = CatalogCache(directory: () async => directory);
       await cache.write(
+        'es',
         _catalog(
           title: 'En caché',
           urlsExpireAt: DateTime.now().toUtc().add(const Duration(hours: 1)),
@@ -105,6 +112,7 @@ void main() {
       () async {
         final cache = CatalogCache(directory: () async => directory);
         await cache.write(
+          'es',
           _catalog(
             title: 'En caché',
             urlsExpireAt: DateTime.now().toUtc().add(const Duration(hours: 1)),
@@ -133,6 +141,7 @@ void main() {
     test('shows an expired copy and then replaces it', () async {
       final cache = CatalogCache(directory: () async => directory);
       await cache.write(
+        'es',
         _catalog(
           title: 'Caducado',
           urlsExpireAt: DateTime.now().toUtc().subtract(
@@ -151,19 +160,23 @@ void main() {
       final shown = await container.read(catalogProvider.future);
       expect(shown.books.single.title, 'Caducado');
 
-      await pumpEventQueue();
+      String? title;
+      for (var attempt = 0; attempt < 50; attempt++) {
+        await pumpEventQueue();
+        title = container.read(catalogProvider).value?.books.single.title;
+        if (title == 'Nuevo') break;
+        await Future<void>.delayed(const Duration(milliseconds: 20));
+      }
 
-      expect(
-        container.read(catalogProvider).value?.books.single.title,
-        'Nuevo',
-      );
-      expect((await cache.read())!.catalog.books.single.title, 'Nuevo');
+      expect(title, 'Nuevo');
+      expect((await cache.read('es'))!.catalog.books.single.title, 'Nuevo');
       expect(client.calls, 1);
     });
 
     test('keeps the expired copy when the refresh fails', () async {
       final cache = CatalogCache(directory: () async => directory);
       await cache.write(
+        'es',
         _catalog(
           title: 'Caducado',
           urlsExpireAt: DateTime.now().toUtc().subtract(
@@ -184,7 +197,7 @@ void main() {
         container.read(catalogProvider).value?.books.single.title,
         'Caducado',
       );
-      expect((await cache.read())!.catalog.books.single.title, 'Caducado');
+      expect((await cache.read('es'))!.catalog.books.single.title, 'Caducado');
     });
 
     test('fetches when there is no copy', () async {
@@ -199,10 +212,13 @@ void main() {
 
       expect(catalog.books.single.title, 'Remoto');
       expect(client.calls, 1);
+      expect(client.language, 'es');
       expect(
-        (await CatalogCache(
-          directory: () async => directory,
-        ).read())!.catalog.books.single.title,
+        (await CatalogCache(directory: () async => directory).read('es'))!
+            .catalog
+            .books
+            .single
+            .title,
         'Remoto',
       );
     });
@@ -210,6 +226,7 @@ void main() {
     test('reload ignores a valid copy', () async {
       final cache = CatalogCache(directory: () async => directory);
       await cache.write(
+        'es',
         _catalog(
           title: 'En caché',
           urlsExpireAt: DateTime.now().toUtc().add(const Duration(hours: 1)),
@@ -237,6 +254,7 @@ void main() {
     test('reload keeps the visible copy when the network fails', () async {
       final cache = CatalogCache(directory: () async => directory);
       await cache.write(
+        'es',
         _catalog(
           title: 'En caché',
           urlsExpireAt: DateTime.now().toUtc().add(const Duration(hours: 1)),
@@ -283,6 +301,7 @@ ProviderContainer _container(
       catalogCacheProvider.overrideWithValue(
         CatalogCache(directory: () async => directory),
       ),
+      catalogLanguageProvider.overrideWithValue('es'),
       catalogClientProvider.overrideWith((ref) => client),
     ],
   );
@@ -294,11 +313,13 @@ class _ScriptedCatalogClient extends CatalogClient {
   Catalog? next;
   var fail = false;
   var calls = 0;
+  String? language;
 
   @override
-  Future<Catalog> fetch() async {
+  Future<Catalog> fetch(String language) async {
     calls += 1;
-    if (fail) throw const CatalogException('No se pudo cargar el catálogo.');
+    this.language = language;
+    if (fail) throw const CatalogException(CatalogFailure.load);
     return next!;
   }
 }

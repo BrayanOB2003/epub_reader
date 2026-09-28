@@ -31,7 +31,11 @@ bool? pageTurnSwipe({
 ///
 /// Scroll mode lays out one reading-order resource at a time. Fragments are
 /// ignored so a locator inside `chapter.xhtml#p3` still matches that chapter.
-int? adjacentChapterIndex({required List<String> hrefs, required String currentHref, required bool forward}) {
+int? adjacentChapterIndex({
+  required List<String> hrefs,
+  required String currentHref,
+  required bool forward,
+}) {
   if (hrefs.isEmpty) return null;
   final resource = _resourceHref(currentHref);
   final index = hrefs.indexWhere((href) => _resourceHref(href) == resource);
@@ -43,7 +47,11 @@ int? adjacentChapterIndex({required List<String> hrefs, required String currentH
 
 String _resourceHref(String href) => href.split('#').first;
 
-ReaderZone readerZoneAt({required double x, required double width, required bool rtl}) {
+ReaderZone readerZoneAt({
+  required double x,
+  required double width,
+  required bool rtl,
+}) {
   if (width <= 0) return ReaderZone.menu;
   final fraction = (x / width).clamp(0.0, 1.0);
   if (fraction < 0.2) return rtl ? ReaderZone.next : ReaderZone.previous;
@@ -72,27 +80,33 @@ class ReaderGestureLayer extends StatelessWidget {
   @override
   Widget build(BuildContext context) {
     final gestures = <Type, GestureRecognizerFactory>{
-      _ShortTapRecognizer: GestureRecognizerFactoryWithHandlers<_ShortTapRecognizer>(
-        () => _ShortTapRecognizer(),
-        (recognizer) {
-          recognizer.shouldClaim = (position) => _claims(context, position);
-          recognizer.onShortTap = (position) => _dispatch(context, position);
-        },
-      ),
+      _ShortTapRecognizer:
+          GestureRecognizerFactoryWithHandlers<_ShortTapRecognizer>(
+            () => _ShortTapRecognizer(),
+            (recognizer) {
+              recognizer.shouldClaim = (position) => _claims(context, position);
+              recognizer.onShortTap = (position) =>
+                  _dispatch(context, position);
+            },
+          ),
     };
     if (!scroll && !textSelected) {
-      gestures[_PageTurnSwipeRecognizer] = GestureRecognizerFactoryWithHandlers<_PageTurnSwipeRecognizer>(
-        () => _PageTurnSwipeRecognizer(),
-        (recognizer) {
-          recognizer.rtl = rtl;
-          recognizer.onTurn = onSwipe;
-        },
-      );
+      gestures[_PageTurnSwipeRecognizer] =
+          GestureRecognizerFactoryWithHandlers<_PageTurnSwipeRecognizer>(
+            () => _PageTurnSwipeRecognizer(),
+            (recognizer) {
+              recognizer.rtl = rtl;
+              recognizer.onTurn = onSwipe;
+            },
+          );
     }
     return RawGestureDetector(
       behavior: HitTestBehavior.translucent,
       gestures: gestures,
-      child: _SelectionTapObserver(enabled: textSelected, onShortTap: onSelectionTap),
+      child: _SelectionTapObserver(
+        enabled: textSelected,
+        onShortTap: onSelectionTap,
+      ),
     );
   }
 
@@ -152,7 +166,11 @@ class _ShortTapRecognizer extends PrimaryPointerGestureRecognizer {
 /// then turns only if the finger lifts before [pageTurnSwipeDeadline].
 class _PageTurnSwipeRecognizer extends PrimaryPointerGestureRecognizer {
   _PageTurnSwipeRecognizer()
-    : super(deadline: shortTapDeadline, preAcceptSlopTolerance: null, postAcceptSlopTolerance: null);
+    : super(
+        deadline: shortTapDeadline,
+        preAcceptSlopTolerance: null,
+        postAcceptSlopTolerance: null,
+      );
 
   bool rtl = false;
   ValueChanged<bool>? onTurn;
@@ -188,7 +206,12 @@ class _PageTurnSwipeRecognizer extends PrimaryPointerGestureRecognizer {
       if (event is PointerUpEvent) resolve(GestureDisposition.rejected);
       return;
     }
-    final forward = pageTurnSwipe(dx: dx, dy: dy, elapsed: event.timeStamp - started, rtl: rtl);
+    final forward = pageTurnSwipe(
+      dx: dx,
+      dy: dy,
+      elapsed: event.timeStamp - started,
+      rtl: rtl,
+    );
     if (forward != null && onTurn != null) {
       invokeCallback<void>('onTurn', () => onTurn!(forward));
     }
@@ -206,7 +229,10 @@ class _PageTurnSwipeRecognizer extends PrimaryPointerGestureRecognizer {
 /// Sees the tap that was given to Readium and clears the selection flag only
 /// when it was a short tap. A drag that adjusts the selection keeps the flag.
 class _SelectionTapObserver extends StatefulWidget {
-  const _SelectionTapObserver({required this.enabled, required this.onShortTap});
+  const _SelectionTapObserver({
+    required this.enabled,
+    required this.onShortTap,
+  });
 
   final bool enabled;
   final VoidCallback onShortTap;

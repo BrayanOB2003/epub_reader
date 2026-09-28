@@ -118,6 +118,8 @@ void main() {
     'the first launch asks three questions and then opens the library',
     (tester) async {
       final database = AppDatabase(NativeDatabase.memory());
+      tester.platformDispatcher.localesTestValue = const [Locale('es')];
+      addTearDown(tester.platformDispatcher.clearLocalesTestValue);
       await tester.pumpWidget(
         ProviderScope(
           overrides: [

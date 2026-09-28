@@ -1,17 +1,27 @@
 import 'package:epub_reader/features/profile/reading_goal.dart';
 import 'package:epub_reader/features/profile/reading_routine.dart';
+import 'package:epub_reader/l10n/app_localizations.dart';
 
 enum ReadingMotivation {
-  readMore('read_more', 'Leer más'),
-  habit('habit', 'Crear un hábito'),
-  finishBooks('finish_books', 'Terminar más libros'),
-  learn('learn', 'Aprender cosas nuevas'),
-  timeForMe('time_for_me', 'Tener un momento para mí');
+  readMore('read_more'),
+  habit('habit'),
+  finishBooks('finish_books'),
+  learn('learn'),
+  timeForMe('time_for_me');
 
-  const ReadingMotivation(this.id, this.label);
+  const ReadingMotivation(this.id);
 
   final String id;
-  final String label;
+
+  String label(AppLocalizations l10n) {
+    return switch (this) {
+      ReadingMotivation.readMore => l10n.motivationReadMore,
+      ReadingMotivation.habit => l10n.motivationHabit,
+      ReadingMotivation.finishBooks => l10n.motivationFinishBooks,
+      ReadingMotivation.learn => l10n.motivationLearn,
+      ReadingMotivation.timeForMe => l10n.motivationTimeForMe,
+    };
+  }
 
   static ReadingMotivation? byId(String id) {
     for (final motivation in values) {

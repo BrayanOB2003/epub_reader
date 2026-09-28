@@ -18,12 +18,12 @@ class CatalogCache {
   CatalogCache({Future<Directory> Function()? directory})
     : _directory = directory ?? getApplicationCacheDirectory;
 
-  static const fileName = 'catalog.json';
+  static String fileNameFor(String language) => 'catalog-$language.json';
 
   final Future<Directory> Function() _directory;
 
-  Future<CachedCatalog?> read() async {
-    final file = await _file();
+  Future<CachedCatalog?> read(String language) async {
+    final file = await _file(language);
     if (!await file.exists()) return null;
 
     try {
@@ -47,11 +47,12 @@ class CatalogCache {
     }
   }
 
-  Future<void> write(Catalog catalog) async {
+  Future<void> write(String language, Catalog catalog) async {
     final directory = await _directory();
     await directory.create(recursive: true);
-    final file = File(p.join(directory.path, fileName));
-    final temp = File(p.join(directory.path, '$fileName.tmp'));
+    final name = fileNameFor(language);
+    final file = File(p.join(directory.path, name));
+    final temp = File(p.join(directory.path, '$name.tmp'));
     await temp.writeAsString(
       jsonEncode({
         'guardado_en': DateTime.now().toUtc().toIso8601String(),
@@ -67,9 +68,9 @@ class CatalogCache {
     }
   }
 
-  Future<File> _file() async {
+  Future<File> _file(String language) async {
     final directory = await _directory();
-    return File(p.join(directory.path, fileName));
+    return File(p.join(directory.path, fileNameFor(language)));
   }
 
   Future<void> _deleteQuietly(File file) async {

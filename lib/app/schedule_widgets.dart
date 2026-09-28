@@ -14,6 +14,16 @@ const scheduleWeekdays = [
   'domingo',
 ];
 
+const _englishWeekdays = [
+  'Monday',
+  'Tuesday',
+  'Wednesday',
+  'Thursday',
+  'Friday',
+  'Saturday',
+  'Sunday',
+];
+
 const scheduleMonths = [
   'enero',
   'febrero',
@@ -29,8 +39,28 @@ const scheduleMonths = [
   'diciembre',
 ];
 
-String scheduleDate(DateTime day) {
+const _englishMonths = [
+  'January',
+  'February',
+  'March',
+  'April',
+  'May',
+  'June',
+  'July',
+  'August',
+  'September',
+  'October',
+  'November',
+  'December',
+];
+
+String scheduleDate(DateTime day, String languageCode) {
   final local = day.toLocal();
+  if (languageCode == 'en') {
+    final weekday = _englishWeekdays[local.weekday - 1];
+    final month = _englishMonths[local.month - 1];
+    return '$weekday, $month ${local.day}';
+  }
   final weekday = scheduleWeekdays[local.weekday - 1];
   final month = scheduleMonths[local.month - 1];
   return '$weekday ${local.day} de $month';
@@ -63,7 +93,7 @@ class ScheduleHeader extends StatelessWidget {
           if (date != null) ...[
             const SizedBox(height: 8),
             Text(
-              scheduleDate(date!),
+              scheduleDate(date!, Localizations.localeOf(context).languageCode),
               style: Theme.of(context).textTheme.bodyLarge
                   ?.copyWith(color: colors.muted),
             ),

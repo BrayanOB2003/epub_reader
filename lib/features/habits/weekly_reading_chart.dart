@@ -1,7 +1,13 @@
 import 'package:epub_reader/features/habits/reading_time.dart';
+import 'package:epub_reader/l10n/app_localizations.dart';
 import 'package:flutter/material.dart';
 
-const weekdayLabels = ['Lun', 'Mar', 'Mié', 'Jue', 'Vie', 'Sáb', 'Dom'];
+List<String> weekdayLabels(String languageCode) {
+  if (languageCode == 'en') {
+    return const ['Mon', 'Tue', 'Wed', 'Thu', 'Fri', 'Sat', 'Sun'];
+  }
+  return const ['Lun', 'Mar', 'Mié', 'Jue', 'Vie', 'Sáb', 'Dom'];
+}
 
 class WeeklyReadingChart extends StatelessWidget {
   const WeeklyReadingChart({
@@ -18,6 +24,8 @@ class WeeklyReadingChart extends StatelessWidget {
   @override
   Widget build(BuildContext context) {
     final theme = Theme.of(context);
+    final l10n = AppLocalizations.of(context);
+    final labels = weekdayLabels(Localizations.localeOf(context).languageCode);
     final color = theme.colorScheme;
     final peak = days.fold<int>(
       0,
@@ -36,7 +44,7 @@ class WeeklyReadingChart extends StatelessWidget {
           children: [
             Row(
               children: [
-                Text('Esta semana', style: theme.textTheme.titleMedium),
+                Text(l10n.thisWeek, style: theme.textTheme.titleMedium),
                 const Spacer(),
                 if (goalFraction != null) ...[
                   CustomPaint(
@@ -45,7 +53,7 @@ class WeeklyReadingChart extends StatelessWidget {
                   ),
                   const SizedBox(width: 6),
                   Text(
-                    'Meta · ${formatReadingDuration(goal!)}',
+                    l10n.goalLine(formatReadingDuration(goal!)),
                     style: theme.textTheme.bodySmall?.copyWith(
                       color: color.onSurfaceVariant,
                     ),

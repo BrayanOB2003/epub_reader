@@ -49,6 +49,7 @@ class CatalogBook {
     this.authors,
     this.identifier,
     this.language,
+    this.genres = const [],
     this.coverUrl,
     this.size,
   });
@@ -58,6 +59,7 @@ class CatalogBook {
   final String? authors;
   final String? identifier;
   final String? language;
+  final List<String> genres;
   final String? coverUrl;
   final String downloadUrl;
   final int? size;
@@ -67,12 +69,11 @@ class CatalogBook {
     final downloadUrl = json['descarga_url'];
     return CatalogBook(
       id: json['id']?.toString() ?? '',
-      title: title is String && title.trim().isNotEmpty
-          ? title.trim()
-          : 'Sin título',
+      title: title is String && title.trim().isNotEmpty ? title.trim() : '',
       authors: _text(json['autores']),
       identifier: _text(json['identificador']),
       language: _text(json['idioma']),
+      genres: _texts(json['generos']),
       coverUrl: _text(json['portada_url']),
       downloadUrl: downloadUrl is String ? downloadUrl : '',
       size: json['tamano'] is num ? (json['tamano'] as num).toInt() : null,
@@ -86,6 +87,7 @@ class CatalogBook {
       'autores': authors,
       'identificador': identifier,
       'idioma': language,
+      'generos': genres,
       'portada_url': coverUrl,
       'descarga_url': downloadUrl,
       'tamano': size,
@@ -93,13 +95,16 @@ class CatalogBook {
   }
 }
 
-class CatalogException implements Exception {
-  const CatalogException(this.message);
+enum CatalogFailure { load, format, missingUrl, download, missingKey }
 
-  final String message;
+class CatalogException implements Exception {
+  const CatalogException(this.failure, {this.statusCode});
+
+  final CatalogFailure failure;
+  final int? statusCode;
 
   @override
-  String toString() => message;
+  String toString() => 'CatalogException($failure, $statusCode)';
 }
 
 DateTime? _date(Object? value) {
@@ -111,4 +116,14 @@ String? _text(Object? value) {
   if (value is! String) return null;
   final trimmed = value.trim();
   return trimmed.isEmpty ? null : trimmed;
+}
+
+List<String> _texts(Object? value) {
+  if (value is! List) return const [];
+  final texts = <String>[];
+  for (final item in value) {
+    final text = _text(item);
+    if (text != null && !texts.contains(text)) texts.add(text);
+  }
+  return texts;
 }

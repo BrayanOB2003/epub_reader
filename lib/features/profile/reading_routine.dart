@@ -1,14 +1,23 @@
-enum ReadingRoutine {
-  morning('morning', 'Mañana', 5, 11),
-  afternoon('afternoon', 'Tarde', 12, 18),
-  night('night', 'Noche', 19, 23);
+import 'package:epub_reader/l10n/app_localizations.dart';
 
-  const ReadingRoutine(this.id, this.label, this.firstHour, this.lastHour);
+enum ReadingRoutine {
+  morning('morning', 5, 11),
+  afternoon('afternoon', 12, 18),
+  night('night', 19, 23);
+
+  const ReadingRoutine(this.id, this.firstHour, this.lastHour);
 
   final String id;
-  final String label;
   final int firstHour;
   final int lastHour;
+
+  String label(AppLocalizations l10n) {
+    return switch (this) {
+      ReadingRoutine.morning => l10n.routineMorning,
+      ReadingRoutine.afternoon => l10n.routineAfternoon,
+      ReadingRoutine.night => l10n.routineNight,
+    };
+  }
 
   List<int> get hours => [
     for (var hour = firstHour; hour <= lastHour; hour++) hour,
@@ -27,19 +36,41 @@ enum ReadingRoutine {
 String readingHourLabel(int hour) => '${hour.toString().padLeft(2, '0')}:00';
 
 enum ReadingWeekday {
-  monday(1, 'L', 'Lunes'),
-  tuesday(2, 'M', 'Martes'),
-  wednesday(3, 'X', 'Miércoles'),
-  thursday(4, 'J', 'Jueves'),
-  friday(5, 'V', 'Viernes'),
-  saturday(6, 'S', 'Sábado'),
-  sunday(7, 'D', 'Domingo');
+  monday(1),
+  tuesday(2),
+  wednesday(3),
+  thursday(4),
+  friday(5),
+  saturday(6),
+  sunday(7);
 
-  const ReadingWeekday(this.id, this.letter, this.label);
+  const ReadingWeekday(this.id);
 
   final int id;
-  final String letter;
-  final String label;
+
+  String letter(AppLocalizations l10n) {
+    return switch (this) {
+      ReadingWeekday.monday => l10n.mondayLetter,
+      ReadingWeekday.tuesday => l10n.tuesdayLetter,
+      ReadingWeekday.wednesday => l10n.wednesdayLetter,
+      ReadingWeekday.thursday => l10n.thursdayLetter,
+      ReadingWeekday.friday => l10n.fridayLetter,
+      ReadingWeekday.saturday => l10n.saturdayLetter,
+      ReadingWeekday.sunday => l10n.sundayLetter,
+    };
+  }
+
+  String label(AppLocalizations l10n) {
+    return switch (this) {
+      ReadingWeekday.monday => l10n.monday,
+      ReadingWeekday.tuesday => l10n.tuesday,
+      ReadingWeekday.wednesday => l10n.wednesday,
+      ReadingWeekday.thursday => l10n.thursday,
+      ReadingWeekday.friday => l10n.friday,
+      ReadingWeekday.saturday => l10n.saturday,
+      ReadingWeekday.sunday => l10n.sunday,
+    };
+  }
 
   static ReadingWeekday? byId(int id) {
     for (final day in values) {

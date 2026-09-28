@@ -35,7 +35,8 @@ void main() {
   });
 
   test('rejects a file that is not an EPUB', () {
-    final archive = Archive()..addFile(ArchiveFile.string('readme.txt', 'hola'));
+    final archive = Archive()
+      ..addFile(ArchiveFile.string('readme.txt', 'hola'));
     final bytes = Uint8List.fromList(ZipEncoder().encode(archive));
 
     expect(() => readEpubMetadata(bytes), throwsA(isA<EpubFormatException>()));
@@ -46,17 +47,14 @@ Uint8List _epub({required String opf, Uint8List? cover}) {
   final archive = Archive()
     ..addFile(ArchiveFile.string('mimetype', 'application/epub+zip'))
     ..addFile(
-      ArchiveFile.string(
-        'META-INF/container.xml',
-        '''
+      ArchiveFile.string('META-INF/container.xml', '''
 <?xml version="1.0"?>
 <container xmlns="urn:oasis:names:tc:opendocument:xmlns:container" version="1.0">
   <rootfiles>
     <rootfile full-path="OEBPS/content.opf" media-type="application/oebps-package+xml"/>
   </rootfiles>
 </container>
-''',
-      ),
+'''),
     )
     ..addFile(ArchiveFile.string('OEBPS/content.opf', opf));
   if (cover != null) {

@@ -157,15 +157,23 @@ String formatReadingDuration(int seconds) {
   return '$minutes min $rest s';
 }
 
-String formatReadingMoment(DateTime instant, {required DateTime now}) {
+String formatReadingMoment(
+  DateTime instant, {
+  required DateTime now,
+  String languageCode = 'es',
+}) {
   final local = instant.toLocal();
   final current = now.toLocal();
   final time = '${_two(local.hour)}:${_two(local.minute)}';
   final day = DateTime(local.year, local.month, local.day);
   final today = DateTime(current.year, current.month, current.day);
-  if (day == today) return 'Hoy, $time';
-  if (day == today.subtract(const Duration(days: 1))) return 'Ayer, $time';
-  return '${local.day} ${_shortMonths[local.month - 1]}, $time';
+  final english = languageCode == 'en';
+  if (day == today) return '${english ? 'Today' : 'Hoy'}, $time';
+  if (day == today.subtract(const Duration(days: 1))) {
+    return '${english ? 'Yesterday' : 'Ayer'}, $time';
+  }
+  final months = english ? _shortMonthsEn : _shortMonths;
+  return '${local.day} ${months[local.month - 1]}, $time';
 }
 
 const _shortMonths = [
@@ -183,6 +191,21 @@ const _shortMonths = [
   'dic',
 ];
 
+const _shortMonthsEn = [
+  'Jan',
+  'Feb',
+  'Mar',
+  'Apr',
+  'May',
+  'Jun',
+  'Jul',
+  'Aug',
+  'Sep',
+  'Oct',
+  'Nov',
+  'Dec',
+];
+
 const _monthNames = [
   'enero',
   'febrero',
@@ -198,9 +221,32 @@ const _monthNames = [
   'diciembre',
 ];
 
-String formatReadingMonth(DateTime month) {
+const _monthNamesEn = [
+  'January',
+  'February',
+  'March',
+  'April',
+  'May',
+  'June',
+  'July',
+  'August',
+  'September',
+  'October',
+  'November',
+  'December',
+];
+
+String formatReadingMonth(DateTime month, {String languageCode = 'es'}) {
+  if (languageCode == 'en') {
+    return '${_monthNamesEn[month.month - 1]} ${month.year}';
+  }
   final name = _monthNames[month.month - 1];
   return '${name[0].toUpperCase()}${name.substring(1)} ${month.year}';
+}
+
+String readingMonthName(DateTime month, String languageCode) {
+  if (languageCode == 'en') return _monthNamesEn[month.month - 1];
+  return _monthNames[month.month - 1];
 }
 
 String _two(int value) => value.toString().padLeft(2, '0');

@@ -1,0 +1,184 @@
+{
+  "@@locale": "es",
+  "discover": "Descubrimiento",
+  "library": "Biblioteca",
+  "time": "Tiempo",
+  "profile": "Perfil",
+  "noBooksYet": "Todavía no hay libros",
+  "epubOnDevice": "Un EPUB de este dispositivo",
+  "import": "Importar",
+  "importing": "Importando",
+  "importEpub": "Importar EPUB",
+  "read": "Leer",
+  "notStarted": "Sin empezar",
+  "delete": "Eliminar",
+  "deleteBook": "Eliminar libro",
+  "removeBook": "¿Quitar «{title}» de la biblioteca?",
+  "@removeBook": {
+    "placeholders": {
+      "title": {"type": "String"}
+    }
+  },
+  "cancel": "Cancelar",
+  "alreadyInLibrary": "Este libro ya está en la biblioteca.",
+  "importFailed": "No se pudo importar el EPUB.",
+  "deleteFailed": "No se pudo eliminar el libro.",
+  "addFailed": "No se pudo añadir el libro a la biblioteca.",
+  "untitled": "Sin título",
+  "notAnEpub": "El archivo no es un EPUB válido.",
+  "epubMissingRoot": "El EPUB no indica su archivo de contenido.",
+  "epubMissingContent": "No se encontró el contenido del EPUB.",
+  "toAdd": "Por añadir",
+  "inYourLibrary": "En tu biblioteca",
+  "add": "Añadir",
+  "allLanguages": "Todos",
+  "spanish": "Español",
+  "english": "Inglés",
+  "catalogEmpty": "El catálogo está vacío",
+  "catalogEmptyBody": "Cuando haya libros disponibles, aparecerán aquí.",
+  "retry": "Reintentar",
+  "catalogLoadFailed": "No se pudo cargar el catálogo.",
+  "catalogLoadFailedStatus": "No se pudo cargar el catálogo ({status}).",
+  "@catalogLoadFailedStatus": {
+    "placeholders": {
+      "status": {"type": "int"}
+    }
+  },
+  "catalogInvalid": "El catálogo no tiene el formato esperado.",
+  "missingDownload": "Este libro no tiene enlace de descarga.",
+  "downloadFailed": "No se pudo descargar el libro ({status}).",
+  "@downloadFailed": {
+    "placeholders": {
+      "status": {"type": "int"}
+    }
+  },
+  "missingApiKey": "Falta X_EPUB_KEY en .env.",
+  "contents": "Índice",
+  "close": "Cerrar",
+  "back": "Atrás",
+  "noContents": "Este libro no tiene índice.",
+  "copy": "Copiar",
+  "share": "Compartir",
+  "bookGone": "Este libro ya no está en la biblioteca.",
+  "chapterFailed": "No se pudo abrir este capítulo.",
+  "preferencesFailed": "No se pudieron aplicar los ajustes de lectura.",
+  "preferencesSaveFailed": "No se pudieron guardar los ajustes de lectura.",
+  "fixedColor": "En un libro de maquetación fija el color del texto no cambia.",
+  "fixedPages": "Este libro se lee por páginas.",
+  "fixedSize": "En un libro de maquetación fija el tamaño del texto no cambia.",
+  "fixedColorShort": "En este libro el color del texto no cambia",
+  "fixedPagesShort": "Este libro se lee por páginas",
+  "fixedSizeShort": "En este libro el tamaño del texto no cambia",
+  "pageMode": "Lectura por páginas",
+  "scrollMode": "Lectura con scroll",
+  "lightMode": "Modo claro",
+  "darkMode": "Modo oscuro",
+  "smallerText": "Reducir texto",
+  "originalSize": "Tamaño original",
+  "largerText": "Aumentar texto",
+  "readerDesktopOnly": "El lector funciona en iOS y Android. En el escritorio de macOS Readium no abre el EPUB.",
+  "openFailed": "No se pudo abrir el libro.",
+  "invalidBook": "Libro no válido.",
+  "welcomeTitle": "Crea el hábito de leer",
+  "welcomeBody": "Un lugar para leer un poco cada día y sostener ese hábito.",
+  "welcomeAccount": "Sin cuenta. Tus libros y tu progreso se guardan en este dispositivo.",
+  "stepOf": "{step} de {total}",
+  "@stepOf": {
+    "placeholders": {
+      "step": {"type": "int"},
+      "total": {"type": "int"}
+    }
+  },
+  "start": "Empezar",
+  "startReading": "Quiero empezar a leer",
+  "next": "Siguiente",
+  "answersSaveFailed": "No se pudieron guardar tus respuestas.",
+  "profileLoadFailed": "No se pudo cargar el perfil.\n{error}",
+  "@profileLoadFailed": {
+    "placeholders": {
+      "error": {"type": "String"}
+    }
+  },
+  "motivationQuestion": "¿Qué quieres conseguir con la lectura?",
+  "goalQuestion": "¿Cuánto quieres leer?",
+  "whenQuestion": "¿Cuándo te gustaría leer?",
+  "whichDays": "¿Qué días?",
+  "whatTime": "¿A qué hora?",
+  "minutes": "{count} minutos",
+  "@minutes": {
+    "placeholders": {
+      "count": {"type": "int"}
+    }
+  },
+  "motivationReadMore": "Leer más",
+  "motivationHabit": "Crear un hábito",
+  "motivationFinishBooks": "Terminar más libros",
+  "motivationLearn": "Aprender cosas nuevas",
+  "motivationTimeForMe": "Tener un momento para mí",
+  "routineMorning": "Mañana",
+  "routineAfternoon": "Tarde",
+  "routineNight": "Noche",
+  "mondayLetter": "L",
+  "tuesdayLetter": "M",
+  "wednesdayLetter": "X",
+  "thursdayLetter": "J",
+  "fridayLetter": "V",
+  "saturdayLetter": "S",
+  "sundayLetter": "D",
+  "monday": "Lunes",
+  "tuesday": "Martes",
+  "wednesday": "Miércoles",
+  "thursday": "Jueves",
+  "friday": "Viernes",
+  "saturday": "Sábado",
+  "sunday": "Domingo",
+  "notSet": "Sin definir",
+  "readingHabit": "Hábito de lectura",
+  "sampleReadings": "Generar lecturas de ejemplo",
+  "sampleReadingsSubtitle": "Desde hoy, un mes y medio atrás, de 0 a 15 minutos.",
+  "sampleReadingsBody": "Se agregará una lectura al azar por cada día, desde hoy hasta un mes y medio atrás. Cada una dura entre 0 y 15 minutos.",
+  "generate": "Generar",
+  "sampleReadingsAdded": "Se agregaron {count} lecturas de ejemplo.",
+  "@sampleReadingsAdded": {
+    "placeholders": {
+      "count": {"type": "int"}
+    }
+  },
+  "sampleReadingsFailed": "No se pudieron generar las lecturas.",
+  "thisWeek": "Esta semana",
+  "goalLine": "Meta · {duration}",
+  "@goalLine": {
+    "placeholders": {
+      "duration": {"type": "String"}
+    }
+  },
+  "noRecords": "Todavía no hay registros",
+  "noRecordsBody": "El tiempo se guarda cuando una lectura pasa de 30 segundos.",
+  "booksLoadFailed": "No se pudieron cargar los libros.\n{error}",
+  "@booksLoadFailed": {
+    "placeholders": {
+      "error": {"type": "String"}
+    }
+  },
+  "readingTimeLoadFailed": "No se pudo cargar el tiempo de lectura.\n{error}",
+  "@readingTimeLoadFailed": {
+    "placeholders": {
+      "error": {"type": "String"}
+    }
+  },
+  "previousMonth": "Mes anterior",
+  "nextMonth": "Mes siguiente",
+  "today": "Hoy",
+  "yesterday": "Ayer",
+  "goalMet": "meta cumplida",
+  "partialReading": "leído sin cumplir la meta",
+  "noReading": "sin lectura",
+  "calendarDay": "{day} de {month}, {state}",
+  "@calendarDay": {
+    "placeholders": {
+      "day": {"type": "int"},
+      "month": {"type": "String"},
+      "state": {"type": "String"}
+    }
+  }
+}
