@@ -1,0 +1,15 @@
+default_platform(:android)
+
+platform :android do
+  desc "Sube el APK release a Firebase App Distribution"
+  lane :distribute do
+    firebase_app_distribution(
+      app: ENV.fetch("FIREBASE_ANDROID_APP_ID"),
+      android_artifact_type: "APK",
+      android_artifact_path: "../build/app/outputs/flutter-apk/app-release.apk",
+      service_credentials_file: ENV.fetch("GOOGLE_APPLICATION_CREDENTIALS"),
+      groups: ENV.fetch("FIREBASE_TESTER_GROUPS"),
+      release_notes_file: ENV["FIREBASE_RELEASE_NOTES_FILE"]
+    )
+  end
+end

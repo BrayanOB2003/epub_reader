@@ -1,0 +1,129 @@
+name: Deploy iOS to Firebase Distribution
+
+on:
+  push:
+    branches:
+  workflow_dispatch:
+
+permissions:
+  contents: read
+
+env:
+  FIREBASE_PROJECT_ID: epub-reader-6a972
+  FIREBASE_IOS_APP_ID: "1:969465994480:ios:665f555c3d432fb585f635"
+  FIREBASE_TESTER_GROUPS: ${{ vars.FIREBASE_TESTER_GROUPS || 'testers' }}
+  IOS_BUNDLE_ID: com.somosliora.app
+  APPLE_TEAM_ID: 9PAN8935L8
+
+jobs:
+  ios-distribute:
+    name: Build iOS IPA and upload
+    runs-on: macos-26
+    timeout-minutes: 60
+    steps:
+      - name: Checkout repository
+        uses: actions/checkout@v4
+        with:
+          persist-credentials: false
+
+      - name: Create Temporary Keychain
+        run: |
+          KEYCHAIN_PATH=$HOME/Library/Keychains/ios-build.keychain-db
+          KEYCHAIN_PASSWORD="build_password_123"
+          security create-keychain -p "$KEYCHAIN_PASSWORD" "$KEYCHAIN_PATH"
+          security set-keychain-settings -lut 21600 "$KEYCHAIN_PATH"
+          security unlock-keychain -p "$KEYCHAIN_PASSWORD" "$KEYCHAIN_PATH"
+          security default-keychain -s "$KEYCHAIN_PATH"
+          security list-keychains -d user -s "$KEYCHAIN_PATH"
+
+      - name: Leer version de Flutter
+        id: fvm
+        run: |
+          set -euo pipefail
+          VERSION=$(python3 -c 'import json; print(json.load(open(".fvmrc"))["flutter"])')
+          echo "version=${VERSION}" >> "$GITHUB_OUTPUT"
+          echo "Flutter ${VERSION}"
+
+      - name: Setup Flutter
+        uses: subosito/flutter-action@v2
+        with:
+          flutter-version: ${{ steps.fvm.outputs.version }}
+          channel: stable
+          cache: true
+
+      - name: Setup Xcode
+        uses: maxim-lobanov/setup-xcode@v1
+        with:
+          xcode-version: latest-stable
+
+      - name: Precache Flutter iOS
+        run: flutter precache --ios
+
+      - name: Crear .env/.env desde secretos
+        env:
+          APP_ENV_FILE: ${{ secrets.APP_ENV_FILE }}
+        run: |
+          set -euo pipefail
+          if [ -z "${APP_ENV_FILE}" ]; then
+            echo "::error::Falta el secret APP_ENV_FILE (contenido de .env/.env, incluida la linea X_EPUB_KEY)."
+            exit 1
+          fi
+          mkdir -p .env
+          printf '%s\n' "$APP_ENV_FILE" > .env/.env
+          test -s .env/.env
+          grep -qE '^X_EPUB_KEY[:=]' .env/.env
+
+      - name: Install Dependencies
+        run: flutter pub get
+
+      - name: Run Build Runner
+        run: dart run build_runner build --delete-conflicting-outputs
+
+      - name: Calcular build number unico
+        run: |
+          set -euo pipefail
+          VERSION_LINE=$(grep -E '^version:' pubspec.yaml | head -1 | awk '{print $2}')
+          BASE_CODE="${VERSION_LINE#*+}"
+          CI_BUILD_NUMBER=$((BASE_CODE * 10000 + GITHUB_RUN_NUMBER))
+          echo "CI_BUILD_NUMBER=${CI_BUILD_NUMBER}" >> "$GITHUB_ENV"
+          echo "Build number de iOS: ${CI_BUILD_NUMBER} (base=${BASE_CODE}, run=${GITHUB_RUN_NUMBER})"
+
+      - name: Pre-build iOS (Release, sin firmar)
+        run: flutter build ios --release --no-codesign --build-number="${CI_BUILD_NUMBER}"
+
+      - name: Install Ruby and Fastlane
+        uses: ruby/setup-ruby@v1
+        with:
+          ruby-version: "3.2"
+          bundler-cache: true
+          working-directory: ios
+
+      - name: Build and Distribute iOS
+        working-directory: ios
+        env:
+          FIREBASE_IOS_APP_ID: ${{ env.FIREBASE_IOS_APP_ID }}
+          FIREBASE_SERVICE_ACCOUNT_JSON: ${{ secrets.FIREBASE_SERVICE_ACCOUNT_JSON }}
+          FIREBASE_TESTER_GROUPS: ${{ env.FIREBASE_TESTER_GROUPS }}
+          MATCH_PASSWORD: ${{ secrets.MATCH_PASSWORD }}
+          MATCH_GIT_URL: ${{ secrets.MATCH_GIT_URL }}
+          MATCH_KEYCHAIN_NAME: "ios-build.keychain-db"
+          MATCH_KEYCHAIN_PASSWORD: "build_password_123"
+          IOS_BUNDLE_ID: ${{ env.IOS_BUNDLE_ID }}
+          APPLE_TEAM_ID: ${{ env.APPLE_TEAM_ID }}
+        run: |
+          set -euo pipefail
+          if [ -z "${FIREBASE_SERVICE_ACCOUNT_JSON}" ] || [ -z "${MATCH_PASSWORD}" ] || [ -z "${MATCH_GIT_URL}" ]; then
+            echo "::error::Faltan secrets de iOS: FIREBASE_SERVICE_ACCOUNT_JSON, MATCH_PASSWORD y MATCH_GIT_URL."
+            exit 1
+          fi
+          printf '%s' "$FIREBASE_SERVICE_ACCOUNT_JSON" > "$RUNNER_TEMP/firebase-sa.json"
+          export GOOGLE_APPLICATION_CREDENTIALS="$RUNNER_TEMP/firebase-sa.json"
+          NOTES="$RUNNER_TEMP/firebase-release-notes.txt"
+          {
+            echo "Build generado automaticamente (iOS)."
+            echo "Numero de workflow: ${GITHUB_RUN_NUMBER}"
+            echo "Commit: ${GITHUB_SHA::7}"
+            echo "Build number: ${CI_BUILD_NUMBER}"
+          } > "$NOTES"
+          export FIREBASE_RELEASE_NOTES_FILE="$NOTES"
+          bundle exec fastlane distribute

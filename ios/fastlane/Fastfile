@@ -1,0 +1,51 @@
+default_platform(:ios)
+
+platform :ios do
+  desc "Firma ad-hoc con match y sube el IPA a Firebase App Distribution"
+  lane :distribute do
+    match(
+      type: "adhoc",
+      readonly: true,
+      app_identifier: ENV.fetch("IOS_BUNDLE_ID"),
+      team_id: ENV.fetch("APPLE_TEAM_ID"),
+      git_url: ENV.fetch("MATCH_GIT_URL"),
+      keychain_name: ENV.fetch("MATCH_KEYCHAIN_NAME"),
+      keychain_password: ENV.fetch("MATCH_KEYCHAIN_PASSWORD")
+    )
+
+    profile_name = ENV["sigh_#{ENV.fetch("IOS_BUNDLE_ID")}_adhoc_profile-name"]
+    UI.user_error!("match no dejo el nombre del provisioning profile ad-hoc") if profile_name.to_s.empty?
+
+    update_code_signing_settings(
+      use_automatic_signing: false,
+      path: "Runner.xcodeproj",
+      targets: ["Runner"],
+      team_id: ENV.fetch("APPLE_TEAM_ID"),
+      bundle_identifier: ENV.fetch("IOS_BUNDLE_ID"),
+      code_sign_identity: "Apple Distribution",
+      profile_name: profile_name
+    )
+
+    build_app(
+      workspace: "Runner.xcworkspace",
+      scheme: "Runner",
+      configuration: "Release",
+      export_method: "ad-hoc",
+      output_directory: "../build/ios/ipa",
+      output_name: "Liora.ipa",
+      export_options: {
+        provisioningProfiles: {
+          ENV.fetch("IOS_BUNDLE_ID") => profile_name
+        }
+      }
+    )
+
+    firebase_app_distribution(
+      app: ENV.fetch("FIREBASE_IOS_APP_ID"),
+      ipa_path: "../build/ios/ipa/Liora.ipa",
+      service_credentials_file: ENV.fetch("GOOGLE_APPLICATION_CREDENTIALS"),
+      groups: ENV.fetch("FIREBASE_TESTER_GROUPS"),
+      release_notes_file: ENV["FIREBASE_RELEASE_NOTES_FILE"]
+    )
+  end
+end

@@ -1,0 +1,151 @@
+name: Deploy Android to Firebase Distribution
+
+on:
+  push:
+    branches:
+      - test
+  workflow_dispatch:
+
+permissions:
+  contents: read
+
+env:
+  FIREBASE_PROJECT_ID: epub-reader-6a972
+  FIREBASE_ANDROID_APP_ID: "1:969465994480:android:ab8c7310f649e4ea85f635"
+  # Grupo de testers creado en Firebase App Distribution. Se puede override
+  # con el repository variable FIREBASE_TESTER_GROUPS.
+  FIREBASE_TESTER_GROUPS: ${{ vars.FIREBASE_TESTER_GROUPS || 'testers' }}
+
+jobs:
+  android-distribute:
+    name: Build Android APK and upload
+    runs-on: ubuntu-latest
+    timeout-minutes: 45
+    steps:
+      - name: Checkout repository
+        uses: actions/checkout@v4
+        with:
+          persist-credentials: false
+
+      - name: Leer version de Flutter
+        id: fvm
+        run: |
+          set -euo pipefail
+          VERSION=$(python3 -c 'import json; print(json.load(open(".fvmrc"))["flutter"])')
+          echo "version=${VERSION}" >> "$GITHUB_OUTPUT"
+          echo "Flutter ${VERSION}"
+
+      - name: Setup Java
+        uses: actions/setup-java@v4
+        with:
+          distribution: temurin
+          java-version: "17"
+
+      - name: Setup Flutter
+        uses: subosito/flutter-action@v2
+        with:
+          flutter-version: ${{ steps.fvm.outputs.version }}
+          channel: stable
+          cache: true
+
+      - name: Precache Flutter Android
+        run: flutter precache --android
+
+      - name: Crear .env/.env desde secretos
+        env:
+          APP_ENV_FILE: ${{ secrets.APP_ENV_FILE }}
+        run: |
+          set -euo pipefail
+          if [ -z "${APP_ENV_FILE}" ]; then
+            echo "::error::Falta el secret APP_ENV_FILE (contenido de .env/.env, incluida la linea X_EPUB_KEY)."
+            exit 1
+          fi
+          mkdir -p .env
+          printf '%s\n' "$APP_ENV_FILE" > .env/.env
+          test -s .env/.env
+          grep -qE '^X_EPUB_KEY[:=]' .env/.env
+
+      - name: Install Dependencies
+        run: flutter pub get
+
+      - name: Run Build Runner
+        run: dart run build_runner build --delete-conflicting-outputs
+
+      - name: Android release signing files
+        env:
+          ANDROID_KEYSTORE_BASE64: ${{ secrets.ANDROID_KEYSTORE_BASE64 }}
+          ANDROID_STORE_PASSWORD: ${{ secrets.ANDROID_STORE_PASSWORD }}
+          ANDROID_KEY_PASSWORD: ${{ secrets.ANDROID_KEY_PASSWORD }}
+          ANDROID_KEY_ALIAS: ${{ secrets.ANDROID_KEY_ALIAS }}
+        run: |
+          set -euo pipefail
+          if [ -z "${ANDROID_KEYSTORE_BASE64}" ] || [ -z "${ANDROID_STORE_PASSWORD}" ] || [ -z "${ANDROID_KEY_PASSWORD}" ] || [ -z "${ANDROID_KEY_ALIAS}" ]; then
+            echo "::error::Faltan secrets de firma Android: ANDROID_KEYSTORE_BASE64, ANDROID_STORE_PASSWORD, ANDROID_KEY_PASSWORD, ANDROID_KEY_ALIAS."
+            exit 1
+          fi
+          printf '%s' "$ANDROID_KEYSTORE_BASE64" | base64 -d > android/app/liora-upload.jks
+          test -s android/app/liora-upload.jks
+          {
+            echo "storePassword=${ANDROID_STORE_PASSWORD}"
+            echo "keyPassword=${ANDROID_KEY_PASSWORD}"
+            echo "keyAlias=${ANDROID_KEY_ALIAS}"
+            echo "storeFile=liora-upload.jks"
+          } > android/key.properties
+
+      # El gradle.properties del repo pide 8G de heap. El runner de GitHub no
+      # tiene esa RAM y el daemon muere. Estas lineas pisan el heap solo en CI.
+      - name: Ajustar Gradle para memoria del runner
+        run: |
+          set -euo pipefail
+          sed -i 's/^org.gradle.jvmargs=.*/org.gradle.jvmargs=-Xmx3584m -XX:MaxMetaspaceSize=512m -XX:ReservedCodeCacheSize=256m -XX:+HeapDumpOnOutOfMemoryError/' android/gradle.properties
+          {
+            echo "org.gradle.vfs.watch=false"
+            echo "org.gradle.workers.max=2"
+            echo "kotlin.daemon.jvmargs=-Xmx1536m"
+          } >> android/gradle.properties
+
+      # versionCode unico por run: si dos builds comparten versionName+versionCode,
+      # Firebase App Distribution actualiza el release existente y no notifica.
+      # Formula: code_base_pubspec * 10000 + run_number.
+      - name: Calcular versionCode unico del build
+        run: |
+          set -euo pipefail
+          VERSION_LINE=$(grep -E '^version:' pubspec.yaml | head -1 | awk '{print $2}')
+          BASE_CODE="${VERSION_LINE#*+}"
+          CI_BUILD_NUMBER=$((BASE_CODE * 10000 + GITHUB_RUN_NUMBER))
+          echo "CI_BUILD_NUMBER=${CI_BUILD_NUMBER}" >> "$GITHUB_ENV"
+          echo "versionCode del build: ${CI_BUILD_NUMBER} (base=${BASE_CODE}, run=${GITHUB_RUN_NUMBER})"
+
+      - name: Build Android APK (release)
+        run: flutter build apk --release --build-number="${CI_BUILD_NUMBER}"
+
+      - name: Install Ruby and Fastlane
+        uses: ruby/setup-ruby@v1
+        with:
+          ruby-version: "3.2"
+          bundler-cache: true
+          working-directory: android
+
+      - name: Upload to Firebase App Distribution
+        working-directory: android
+        env:
+          FIREBASE_ANDROID_APP_ID: ${{ env.FIREBASE_ANDROID_APP_ID }}
+          FIREBASE_SERVICE_ACCOUNT_JSON: ${{ secrets.FIREBASE_SERVICE_ACCOUNT_JSON }}
+          FIREBASE_TESTER_GROUPS: ${{ env.FIREBASE_TESTER_GROUPS }}
+        run: |
+          set -euo pipefail
+          if [ -z "${FIREBASE_SERVICE_ACCOUNT_JSON}" ]; then
+            echo "::error::Falta el secret FIREBASE_SERVICE_ACCOUNT_JSON."
+            exit 1
+          fi
+          printf '%s' "$FIREBASE_SERVICE_ACCOUNT_JSON" > "$RUNNER_TEMP/firebase-sa.json"
+          export GOOGLE_APPLICATION_CREDENTIALS="$RUNNER_TEMP/firebase-sa.json"
+          NOTES="$RUNNER_TEMP/firebase-release-notes.txt"
+          {
+            echo "Build generado automaticamente (Android)."
+            echo "Numero de workflow: ${GITHUB_RUN_NUMBER}"
+            echo "Commit: ${GITHUB_SHA::7}"
+            echo "versionCode: ${CI_BUILD_NUMBER}"
+          } > "$NOTES"
+          export FIREBASE_RELEASE_NOTES_FILE="$NOTES"
+          bundle exec fastlane distribute
