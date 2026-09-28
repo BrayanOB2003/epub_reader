@@ -1,7 +1,9 @@
-import 'package:drift/drift.dart';
+import 'package:drift/drift.dart' hide Column;
 import 'package:drift/native.dart';
 import 'package:epub_reader/app/app.dart';
 import 'package:epub_reader/app/providers.dart';
+import 'package:epub_reader/app/schedule_theme.dart';
+import 'package:epub_reader/app/schedule_widgets.dart';
 import 'package:epub_reader/core/database/app_database.dart';
 import 'package:epub_reader/features/discover/data/catalog.dart';
 import 'package:epub_reader/features/habits/reading_time.dart';
@@ -120,5 +122,39 @@ void main() {
 
     await tester.pumpWidget(const SizedBox.shrink());
     await tester.pump(Duration.zero);
+  });
+
+  test('cover initial skips marks and keeps a leading number', () {
+    expect(coverInitial('¿Hábitos?'), 'H');
+    expect(coverInitial('100 hábitos'), '1');
+    expect(coverInitial('   '), '');
+  });
+
+  testWidgets('a missing cover shows the title initial', (tester) async {
+    await tester.pumpWidget(
+      MaterialApp(
+        theme: scheduleTheme(Brightness.light),
+        home: Scaffold(
+          body: Column(
+            children: [
+              const ScheduleCoverPlaceholder(
+                width: 72,
+                height: 108,
+                title: '¿Hábitos?',
+                onAir: true,
+              ),
+              ScheduleListing(
+                title: 'Frankenstein',
+                subtitle: 'Mary Shelley',
+                onTap: () {},
+              ),
+            ],
+          ),
+        ),
+      ),
+    );
+
+    expect(find.text('H'), findsOneWidget);
+    expect(find.text('F'), findsOneWidget);
   });
 }

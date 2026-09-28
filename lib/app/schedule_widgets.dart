@@ -74,14 +74,15 @@ class ScheduleHeader extends StatelessWidget {
   }
 }
 
-/// The book as an object: one cover on the live program, a small mark in a row.
-/// Square, flat, no grid. Absent bytes leave no frame.
+/// The book as an object. The frame keeps its size when the file has no cover.
 class ScheduleCover extends StatelessWidget {
   const ScheduleCover({
     required this.bytes,
     required this.width,
     required this.height,
     this.borderColor,
+    this.title = '',
+    this.onAir = false,
     super.key,
   });
 
@@ -89,10 +90,20 @@ class ScheduleCover extends StatelessWidget {
   final double width;
   final double height;
   final Color? borderColor;
+  final String title;
+  final bool onAir;
 
   @override
   Widget build(BuildContext context) {
-    if (bytes.isEmpty) return const SizedBox.shrink();
+    if (bytes.isEmpty) {
+      return ScheduleCoverPlaceholder(
+        width: width,
+        height: height,
+        title: title,
+        borderColor: borderColor,
+        onAir: onAir,
+      );
+    }
     final ratio = MediaQuery.devicePixelRatioOf(context);
     return _CoverFrame(
       width: width,
@@ -108,6 +119,53 @@ class ScheduleCover extends StatelessWidget {
         cacheWidth: (width * ratio).round(),
         cacheHeight: (height * ratio).round(),
         excludeFromSemantics: true,
+      ),
+    );
+  }
+}
+
+class ScheduleCoverPlaceholder extends StatelessWidget {
+  const ScheduleCoverPlaceholder({
+    required this.width,
+    required this.height,
+    required this.title,
+    this.borderColor,
+    this.onAir = false,
+    super.key,
+  });
+
+  final double width;
+  final double height;
+  final String title;
+  final Color? borderColor;
+  final bool onAir;
+
+  @override
+  Widget build(BuildContext context) {
+    final colors = ScheduleColors.of(context);
+    final border = borderColor ?? colors.rule;
+    final fill = onAir
+        ? colors.onStation.withValues(alpha: 0.16)
+        : colors.paper;
+    final ink = onAir ? colors.onStation : colors.ink;
+    final initial = coverInitial(title);
+    return _CoverFrame(
+      width: width,
+      height: height,
+      borderColor: border,
+      child: ColoredBox(
+        color: fill,
+        child: initial.isEmpty
+            ? null
+            : ExcludeSemantics(
+                child: Center(
+                  child: Text(
+                    initial,
+                    maxLines: 1,
+                    style: programTitle(ink, size: height * 0.46),
+                  ),
+                ),
+              ),
       ),
     );
   }
@@ -144,11 +202,13 @@ class _NetworkCover extends StatefulWidget {
     required this.url,
     required this.width,
     required this.height,
+    required this.title,
   });
 
   final String url;
   final double width;
   final double height;
+  final String title;
 
   @override
   State<_NetworkCover> createState() => _NetworkCoverState();
@@ -165,7 +225,13 @@ class _NetworkCoverState extends State<_NetworkCover> {
 
   @override
   Widget build(BuildContext context) {
-    if (_failed || widget.url.isEmpty) return const SizedBox.shrink();
+    if (_failed || widget.url.isEmpty) {
+      return ScheduleCoverPlaceholder(
+        width: widget.width,
+        height: widget.height,
+        title: widget.title,
+      );
+    }
     final ratio = MediaQuery.devicePixelRatioOf(context);
     return _CoverFrame(
       width: widget.width,
@@ -245,16 +311,12 @@ class ScheduleListing extends StatelessWidget {
     final coverBytes = cover;
     final hasBytes = coverBytes != null && coverBytes.isNotEmpty;
     final url = coverUrl;
-    final hasUrl = !hasBytes && url != null && url.isNotEmpty;
-    final hasCover = hasBytes || hasUrl;
     final child = ConstrainedBox(
       constraints: const BoxConstraints(minHeight: 48),
       child: Padding(
         padding: const EdgeInsets.symmetric(horizontal: 20, vertical: 8),
         child: Row(
-          crossAxisAlignment: hasCover
-              ? CrossAxisAlignment.center
-              : CrossAxisAlignment.start,
+          crossAxisAlignment: CrossAxisAlignment.center,
           children: [
             if (leading != null)
               SizedBox(
@@ -267,17 +329,26 @@ class ScheduleListing extends StatelessWidget {
                   ),
                 ),
               ),
-            if (hasBytes) ...[
+            if (hasBytes)
               ScheduleCover(
                 bytes: coverBytes,
                 width: coverWidth,
                 height: coverHeight,
+              )
+            else if (url != null && url.isNotEmpty)
+              _NetworkCover(
+                url: url,
+                width: coverWidth,
+                height: coverHeight,
+                title: title,
+              )
+            else
+              ScheduleCoverPlaceholder(
+                width: coverWidth,
+                height: coverHeight,
+                title: title,
               ),
-              const SizedBox(width: 12),
-            ] else if (url != null && url.isNotEmpty) ...[
-              _NetworkCover(url: url, width: coverWidth, height: coverHeight),
-              const SizedBox(width: 12),
-            ],
+            const SizedBox(width: 12),
             Expanded(
               child: Column(
                 crossAxisAlignment: CrossAxisAlignment.start,
@@ -402,4 +473,17 @@ class ScheduleAction extends StatelessWidget {
       ),
     );
   }
+}
+
+final _letter = RegExp(r'^\p{L}$', unicode: true);
+final _number = RegExp(r'^\p{N}$', unicode: true);
+
+String coverInitial(String title) {
+  for (final rune in title.trim().runes) {
+    final char = String.fromCharCode(rune);
+    if (_letter.hasMatch(char) || _number.hasMatch(char)) {
+      return char.toUpperCase();
+    }
+  }
+  return '';
 }

@@ -322,15 +322,22 @@ class _LiveBand extends StatelessWidget {
                     ],
                   ),
                 ),
-                if (book != null &&
-                    book!.coverBytes != null &&
-                    book!.coverBytes!.isNotEmpty) ...[
-                  ScheduleCover(
-                    bytes: book!.coverBytes!,
-                    width: 72,
-                    height: 108,
-                    borderColor: colors.onStationMuted,
-                  ),
+                if (book != null) ...[
+                  if (book!.coverBytes != null && book!.coverBytes!.isNotEmpty)
+                    ScheduleCover(
+                      bytes: book!.coverBytes!,
+                      width: 72,
+                      height: 108,
+                      borderColor: colors.onStationMuted,
+                    )
+                  else
+                    ScheduleCoverPlaceholder(
+                      width: 72,
+                      height: 108,
+                      title: book!.title,
+                      borderColor: colors.onStationMuted,
+                      onAir: true,
+                    ),
                   const SizedBox(width: 16),
                 ],
                 Expanded(
