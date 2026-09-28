@@ -23,6 +23,7 @@ class _DiscoverPageState extends ConsumerState<DiscoverPage> {
 
   Future<void> _open(CatalogBook book) async {
     if (_downloadingId != null) return;
+    final l10n = AppLocalizations.of(context);
     final identifier = book.identifier;
     if (identifier != null) {
       final saved = await ref
@@ -47,15 +48,15 @@ class _DiscoverPageState extends ConsumerState<DiscoverPage> {
       final bytes = await client.download(source.downloadUrl);
       final imported = await ref
           .read(epubImporterProvider)
-          .importBytes(bytes, fallbackTitle: source.title);
+          .importBytes(bytes, fallbackTitle: _shownTitle(source.title, l10n));
       if (!mounted) return;
       context.push('/read/${imported.bookId}');
     } on CatalogException catch (error) {
       if (!mounted) return;
-      _showMessage(_catalogMessage(AppLocalizations.of(context), error));
+      _showMessage(_catalogMessage(l10n, error));
     } catch (_) {
       if (!mounted) return;
-      _showMessage(AppLocalizations.of(context).addFailed);
+      _showMessage(l10n.addFailed);
     } finally {
       if (mounted) setState(() => _downloadingId = null);
     }
@@ -84,6 +85,7 @@ class _DiscoverPageState extends ConsumerState<DiscoverPage> {
             onRetry: () => ref.invalidate(catalogProvider),
           ),
           data: (data) {
+            final l10n = AppLocalizations.of(context);
             if (data.books.isEmpty) return const _CatalogEmpty();
             return RefreshIndicator(
               onRefresh: () async {
@@ -91,19 +93,17 @@ class _DiscoverPageState extends ConsumerState<DiscoverPage> {
                   await ref.read(catalogProvider.notifier).reload();
                 } on CatalogException catch (error) {
                   if (!context.mounted) return;
-                  _showMessage(
-                    _catalogMessage(AppLocalizations.of(context), error),
-                  );
+                  _showMessage(_catalogMessage(l10n, error));
                 } catch (_) {
                   if (!context.mounted) return;
-                  _showMessage(AppLocalizations.of(context).catalogLoadFailed);
+                  _showMessage(l10n.catalogLoadFailed);
                 }
               },
               child: CustomScrollView(
                 physics: const AlwaysScrollableScrollPhysics(),
                 slivers: [
-                  const SliverToBoxAdapter(
-                    child: ScheduleHeader(title: 'Descubrimiento'),
+                  SliverToBoxAdapter(
+                    child: ScheduleHeader(title: l10n.discover),
                   ),
                   const SliverToBoxAdapter(child: ScheduleRule()),
                   ..._catalogSlivers(data.books, library),
@@ -117,6 +117,7 @@ class _DiscoverPageState extends ConsumerState<DiscoverPage> {
   }
 
   List<Widget> _catalogSlivers(List<CatalogBook> books, List<Book> library) {
+    final l10n = AppLocalizations.of(context);
     final savedIds = library
         .map((book) => book.bookUid)
         .whereType<String>()
@@ -150,11 +151,11 @@ class _DiscoverPageState extends ConsumerState<DiscoverPage> {
           ),
         ),
       if (available.isNotEmpty) ...[
-        const SliverToBoxAdapter(child: _SectionTitle('Por añadir')),
+        SliverToBoxAdapter(child: _SectionTitle(l10n.toAdd)),
         ..._genreSlivers(available, library),
       ],
       if (owned.isNotEmpty) ...[
-        const SliverToBoxAdapter(child: _SectionTitle('En tu biblioteca')),
+        SliverToBoxAdapter(child: _SectionTitle(l10n.inYourLibrary)),
         SliverList.builder(
           itemCount: owned.length,
           itemBuilder: (context, index) {
@@ -162,12 +163,12 @@ class _DiscoverPageState extends ConsumerState<DiscoverPage> {
             final downloading = _downloadingId == book.id;
             final stored = _storedCover(library, book.identifier);
             return ScheduleListing(
-              title: book.title,
+              title: _shownTitle(book.title, l10n),
               subtitle: book.authors,
               caption: catalogGenreLabel(book.genres),
               cover: stored,
               coverUrl: stored == null ? book.coverUrl : null,
-              trailing: downloading ? '…' : 'Leer',
+              trailing: downloading ? '…' : l10n.read,
               onTap: downloading ? null : () => _open(book),
             );
           },
@@ -178,6 +179,7 @@ class _DiscoverPageState extends ConsumerState<DiscoverPage> {
   }
 
   List<Widget> _genreSlivers(List<CatalogBook> books, List<Book> library) {
+    final l10n = AppLocalizations.of(context);
     final grouped = groupCatalogBooks(books);
     return [
       for (final shelf in grouped.shelves) ...[
@@ -191,14 +193,14 @@ class _DiscoverPageState extends ConsumerState<DiscoverPage> {
             final stored = _storedCover(library, book.identifier);
             return ScheduleListing(
               key: ValueKey(book.id),
-              title: book.title,
+              title: _shownTitle(book.title, l10n),
               subtitle: book.authors,
               caption: catalogGenreLabel(book.genres),
               cover: stored,
               coverUrl: stored == null ? book.coverUrl : null,
               coverWidth: 72,
               coverHeight: 108,
-              trailing: downloading ? '…' : 'Añadir',
+              trailing: downloading ? '…' : l10n.add,
               onTap: downloading ? null : () => _open(book),
             );
           },
@@ -321,9 +323,10 @@ class _LanguageRow extends StatelessWidget {
   @override
   Widget build(BuildContext context) {
     final colors = ScheduleColors.of(context);
+    final l10n = AppLocalizations.of(context);
     final choices = <(String?, String)>[
-      (null, 'Todos'),
-      for (final code in languages) (code, _languageName(code)),
+      (null, l10n.allLanguages),
+      for (final code in languages) (code, _languageName(l10n, code)),
     ];
     return Padding(
       padding: const EdgeInsets.fromLTRB(20, 12, 20, 4),
@@ -394,12 +397,17 @@ String? _languageFamily(String? code) {
   return lower;
 }
 
-String _languageName(String code) {
+String _languageName(AppLocalizations l10n, String code) {
   return switch (code) {
-    'es' => 'Español',
-    'en' => 'Inglés',
+    'es' => l10n.spanish,
+    'en' => l10n.english,
     _ => code,
   };
+}
+
+String _shownTitle(String title, AppLocalizations l10n) {
+  final trimmed = title.trim();
+  return trimmed.isEmpty ? l10n.untitled : trimmed;
 }
 
 String _catalogMessage(AppLocalizations l10n, CatalogException error) {
@@ -432,10 +440,11 @@ class _CatalogEmpty extends StatelessWidget {
   @override
   Widget build(BuildContext context) {
     final theme = Theme.of(context);
+    final l10n = AppLocalizations.of(context);
     return Column(
       crossAxisAlignment: CrossAxisAlignment.start,
       children: [
-        const ScheduleHeader(title: 'Descubrimiento'),
+        ScheduleHeader(title: AppLocalizations.of(context).discover),
         const ScheduleRule(),
         Expanded(
           child: Padding(
@@ -443,13 +452,10 @@ class _CatalogEmpty extends StatelessWidget {
             child: Column(
               crossAxisAlignment: CrossAxisAlignment.start,
               children: [
-                Text(
-                  'El catálogo está vacío',
-                  style: theme.textTheme.headlineSmall,
-                ),
+                Text(l10n.catalogEmpty, style: theme.textTheme.headlineSmall),
                 const SizedBox(height: 8),
                 Text(
-                  'Cuando haya libros disponibles, aparecerán aquí.',
+                  l10n.catalogEmptyBody,
                   style: theme.textTheme.bodyLarge?.copyWith(
                     color: theme.colorScheme.onSurfaceVariant,
                   ),
@@ -479,7 +485,10 @@ class _CatalogError extends StatelessWidget {
           children: [
             Text(message, textAlign: TextAlign.center),
             const SizedBox(height: 16),
-            FilledButton(onPressed: onRetry, child: const Text('Reintentar')),
+            FilledButton(
+              onPressed: onRetry,
+              child: Text(AppLocalizations.of(context).retry),
+            ),
           ],
         ),
       ),

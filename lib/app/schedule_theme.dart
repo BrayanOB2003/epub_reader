@@ -98,20 +98,21 @@ ThemeData scheduleTheme(Brightness brightness) {
   final colors = brightness == Brightness.dark
       ? ScheduleColors.dark
       : ScheduleColors.light;
-  final scheme = ColorScheme.fromSeed(
-    seedColor: colors.station,
-    brightness: brightness,
-  ).copyWith(
-    primary: colors.station,
-    onPrimary: colors.onStation,
-    secondary: colors.station,
-    onSecondary: colors.onStation,
-    surface: colors.paper,
-    onSurface: colors.ink,
-    onSurfaceVariant: colors.muted,
-    outline: colors.rule,
-    outlineVariant: colors.rule,
-  );
+  final scheme =
+      ColorScheme.fromSeed(
+        seedColor: colors.station,
+        brightness: brightness,
+      ).copyWith(
+        primary: colors.station,
+        onPrimary: colors.onStation,
+        secondary: colors.station,
+        onSecondary: colors.onStation,
+        surface: colors.paper,
+        onSurface: colors.ink,
+        onSurfaceVariant: colors.muted,
+        outline: colors.rule,
+        outlineVariant: colors.rule,
+      );
   final base = ThemeData(
     useMaterial3: true,
     colorScheme: scheme,

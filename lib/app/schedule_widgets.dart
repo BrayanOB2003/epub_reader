@@ -1,6 +1,7 @@
 import 'dart:typed_data';
 
 import 'package:epub_reader/app/schedule_theme.dart';
+import 'package:epub_reader/l10n/app_localizations.dart';
 import 'package:flutter/cupertino.dart';
 import 'package:flutter/material.dart';
 
@@ -434,7 +435,7 @@ class ScheduleListing extends StatelessWidget {
                         tapTargetSize: MaterialTapTargetSize.shrinkWrap,
                         padding: const EdgeInsets.symmetric(horizontal: 4),
                       ),
-                      child: const Text('Eliminar'),
+                      child: Text(AppLocalizations.of(context).delete),
                     ),
                 ],
               ),

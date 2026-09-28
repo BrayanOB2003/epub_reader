@@ -51,19 +51,20 @@ class _HomePageState extends ConsumerState<HomePage> {
   }
 
   Future<void> _delete(Book book) async {
+    final l10n = AppLocalizations.of(context);
     final confirmed = await showDialog<bool>(
       context: context,
       builder: (context) => AlertDialog(
-        title: const Text('Eliminar libro'),
-        content: Text('¿Quitar «${book.title}» de la biblioteca?'),
+        title: Text(l10n.deleteBook),
+        content: Text(l10n.removeBook(_shownTitle(book.title, l10n))),
         actions: [
           TextButton(
             onPressed: () => Navigator.pop(context, false),
-            child: const Text('Cancelar'),
+            child: Text(l10n.cancel),
           ),
           TextButton(
             onPressed: () => Navigator.pop(context, true),
-            child: const Text('Eliminar'),
+            child: Text(l10n.delete),
           ),
         ],
       ),
@@ -72,7 +73,8 @@ class _HomePageState extends ConsumerState<HomePage> {
     try {
       await ref.read(bookRepositoryProvider).delete(book);
     } catch (_) {
-      _showMessage('No se pudo eliminar el libro.');
+      if (!mounted) return;
+      _showMessage(l10n.deleteFailed);
     }
   }
 
@@ -95,7 +97,7 @@ class _HomePageState extends ConsumerState<HomePage> {
           loading: () => const Center(child: CircularProgressIndicator()),
           error: (error, _) => Center(
             child: Text(
-              'No se pudo cargar la biblioteca.\n$error',
+              AppLocalizations.of(context).libraryLoadFailed('$error'),
               textAlign: TextAlign.center,
             ),
           ),
@@ -135,6 +137,7 @@ class _Schedule extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) {
+    final l10n = AppLocalizations.of(context);
     final routine = profile == null
         ? null
         : ReadingRoutine.byId(profile!.routine);
@@ -149,7 +152,7 @@ class _Schedule extends StatelessWidget {
     return Column(
       crossAxisAlignment: CrossAxisAlignment.stretch,
       children: [
-        ScheduleHeader(title: 'Biblioteca', date: DateTime.now()),
+        ScheduleHeader(title: l10n.library, date: DateTime.now()),
         const ScheduleRule(),
         if (routine != null)
           _LiveBand(
@@ -178,11 +181,11 @@ class _Schedule extends StatelessWidget {
                   for (final book in shelf)
                     ScheduleListing(
                       key: ValueKey(book.id),
-                      title: book.title,
+                      title: _shownTitle(book.title, l10n),
                       subtitle: book.author,
                       cover: book.coverBytes,
                       trailing: (book.progress * 100).round() == 0
-                          ? 'Sin empezar'
+                          ? l10n.notStarted
                           : '${(book.progress * 100).round()} %',
                       onTap: () => onRead(book.id),
                       onDelete: () => onDelete(book),
@@ -205,24 +208,22 @@ class _EmptyLibrary extends StatelessWidget {
   @override
   Widget build(BuildContext context) {
     final colors = ScheduleColors.of(context);
+    final l10n = AppLocalizations.of(context);
     return Padding(
       padding: const EdgeInsets.all(20),
       child: Column(
         crossAxisAlignment: CrossAxisAlignment.start,
         children: [
-          Text(
-            'Todavía no hay libros',
-            style: programTitle(colors.ink, size: 36),
-          ),
+          Text(l10n.noBooksYet, style: programTitle(colors.ink, size: 36)),
           const SizedBox(height: 8),
           Text(
-            'Un EPUB de este dispositivo',
+            l10n.epubOnDevice,
             style: Theme.of(context).textTheme.bodyLarge
                 ?.copyWith(color: colors.muted),
           ),
           const Spacer(),
           ScheduleAction(
-            label: importing ? 'Importando' : 'Importar',
+            label: importing ? l10n.importing : l10n.import,
             onPressed: importing ? null : onImport,
           ),
         ],
@@ -240,6 +241,7 @@ class _ImportLine extends StatelessWidget {
   @override
   Widget build(BuildContext context) {
     final colors = ScheduleColors.of(context);
+    final l10n = AppLocalizations.of(context);
     return Semantics(
       button: true,
       child: InkWell(
@@ -251,7 +253,7 @@ class _ImportLine extends StatelessWidget {
             child: Align(
               alignment: Alignment.centerLeft,
               child: Text(
-                importing ? 'Importando' : 'Importar',
+                importing ? l10n.importing : l10n.import,
                 style: programTitle(colors.station, size: 22),
               ),
             ),
@@ -288,7 +290,10 @@ class _LiveBand extends StatelessWidget {
   @override
   Widget build(BuildContext context) {
     final colors = ScheduleColors.of(context);
-    final title = book?.title ?? 'Todavía no hay libros';
+    final l10n = AppLocalizations.of(context);
+    final title = book == null
+        ? l10n.noBooksYet
+        : _shownTitle(book!.title, l10n);
     final minutes = todaySeconds ~/ 60;
     final met =
         goalMinutes != null &&
@@ -341,7 +346,7 @@ class _LiveBand extends StatelessWidget {
                     ScheduleCoverPlaceholder(
                       width: 72,
                       height: 108,
-                      title: book!.title,
+                      title: _shownTitle(book!.title, l10n),
                       borderColor: colors.onStationMuted,
                       onAir: true,
                     ),
@@ -363,7 +368,7 @@ class _LiveBand extends StatelessWidget {
                       const SizedBox(height: 8),
                       if (book == null)
                         Text(
-                          'Un EPUB de este dispositivo',
+                          l10n.epubOnDevice,
                           style: Theme.of(context).textTheme.bodyLarge
                               ?.copyWith(color: colors.onStationMuted),
                         )
@@ -386,7 +391,7 @@ class _LiveBand extends StatelessWidget {
                       minimumSize: const Size(44, 44),
                       tapTargetSize: MaterialTapTargetSize.shrinkWrap,
                     ),
-                    child: const Text('Eliminar'),
+                    child: Text(l10n.delete),
                   ),
               ],
             ),
@@ -395,12 +400,12 @@ class _LiveBand extends StatelessWidget {
             const SizedBox(height: 16),
             if (book == null)
               ScheduleAction(
-                label: importing ? 'Importando' : 'Importar',
+                label: importing ? l10n.importing : l10n.import,
                 onPressed: importing ? null : onImport,
                 onAir: true,
               )
             else
-              ScheduleAction(label: 'Leer', onPressed: onRead, onAir: true),
+              ScheduleAction(label: l10n.read, onPressed: onRead, onAir: true),
           ],
         ),
       ),
@@ -457,6 +462,11 @@ int _secondsToday(List<ReadingSession> sessions, DateTime now) {
     if (day == today) total += session.engagedSeconds;
   }
   return total;
+}
+
+String _shownTitle(String title, AppLocalizations l10n) {
+  final trimmed = title.trim();
+  return trimmed.isEmpty ? l10n.untitled : trimmed;
 }
 
 String _epubMessage(AppLocalizations l10n, EpubFormatException error) {

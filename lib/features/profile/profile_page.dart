@@ -1,6 +1,7 @@
 import 'package:epub_reader/app/providers.dart';
 import 'package:epub_reader/app/schedule_widgets.dart';
 import 'package:epub_reader/features/profile/reader_profile_store.dart';
+import 'package:epub_reader/l10n/app_localizations.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:go_router/go_router.dart';
@@ -16,80 +17,79 @@ class ProfilePage extends ConsumerWidget {
       body: SafeArea(
         bottom: false,
         child: profile.when(
-        loading: () => const Center(child: CircularProgressIndicator()),
-        error: (error, _) => Center(
-          child: Padding(
-            padding: const EdgeInsets.all(24),
-            child: Text(
-              'No se pudo cargar el perfil.\n$error',
-              textAlign: TextAlign.center,
+          loading: () => const Center(child: CircularProgressIndicator()),
+          error: (error, _) => Center(
+            child: Padding(
+              padding: const EdgeInsets.all(24),
+              child: Text(
+                AppLocalizations.of(context).profileLoadFailed('$error'),
+                textAlign: TextAlign.center,
+              ),
             ),
           ),
-        ),
-        data: (saved) {
-          final goal = saved == null
-              ? 'Sin definir'
-              : '${saved.dailyGoalMinutes} minutos';
-          return ListView(
-            children: [
-              const ScheduleHeader(title: 'Perfil'),
-              const ScheduleRule(),
-              ListTile(
-                title: const Text('Hábito de lectura'),
-                trailing: Text(goal),
-                onTap: saved == null
-                    ? null
-                    : () => context.push('/onboarding?editar=1'),
-              ),
-              const Divider(height: 1),
-              ListTile(
-                title: const Text('Generar lecturas de ejemplo'),
-                subtitle: const Text(
-                  'Desde hoy, un mes y medio atrás, de 0 a 15 minutos.',
+          data: (saved) {
+            final l10n = AppLocalizations.of(context);
+            final goal = saved == null
+                ? l10n.notSet
+                : l10n.minutes(saved.dailyGoalMinutes);
+            return ListView(
+              children: [
+                ScheduleHeader(title: l10n.profile),
+                const ScheduleRule(),
+                ListTile(
+                  title: Text(l10n.readingHabit),
+                  trailing: Text(goal),
+                  onTap: saved == null
+                      ? null
+                      : () => context.push('/onboarding?editar=1'),
                 ),
-                onTap: () => _addSampleReadings(context, ref),
-              ),
-              const Divider(height: 1),
-            ],
-          );
-        },
+                const Divider(height: 1),
+                ListTile(
+                  title: Text(l10n.sampleReadings),
+                  subtitle: Text(l10n.sampleReadingsSubtitle),
+                  onTap: () => _addSampleReadings(context, ref),
+                ),
+                const Divider(height: 1),
+              ],
+            );
+          },
         ),
       ),
     );
   }
 
   Future<void> _addSampleReadings(BuildContext context, WidgetRef ref) async {
+    final l10n = AppLocalizations.of(context);
     final confirmed = await showDialog<bool>(
       context: context,
       builder: (context) => AlertDialog(
-        title: const Text('Generar lecturas de ejemplo'),
-        content: const Text(
-          'Se agregará una lectura al azar por cada día, desde hoy hasta un mes y medio atrás. Cada una dura entre 0 y 15 minutos.',
-        ),
+        title: Text(l10n.sampleReadings),
+        content: Text(l10n.sampleReadingsBody),
         actions: [
           TextButton(
             onPressed: () => Navigator.pop(context, false),
-            child: const Text('Cancelar'),
+            child: Text(l10n.cancel),
           ),
           TextButton(
             onPressed: () => Navigator.pop(context, true),
-            child: const Text('Generar'),
+            child: Text(l10n.generate),
           ),
         ],
       ),
     );
     if (confirmed != true || !context.mounted) return;
     try {
-      final count = await ref.read(bookRepositoryProvider).addSampleReadings();
+      final count = await ref
+          .read(bookRepositoryProvider)
+          .addSampleReadings(sampleTitle: l10n.sampleBookTitle);
       if (!context.mounted) return;
-      ScaffoldMessenger.of(context).showSnackBar(
-        SnackBar(content: Text('Se agregaron $count lecturas de ejemplo.')),
-      );
+      ScaffoldMessenger.of(
+        context,
+      ).showSnackBar(SnackBar(content: Text(l10n.sampleReadingsAdded(count))));
     } catch (_) {
       if (!context.mounted) return;
-      ScaffoldMessenger.of(context).showSnackBar(
-        const SnackBar(content: Text('No se pudieron generar las lecturas.')),
-      );
+      ScaffoldMessenger.of(context)
+          .showSnackBar(SnackBar(content: Text(l10n.sampleReadingsFailed)));
     }
   }
 }

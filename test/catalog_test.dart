@@ -5,6 +5,7 @@ import 'package:epub_reader/core/database/app_database.dart';
 import 'package:epub_reader/features/discover/data/catalog.dart';
 import 'package:epub_reader/features/discover/data/catalog_notifier.dart';
 import 'package:epub_reader/features/discover/discover_page.dart';
+import 'package:epub_reader/l10n/app_localizations.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:flutter_test/flutter_test.dart';
@@ -151,6 +152,9 @@ void main() {
           catalogProvider.overrideWith(_GenreCatalog.new),
         ],
         child: MaterialApp(
+          locale: const Locale('es'),
+          localizationsDelegates: AppLocalizations.localizationsDelegates,
+          supportedLocales: AppLocalizations.supportedLocales,
           theme: scheduleTheme(Brightness.light),
           home: const DiscoverPage(),
         ),
