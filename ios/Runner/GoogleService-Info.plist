@@ -9,7 +9,7 @@
 	<key>PLIST_VERSION</key>
 	<string>1</string>
 	<key>BUNDLE_ID</key>
-	<string>com.example.epubReader</string>
+	<string>com.somosliora.app</string>
 	<key>PROJECT_ID</key>
 	<string>epub-reader-6a972</string>
 	<key>STORAGE_BUCKET</key>
@@ -25,6 +25,6 @@
 	<key>IS_SIGNIN_ENABLED</key>
 	<true></true>
 	<key>GOOGLE_APP_ID</key>
-	<string>1:969465994480:ios:68054c6b250003f685f635</string>
+	<string>1:969465994480:ios:665f555c3d432fb585f635</string>
 </dict>
 </plist>

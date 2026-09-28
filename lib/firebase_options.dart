@@ -51,18 +51,17 @@ class DefaultFirebaseOptions {
 
   static const FirebaseOptions android = FirebaseOptions(
     apiKey: 'AIzaSyD-QCfD5oXc55uKPZLVAqHe9-h4qFSMtIw',
-    appId: '1:969465994480:android:938ace5b37a47cba85f635',
+    appId: '1:969465994480:android:ab8c7310f649e4ea85f635',
     messagingSenderId: '969465994480',
     projectId: 'epub-reader-6a972',
     storageBucket: 'epub-reader-6a972.firebasestorage.app',
   );
-
   static const FirebaseOptions ios = FirebaseOptions(
     apiKey: 'AIzaSyCzEYQHeViDAxMJU5v8RAEREUKGwmlvN-U',
-    appId: '1:969465994480:ios:68054c6b250003f685f635',
+    appId: '1:969465994480:ios:665f555c3d432fb585f635',
     messagingSenderId: '969465994480',
     projectId: 'epub-reader-6a972',
     storageBucket: 'epub-reader-6a972.firebasestorage.app',
-    iosBundleId: 'com.example.epubReader',
+    iosBundleId: 'com.somosliora.app',
   );
 }
