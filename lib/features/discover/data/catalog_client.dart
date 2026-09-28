@@ -16,28 +16,26 @@ class CatalogClient {
   final String apiKey;
   final http.Client _http;
 
-  Future<Catalog> fetch() async {
-    debugPrint('[catalog] GET $catalogEndpoint');
+  Future<Catalog> fetch(String language) async {
+    final uri = Uri.parse(catalogEndpoint)
+        .replace(queryParameters: {'idioma': language});
+    debugPrint('[catalog] GET $uri');
     debugPrint(
       '[catalog] header X-Key: ${apiKey.isEmpty ? 'vacío' : 'presente, ${apiKey.length} caracteres'}',
     );
     try {
-      final response = await _http.get(
-        Uri.parse(catalogEndpoint),
-        headers: {'X-Key': apiKey},
-      );
+      final response = await _http.get(uri, headers: {'X-Key': apiKey});
       debugPrint('[catalog] status ${response.statusCode}');
       debugPrint('[catalog] body ${response.body}');
       if (response.statusCode != 200) {
         throw CatalogException(
-          'No se pudo cargar el catálogo (${response.statusCode}).',
+          CatalogFailure.load,
+          statusCode: response.statusCode,
         );
       }
       final decoded = jsonDecode(response.body);
       if (decoded is! Map) {
-        throw const CatalogException(
-          'El catálogo no tiene el formato esperado.',
-        );
+        throw const CatalogException(CatalogFailure.format);
       }
       final catalog = Catalog.fromJson(Map<String, dynamic>.from(decoded));
       debugPrint(
@@ -54,7 +52,7 @@ class CatalogClient {
     debugPrint('[catalog] descarga $url');
     if (url.isEmpty) {
       debugPrint('[catalog] descarga sin URL');
-      throw const CatalogException('Este libro no tiene enlace de descarga.');
+      throw const CatalogException(CatalogFailure.missingUrl);
     }
     try {
       final response = await _http.get(Uri.parse(url));
@@ -63,7 +61,8 @@ class CatalogClient {
       );
       if (response.statusCode != 200 || response.bodyBytes.isEmpty) {
         throw CatalogException(
-          'No se pudo descargar el libro (${response.statusCode}).',
+          CatalogFailure.download,
+          statusCode: response.statusCode,
         );
       }
       return response.bodyBytes;

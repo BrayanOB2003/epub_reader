@@ -1,5 +1,7 @@
+import 'package:epub_reader/app/app_locale.dart';
 import 'package:epub_reader/app/router.dart';
 import 'package:epub_reader/app/schedule_theme.dart';
+import 'package:epub_reader/l10n/app_localizations.dart';
 import 'package:flutter/cupertino.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
@@ -9,8 +11,12 @@ class EpubReaderApp extends ConsumerWidget {
 
   @override
   Widget build(BuildContext context, WidgetRef ref) {
+    final locale = ref.watch(appLocaleProvider);
     return MaterialApp.router(
       title: 'Liora',
+      locale: locale,
+      supportedLocales: AppLocalizations.supportedLocales,
+      localizationsDelegates: AppLocalizations.localizationsDelegates,
       theme: scheduleTheme(Brightness.light),
       darkTheme: scheduleTheme(Brightness.dark),
       themeMode: ThemeMode.system,

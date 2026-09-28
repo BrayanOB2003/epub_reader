@@ -13,8 +13,8 @@ void main() {
           'autores': 'Miguel de Cervantes',
           'identificador': 'urn:uuid:6f8b2c1a-3e4d-4a9b-8c21-0d5e6f7a8b9c',
           'idioma': 'es',
-          'portada_url':
-              'https://storage.googleapis.com/epub_reader/catalogo/portadas/ab12.png',
+          'generos': ['Fiction', ' Fiction ', 'Aventura'],
+          'portada_url': 'https://storage.googleapis.com/epub_reader/catalogo/portadas/ab12.png',
           'descarga_url':
               'https://storage.googleapis.com/epub_reader/don-quijote.epub',
           'tamano': 2458132,
@@ -26,8 +26,7 @@ void main() {
           'identificador': '978-1-234567-89-0',
           'idioma': 'es',
           'portada_url': null,
-          'descarga_url':
-              'https://storage.googleapis.com/epub_reader/clasicos/la-odisea.epub',
+          'descarga_url': 'https://storage.googleapis.com/epub_reader/clasicos/la-odisea.epub',
           'tamano': 812004,
         },
       ],
@@ -36,6 +35,8 @@ void main() {
     expect(catalog.books, hasLength(2));
     expect(catalog.books.first.title, 'Don Quijote de la Mancha');
     expect(catalog.books.first.authors, 'Miguel de Cervantes');
+    expect(catalog.books.first.genres, ['Fiction', 'Aventura']);
+    expect(catalog.books.last.genres, isEmpty);
     expect(catalog.books.last.coverUrl, isNull);
     expect(catalog.generatedAt, DateTime.parse('2026-09-24T05:10:00+00:00'));
 
@@ -44,7 +45,27 @@ void main() {
     expect(restored.urlsExpireAt, DateTime.parse('2026-09-24T06:10:00+00:00'));
     expect(restored.books.first.title, catalog.books.first.title);
     expect(restored.books.first.downloadUrl, catalog.books.first.downloadUrl);
+    expect(restored.books.first.genres, ['Fiction', 'Aventura']);
     expect(restored.books.last.coverUrl, isNull);
+  });
+
+  test('reads genres from the catalog book', () {
+    final book = CatalogBook.fromJson({
+      'id': 'charles-dickens_a-tale-of-two-cities.epub',
+      'titulo': 'A Tale of Two Cities',
+      'autores': '',
+      'identificador': 'https://standardebooks.org/ebooks/charles-dickens/a-tale-of-two-cities',
+      'idioma': 'en-GB',
+      'generos': ['Fiction', 12, ''],
+      'portada_url': 'https://storage.googleapis.com/cover',
+      'descarga_url': 'https://storage.googleapis.com/book',
+      'tamano': 815013,
+    });
+
+    expect(book.authors, isNull);
+    expect(book.language, 'en-GB');
+    expect(book.genres, ['Fiction']);
+    expect(book.size, 815013);
   });
 
   test('reads an empty catalog', () {
