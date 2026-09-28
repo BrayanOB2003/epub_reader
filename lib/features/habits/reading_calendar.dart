@@ -55,11 +55,9 @@ class _ReadingCalendarState extends State<ReadingCalendar> {
       cells.add(null);
     }
 
-    return Card(
-      margin: EdgeInsets.zero,
-      child: Padding(
-        padding: const EdgeInsets.fromLTRB(8, 8, 8, 12),
-        child: Column(
+    return Padding(
+      padding: const EdgeInsets.fromLTRB(8, 8, 8, 12),
+      child: Column(
           children: [
             Row(
               children: [
@@ -116,7 +114,6 @@ class _ReadingCalendarState extends State<ReadingCalendar> {
             ],
           ],
         ),
-      ),
     );
   }
 }
@@ -155,10 +152,11 @@ class _DayCell extends StatelessWidget {
             alignment: Alignment.center,
             decoration: BoxDecoration(
               color: background,
-              shape: BoxShape.circle,
-              border: isToday
-                  ? Border.all(color: borderColor, width: 1.5)
-                  : null,
+              border: Border.all(
+                color: day.mark == ReadingDayMark.none
+                    ? color.outline
+                    : borderColor,
+              ),
             ),
             child: Text(
               '${day.day.day}',

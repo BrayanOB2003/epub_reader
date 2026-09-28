@@ -478,7 +478,7 @@ class _ReaderPageState extends ConsumerState<ReaderPage>
       children: [
         Center(
           child: DefaultTextStyle.merge(
-            style: const TextStyle(color: Color(0xFFF7F1E8)),
+            style: const TextStyle(color: Color(0xFFF4F7FB)),
             child: child,
           ),
         ),
@@ -501,8 +501,8 @@ class _ReaderPageState extends ConsumerState<ReaderPage>
           child: LinearProgressIndicator(
             minHeight: 3,
             value: _loading ? null : _progress.clamp(0, 1),
-            backgroundColor: const Color(0x33000000),
-            color: const Color(0xFF6B4F3A),
+            backgroundColor: const Color(0x330E1A2B),
+            color: const Color(0xFF0C4DA2),
           ),
         ),
         ClipRect(
@@ -512,7 +512,7 @@ class _ReaderPageState extends ConsumerState<ReaderPage>
             duration: const Duration(milliseconds: 180),
             curve: Curves.easeOut,
             child: Material(
-              color: const Color(0xF2F7F1E8),
+              color: const Color(0xF2F4F7FB),
               child: SafeArea(
                 bottom: false,
                 child: Row(

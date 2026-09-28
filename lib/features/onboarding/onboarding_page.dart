@@ -1,3 +1,4 @@
+import 'package:epub_reader/app/schedule_theme.dart';
 import 'package:epub_reader/features/onboarding/onboarding_answers.dart';
 import 'package:epub_reader/features/profile/reader_profile_store.dart';
 import 'package:epub_reader/features/profile/reading_goal.dart';
@@ -136,6 +137,8 @@ class _OnboardingPageState extends ConsumerState<OnboardingPage> {
                           icon: const Icon(Icons.arrow_back),
                         ),
                 ),
+                Expanded(child: _stepBody(theme)),
+                const SizedBox(height: 16),
                 if (_step > 0) ...[
                   Text(
                     '$_step de 3',
@@ -143,10 +146,8 @@ class _OnboardingPageState extends ConsumerState<OnboardingPage> {
                       color: theme.colorScheme.onSurfaceVariant,
                     ),
                   ),
-                  const SizedBox(height: 12),
+                  const SizedBox(height: 8),
                 ],
-                Expanded(child: _stepBody(theme)),
-                const SizedBox(height: 16),
                 SizedBox(
                   width: double.infinity,
                   child: FilledButton(
@@ -269,11 +270,21 @@ class _Welcome extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) {
+    final colors = ScheduleColors.of(context);
     return Column(
       crossAxisAlignment: CrossAxisAlignment.start,
       children: [
         const Spacer(),
-        Text('Crea el hábito de leer', style: theme.textTheme.headlineMedium),
+        ColoredBox(
+          color: colors.station,
+          child: Padding(
+            padding: const EdgeInsets.fromLTRB(0, 20, 16, 20),
+            child: Text(
+              'Crea el hábito de leer',
+              style: programTitle(colors.onStation, size: 44),
+            ),
+          ),
+        ),
         const SizedBox(height: 16),
         Text(
           'Un lugar para leer un poco cada día y sostener ese hábito.',
@@ -330,26 +341,30 @@ class _DayLetter extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) {
+    final colors = ScheduleColors.of(context);
     final theme = Theme.of(context);
-    final color = theme.colorScheme;
+    final ink = selected ? colors.onStation : colors.ink;
     return Semantics(
       button: true,
       selected: selected,
       label: label,
-      child: Material(
-        color: selected ? color.primaryContainer : color.surface,
-        shape: CircleBorder(
-          side: BorderSide(
-            color: selected ? color.primary : color.outlineVariant,
+      child: Padding(
+        padding: const EdgeInsets.symmetric(horizontal: 3),
+        child: Material(
+          color: selected ? colors.station : colors.paper,
+          shape: RoundedRectangleBorder(
+            side: BorderSide(color: selected ? colors.station : colors.rule),
           ),
-        ),
-        child: InkWell(
-          onTap: onTap,
-          customBorder: const CircleBorder(),
-          child: SizedBox(
-            height: 40,
-            child: Center(
-              child: Text(letter, style: theme.textTheme.titleMedium),
+          child: InkWell(
+            onTap: onTap,
+            child: SizedBox(
+              height: 44,
+              child: Center(
+                child: Text(
+                  letter,
+                  style: theme.textTheme.titleMedium?.copyWith(color: ink),
+                ),
+              ),
             ),
           ),
         ),
@@ -371,22 +386,22 @@ class _HourChip extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) {
+    final colors = ScheduleColors.of(context);
     final theme = Theme.of(context);
-    final color = theme.colorScheme;
+    final ink = selected ? colors.onStation : colors.ink;
     return Material(
-      color: selected ? color.primaryContainer : color.surface,
+      color: selected ? colors.station : colors.paper,
       shape: RoundedRectangleBorder(
-        borderRadius: BorderRadius.circular(20),
-        side: BorderSide(
-          color: selected ? color.primary : color.outlineVariant,
-        ),
+        side: BorderSide(color: selected ? colors.station : colors.rule),
       ),
       child: InkWell(
         onTap: onTap,
-        borderRadius: BorderRadius.circular(20),
         child: Padding(
-          padding: const EdgeInsets.symmetric(horizontal: 14, vertical: 10),
-          child: Text(label, style: theme.textTheme.bodyLarge),
+          padding: const EdgeInsets.symmetric(horizontal: 14, vertical: 12),
+          child: Text(
+            label,
+            style: theme.textTheme.bodyLarge?.copyWith(color: ink),
+          ),
         ),
       ),
     );
@@ -406,28 +421,34 @@ class _ChoiceTile extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) {
+    final colors = ScheduleColors.of(context);
     final theme = Theme.of(context);
-    final color = theme.colorScheme;
+    final ink = selected ? colors.onStation : colors.ink;
     return Padding(
       padding: const EdgeInsets.only(bottom: 8),
       child: Material(
-        color: selected ? color.primaryContainer : color.surface,
+        color: selected ? colors.station : colors.paper,
         shape: RoundedRectangleBorder(
-          borderRadius: BorderRadius.circular(12),
-          side: BorderSide(
-            color: selected ? color.primary : color.outlineVariant,
-          ),
+          side: BorderSide(color: selected ? colors.station : colors.rule),
         ),
         child: InkWell(
           onTap: onTap,
-          borderRadius: BorderRadius.circular(12),
-          child: Padding(
-            padding: const EdgeInsets.symmetric(horizontal: 16, vertical: 14),
-            child: Row(
-              children: [
-                Expanded(child: Text(label, style: theme.textTheme.bodyLarge)),
-                if (selected) Icon(Icons.check, color: color.primary),
-              ],
+          child: ConstrainedBox(
+            constraints: const BoxConstraints(minHeight: 48),
+            child: Padding(
+              padding: const EdgeInsets.symmetric(horizontal: 16, vertical: 14),
+              child: Row(
+                children: [
+                  Expanded(
+                    child: Text(
+                      label,
+                      style: theme.textTheme.bodyLarge?.copyWith(color: ink),
+                    ),
+                  ),
+                  if (selected)
+                    Icon(Icons.check, color: colors.onStation),
+                ],
+              ),
             ),
           ),
         ),

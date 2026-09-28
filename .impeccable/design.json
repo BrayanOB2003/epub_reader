@@ -1,0 +1,301 @@
+{
+  "schemaVersion": 2,
+  "generatedAt": "2026-09-28T05:25:00Z",
+  "title": "Design System: Liora",
+  "extensions": {
+    "colorMeta": {
+      "paper": {
+        "role": "neutral",
+        "displayName": "Cool Program Paper",
+        "canonical": "oklch(97.5% 0.006 255.5)",
+        "tonalRamp": ["#090B0E", "#222427", "#404346", "#5E6164", "#818387", "#A2A5A8", "#C8CBCF", "#ECEFF3"]
+      },
+      "ink": {
+        "role": "neutral",
+        "displayName": "Program Ink",
+        "canonical": "oklch(21.6% 0.038 257.2)",
+        "tonalRamp": ["#030B1B", "#182536", "#364357", "#536176", "#75849A", "#96A6BD", "#BBCCE4", "#E5EFFF"]
+      },
+      "muted": {
+        "role": "neutral",
+        "displayName": "Slate Caption",
+        "canonical": "oklch(41.3% 0.049 257.5)",
+        "tonalRamp": ["#010A1F", "#14243C", "#32435D", "#4F627D", "#7185A1", "#91A6C4", "#B7CCEB", "#E5EFFF"]
+      },
+      "rule": {
+        "role": "neutral",
+        "displayName": "Hairline",
+        "canonical": "oklch(88.9% 0.013 255.5)",
+        "tonalRamp": ["#080B11", "#20242A", "#3E4349", "#5C6168", "#7E848B", "#9FA5AD", "#C5CBD3", "#E9EFF7"]
+      },
+      "station": {
+        "role": "primary",
+        "displayName": "Station Blue",
+        "canonical": "oklch(43.6% 0.151 258)",
+        "tonalRamp": ["#000A22", "#002151", "#003E8B", "#205DB4", "#4582DC", "#68A5FF", "#ABCDFF", "#E5EFFF"]
+      },
+      "onStation": {
+        "role": "primary",
+        "displayName": "Station Type",
+        "canonical": "oklch(97.5% 0.006 255.5)",
+        "tonalRamp": ["#090B0E", "#222427", "#404346", "#5E6164", "#818387", "#A2A5A8", "#C8CBCF", "#ECEFF3"]
+      },
+      "onStationMuted": {
+        "role": "primary",
+        "displayName": "Station Wash",
+        "canonical": "oklch(91.2% 0.032 258.4)",
+        "tonalRamp": ["#040B19", "#1A2434", "#384354", "#556173", "#778497", "#98A6B9", "#BECCE0", "#E5EFFF"]
+      },
+      "paperDark": {
+        "role": "neutral",
+        "displayName": "Night Paper",
+        "canonical": "oklch(21.6% 0.038 257.2)",
+        "tonalRamp": ["#030B1B", "#182536", "#364357", "#536176", "#75849A", "#96A6BD", "#BBCCE4", "#E5EFFF"]
+      },
+      "inkDark": {
+        "role": "neutral",
+        "displayName": "Night Ink",
+        "canonical": "oklch(97.5% 0.006 255.5)",
+        "tonalRamp": ["#090B0E", "#222427", "#404346", "#5E6164", "#818387", "#A2A5A8", "#C8CBCF", "#ECEFF3"]
+      },
+      "mutedDark": {
+        "role": "neutral",
+        "displayName": "Night Caption",
+        "canonical": "oklch(86% 0.031 258.9)",
+        "tonalRamp": ["#040B18", "#1B2433", "#384353", "#566172", "#788496", "#99A6B9", "#BFCCDF", "#E5EFFF"]
+      },
+      "ruleDark": {
+        "role": "neutral",
+        "displayName": "Night Hairline",
+        "canonical": "oklch(35.4% 0.049 259.1)",
+        "tonalRamp": ["#010A1F", "#15243B", "#33435C", "#50617C", "#7284A1", "#93A6C4", "#B8CCEB", "#E5EFFF"]
+      },
+      "stationDark": {
+        "role": "primary",
+        "displayName": "Night Station Blue",
+        "canonical": "oklch(56.4% 0.185 260.8)",
+        "tonalRamp": ["#000825", "#001E58", "#003996", "#1758C7", "#3D7DF0", "#6FA3FF", "#ADCCFF", "#E6EFFF"]
+      },
+      "onStationDark": {
+        "role": "primary",
+        "displayName": "Station Type",
+        "canonical": "oklch(97.5% 0.006 255.5)",
+        "tonalRamp": ["#090B0E", "#222427", "#404346", "#5E6164", "#818387", "#A2A5A8", "#C8CBCF", "#ECEFF3"]
+      },
+      "onStationMutedDark": {
+        "role": "primary",
+        "displayName": "Bright Station Type",
+        "canonical": "oklch(100% 0 0)",
+        "tonalRamp": ["#0B0B0B", "#242424", "#424242", "#606060", "#838383", "#A4A4A4", "#CACACA", "#EEEEEE"]
+      }
+    },
+    "typographyMeta": {
+      "display": {
+        "displayName": "Display",
+        "purpose": "Live book title and the welcome promise. Barlow Condensed SemiBold at 44px."
+      },
+      "program": {
+        "displayName": "Program",
+        "purpose": "Off-air period name and the minute field. Barlow Condensed SemiBold at 28px."
+      },
+      "title": {
+        "displayName": "Title",
+        "purpose": "Listing title. Barlow Condensed SemiBold at 22px, two lines."
+      },
+      "headline": {
+        "displayName": "Headline",
+        "purpose": "iOS schedule header. CupertinoSystemDisplay at 34px, weight 700."
+      },
+      "headline-android": {
+        "displayName": "Headline, Android",
+        "purpose": "Android schedule header. Roboto at 28px, weight 700."
+      },
+      "body": {
+        "displayName": "Body",
+        "purpose": "Authors, empty lines, and choice labels. Material bodyLarge on the platform face."
+      },
+      "label": {
+        "displayName": "Label",
+        "purpose": "Time column, trailing status, and onboarding progress. Material labelLarge. Time columns add tabular figures."
+      },
+      "control-ios": {
+        "displayName": "iOS control",
+        "purpose": "Cupertino button label. 17px, weight 600, tracking −0.41px."
+      },
+      "control-android": {
+        "displayName": "Android control",
+        "purpose": "Filled button label. Material labelLarge, 14px, weight 500."
+      }
+    },
+    "shadows": [
+      {
+        "name": "none",
+        "value": "none",
+        "purpose": "The log does not cast shadows. Depth is the station field against paper, and a 1px rule."
+      }
+    ],
+    "motion": [
+      {
+        "name": "chrome-collapse",
+        "value": "180ms cubic-bezier(0, 0, 0.58, 1)",
+        "purpose": "Reader chrome folds away. The page color under it is the book's stored color."
+      }
+    ]
+  },
+  "components": [
+    {
+      "name": "On-air button",
+      "kind": "button",
+      "refersTo": "button-on-air",
+      "description": "The control at the foot of the live band. Paper fill, station label.",
+      "html": "<button class=\"ds-btn ds-btn-on-air\" type=\"button\">Leer</button>",
+      "css": ".ds-btn-on-air { display: block; width: 100%; height: 48px; margin: 0; border: none; border-radius: 0; background: #F4F7FB; color: #0C4DA2; font-family: CupertinoSystemText, sans-serif; font-size: 17px; font-weight: 600; letter-spacing: -0.41px; cursor: pointer; } .ds-btn-on-air:hover { opacity: 0.92; } .ds-btn-on-air:focus-visible { outline: 2px solid #0C4DA2; outline-offset: 2px; }"
+    },
+    {
+      "name": "Primary button",
+      "kind": "button",
+      "refersTo": "button-primary",
+      "description": "The control on paper. Station fill, paper label. Full width, 48px, square.",
+      "html": "<button class=\"ds-btn ds-btn-primary\" type=\"button\">Importar</button>",
+      "css": ".ds-btn-primary { display: block; width: 100%; height: 48px; margin: 0; border: none; border-radius: 0; background: #0C4DA2; color: #F4F7FB; font-family: CupertinoSystemText, sans-serif; font-size: 17px; font-weight: 600; letter-spacing: -0.41px; cursor: pointer; } .ds-btn-primary:hover { opacity: 0.92; } .ds-btn-primary:focus-visible { outline: 2px solid #0E1A2B; outline-offset: 2px; }"
+    },
+    {
+      "name": "Disabled button",
+      "kind": "button",
+      "refersTo": "button-disabled",
+      "description": "The schedule action when it cannot run. Hairline fill, muted label.",
+      "html": "<button class=\"ds-btn ds-btn-disabled\" type=\"button\" disabled>Importando</button>",
+      "css": ".ds-btn-disabled { display: block; width: 100%; height: 48px; margin: 0; border: none; border-radius: 0; background: #D5DBE3; color: #3A4C66; font-family: CupertinoSystemText, sans-serif; font-size: 17px; font-weight: 600; letter-spacing: -0.41px; cursor: default; } .ds-btn-disabled:hover { opacity: 1; } .ds-btn-disabled:focus-visible { outline: 2px solid #0E1A2B; outline-offset: 2px; }"
+    },
+    {
+      "name": "Text button",
+      "kind": "button",
+      "refersTo": "button-text",
+      "description": "Dialog actions. Station label, no fill.",
+      "html": "<button class=\"ds-btn ds-btn-text\" type=\"button\">Cancelar</button>",
+      "css": ".ds-btn-text { display: inline-block; margin: 0; padding: 8px 12px; border: none; border-radius: 0; background: transparent; color: #0C4DA2; font-family: CupertinoSystemText, Roboto, sans-serif; font-size: 14px; font-weight: 500; letter-spacing: 0.1px; cursor: pointer; } .ds-btn-text:hover { text-decoration: underline; text-underline-offset: 3px; } .ds-btn-text:focus-visible { outline: 2px solid #0C4DA2; outline-offset: 2px; }"
+    },
+    {
+      "name": "Listing",
+      "kind": "custom",
+      "refersTo": "listing",
+      "description": "A book row. Program title, muted subtitle, a 36×52 cover mark (the title's first letter when the file has none), and a 1px rule.",
+      "html": "<button class=\"ds-listing\" type=\"button\"><span class=\"ds-listing-time\">12–18</span><span class=\"ds-listing-copy\"><span class=\"ds-listing-title\">Tarde</span></span></button>",
+      "css": ".ds-listing { display: flex; align-items: flex-start; gap: 0; width: 100%; min-height: 48px; margin: 0; padding: 8px 20px; border: none; border-bottom: 1px solid #D5DBE3; border-radius: 0; background: #F4F7FB; text-align: left; cursor: pointer; } .ds-listing-time { width: 64px; flex: none; color: #3A4C66; font-family: CupertinoSystemText, Roboto, sans-serif; font-size: 14px; font-weight: 500; letter-spacing: 0.1px; font-variant-numeric: tabular-nums; } .ds-listing-copy { display: flex; flex-direction: column; gap: 4px; min-width: 0; } .ds-listing-title { color: #0E1A2B; font-family: BarlowCondensed, sans-serif; font-size: 22px; font-weight: 600; line-height: 0.95; letter-spacing: -0.02em; } .ds-listing-sub { color: #3A4C66; font-family: CupertinoSystemText, Roboto, sans-serif; font-size: 14px; font-weight: 400; letter-spacing: 0.25px; } .ds-listing:hover { background: color-mix(in srgb, #0E1A2B 6%, #F4F7FB); } .ds-listing:focus-visible { outline: 2px solid #0C4DA2; outline-offset: -2px; }"
+    },
+    {
+      "name": "Live band",
+      "kind": "custom",
+      "description": "The on-air band. Station field, a 72×108 cover (the title's first letter when the file has none), display title, open minute field, inverted control.",
+      "html": "<section class=\"ds-live\"><div class=\"ds-live-top\"><div class=\"ds-live-when\"><span class=\"ds-live-hour\">06:00</span><span class=\"ds-live-period\">Mañana</span></div><div class=\"ds-live-book\"><span class=\"ds-live-title\">Memoirs of an Infantry Officer</span><span class=\"ds-live-author\">Siegfried Sassoon</span></div></div><div class=\"ds-minute\">0 / 10</div><button class=\"ds-live-action\" type=\"button\">Leer</button></section>",
+      "css": ".ds-live { display: flex; flex-direction: column; align-items: stretch; gap: 16px; width: 100%; padding: 16px 20px; background: #0C4DA2; color: #F4F7FB; border-radius: 0; } .ds-live-top { display: flex; align-items: flex-start; gap: 0; } .ds-live-when { width: 72px; flex: none; display: flex; flex-direction: column; gap: 4px; } .ds-live-hour { color: #D5E3F8; font-family: CupertinoSystemText, Roboto, sans-serif; font-size: 14px; font-weight: 500; letter-spacing: 0.1px; font-variant-numeric: tabular-nums; } .ds-live-period { color: #F4F7FB; font-family: CupertinoSystemText, Roboto, sans-serif; font-size: 14px; font-weight: 500; letter-spacing: 0.1px; } .ds-live-book { display: flex; flex-direction: column; gap: 8px; min-width: 0; } .ds-live-title { color: #F4F7FB; font-family: BarlowCondensed, sans-serif; font-size: 44px; font-weight: 600; line-height: 0.95; letter-spacing: -0.02em; } .ds-live-author { color: #D5E3F8; font-family: CupertinoSystemText, Roboto, sans-serif; font-size: 16px; font-weight: 400; letter-spacing: 0.5px; } .ds-minute { align-self: flex-start; padding: 8px 12px; border: 1px solid #D5E3F8; border-radius: 0; background: transparent; color: #F4F7FB; font-family: BarlowCondensed, sans-serif; font-size: 28px; font-weight: 600; line-height: 0.95; letter-spacing: -0.02em; } .ds-live-action { display: block; width: 100%; height: 48px; margin: 0; border: none; border-radius: 0; background: #F4F7FB; color: #0C4DA2; font-family: CupertinoSystemText, sans-serif; font-size: 17px; font-weight: 600; letter-spacing: -0.41px; cursor: pointer; } .ds-live-action:hover { opacity: 0.92; } .ds-live-action:focus-visible { outline: 2px solid #F4F7FB; outline-offset: 2px; }"
+    },
+    {
+      "name": "Met minute field",
+      "kind": "custom",
+      "refersTo": "minute-field-met",
+      "description": "The day's minutes once the goal is in. Paper fill, station numerals.",
+      "html": "<div class=\"ds-minute-met\">12 / 10</div>",
+      "css": ".ds-minute-met { display: inline-block; padding: 8px 12px; border: 1px solid #D5E3F8; border-radius: 0; background: #F4F7FB; color: #0C4DA2; font-family: BarlowCondensed, sans-serif; font-size: 28px; font-weight: 600; line-height: 0.95; letter-spacing: -0.02em; }"
+    },
+    {
+      "name": "Choice",
+      "kind": "chip",
+      "refersTo": "choice-selected",
+      "description": "Onboarding choice. Unselected is paper with a hairline. Selected fills with station.",
+      "html": "<div class=\"ds-choices\"><button class=\"ds-choice\" type=\"button\">10 minutos</button><button class=\"ds-choice ds-choice-selected\" type=\"button\"><span>20 minutos</span><svg width=\"20\" height=\"20\" viewBox=\"0 0 24 24\" fill=\"none\" stroke=\"currentColor\" stroke-width=\"2\" aria-hidden=\"true\"><path d=\"M5 12.5 10 17.5 19 7.5\"/></svg></button></div>",
+      "css": ".ds-choices { display: flex; flex-direction: column; gap: 8px; width: 100%; } .ds-choice { display: flex; align-items: center; justify-content: space-between; width: 100%; min-height: 48px; margin: 0; padding: 14px 16px; border: 1px solid #D5DBE3; border-radius: 0; background: #F4F7FB; color: #0E1A2B; font-family: CupertinoSystemText, Roboto, sans-serif; font-size: 16px; font-weight: 400; letter-spacing: 0.5px; text-align: left; cursor: pointer; } .ds-choice:hover { background: color-mix(in srgb, #0E1A2B 6%, #F4F7FB); } .ds-choice:focus-visible { outline: 2px solid #0C4DA2; outline-offset: 2px; } .ds-choice-selected { background: #0C4DA2; border-color: #0C4DA2; color: #F4F7FB; } .ds-choice-selected:hover { background: #0C4DA2; opacity: 0.92; }"
+    },
+    {
+      "name": "iOS tab bar",
+      "kind": "nav",
+      "refersTo": "nav-ios",
+      "description": "Cupertino bar. Paper at 94%, a top hairline, active station, inactive muted.",
+      "html": "<nav class=\"ds-tabbar\" aria-label=\"Secciones\"><a class=\"ds-tab\" href=\"#descubrimiento\"><svg width=\"24\" height=\"24\" viewBox=\"0 0 24 24\" fill=\"none\" stroke=\"currentColor\" stroke-width=\"1.6\" aria-hidden=\"true\"><circle cx=\"12\" cy=\"12\" r=\"8\"/><path d=\"m14.5 9.5-1.5 3.5-3.5 1.5L11 11l3.5-1.5z\"/></svg><span>Descubrimiento</span></a><a class=\"ds-tab ds-tab-active\" href=\"#biblioteca\" aria-current=\"page\"><svg width=\"24\" height=\"24\" viewBox=\"0 0 24 24\" fill=\"none\" stroke=\"currentColor\" stroke-width=\"1.6\" aria-hidden=\"true\"><path d=\"M5 5.5h6.2A2.8 2.8 0 0 1 14 8.3V19a2.5 2.5 0 0 0-2.2-1.2H5V5.5zM19 5.5h-6.2A2.8 2.8 0 0 0 10 8.3V19a2.5 2.5 0 0 1 2.2-1.2H19V5.5z\"/></svg><span>Biblioteca</span></a><a class=\"ds-tab\" href=\"#tiempo\"><svg width=\"24\" height=\"24\" viewBox=\"0 0 24 24\" fill=\"none\" stroke=\"currentColor\" stroke-width=\"1.6\" aria-hidden=\"true\"><circle cx=\"12\" cy=\"13\" r=\"7\"/><path d=\"M12 13V9.5M10 3.5h4M12 6V4.5\"/></svg><span>Tiempo</span></a><a class=\"ds-tab\" href=\"#perfil\"><svg width=\"24\" height=\"24\" viewBox=\"0 0 24 24\" fill=\"none\" stroke=\"currentColor\" stroke-width=\"1.6\" aria-hidden=\"true\"><circle cx=\"12\" cy=\"8\" r=\"3\"/><path d=\"M6 19.5c1.2-3 3.2-4.5 6-4.5s4.8 1.5 6 4.5\"/></svg><span>Perfil</span></a></nav>",
+      "css": ".ds-tabbar { display: flex; width: 100%; margin: 0; padding: 6px 0 4px; border-top: 1px solid #D5DBE3; border-radius: 0; background: rgba(244, 247, 251, 0.94); } .ds-tab { flex: 1; display: flex; flex-direction: column; align-items: center; gap: 2px; margin: 0; padding: 4px 2px; color: #3A4C66; font-family: CupertinoSystemText, sans-serif; font-size: 10px; font-weight: 500; letter-spacing: -0.24px; text-decoration: none; } .ds-tab:hover { color: #0E1A2B; } .ds-tab:focus-visible { outline: 2px solid #0C4DA2; outline-offset: -2px; } .ds-tab-active { color: #0C4DA2; }"
+    },
+    {
+      "name": "Habit marks",
+      "kind": "custom",
+      "description": "Calendar days. Empty, partial, and met. Square, 32px, no radius.",
+      "html": "<div class=\"ds-marks\"><span class=\"ds-day\">4</span><span class=\"ds-day ds-day-partial\">12</span><span class=\"ds-day ds-day-met\">18</span></div>",
+      "css": ".ds-marks { display: flex; gap: 8px; align-items: center; } .ds-day { display: inline-flex; align-items: center; justify-content: center; width: 32px; height: 32px; border: 1px solid #D5DBE3; border-radius: 0; background: transparent; color: #0E1A2B; font-family: CupertinoSystemText, Roboto, sans-serif; font-size: 14px; font-weight: 500; } .ds-day-partial { background: rgba(12, 77, 162, 0.28); border-color: #0C4DA2; } .ds-day-met { background: #0C4DA2; border-color: #F4F7FB; color: #F4F7FB; font-weight: 700; }"
+    }
+  ],
+  "narrative": {
+    "northStar": "The Printed Program Log",
+    "overview": "Liora reads as one day's program, printed on cool paper. The page is flat and edge to edge. A scheduled day is three bands. The band that is on air is the only field of station blue; the other two stay short and off air. Books that are not in that slot are ruled listings under the bands. The same paper, ink, hairline, and station blue run through the catalog, the habit, the profile, and onboarding. The reader page keeps its own stored colors; only its chrome belongs to this log.\n\nLight and dark follow the platform. Light is cool paper with deep ink. Dark sets the paper to that ink and the ink to the paper, and lifts the station blue so the live band still reads. Type on the live band stays light in both. Program titles are Barlow Condensed. Headers, captions, and controls stay on the platform face: San Francisco on iOS, Roboto on Android. Copy on the screen is the Spanish the app ships.",
+    "keyCharacteristics": [
+      "Cool paper, edge to edge, with one station blue for the live band",
+      "Hairline rules and no cards or shadows",
+      "Square corners on the log's own surfaces",
+      "Barlow Condensed for program titles; the platform face for headers and controls",
+      "A listing is off air, on air, or, for the day's minutes, met",
+      "iOS closes on a Cupertino tab bar; Android closes on a Material 3 navigation bar"
+    ],
+    "rules": [
+      {
+        "name": "The One Station Rule",
+        "body": "Station blue is the live band, the primary control, the selected mark, and the met day. Paper, ink, muted, and the hairline do the rest of the screen.",
+        "section": "colors"
+      },
+      {
+        "name": "The Station Type Rule",
+        "body": "Type on the live band is onStation and onStationMuted. In dark mode those stay light (#F4F7FB and white).",
+        "section": "colors"
+      },
+      {
+        "name": "The Two Faces Rule",
+        "body": "Barlow Condensed carries program titles. Page headers, dates, captions, questions, and controls stay on the platform face.",
+        "section": "typography"
+      },
+      {
+        "name": "The Program Tracking Rule",
+        "body": "Every program title uses line height 0.95 and tracking at −2% of its font size.",
+        "section": "typography"
+      },
+      {
+        "name": "The One Band Rule",
+        "body": "A scheduled day is the chosen band, the station field. Importar is one line under it when the library has books. Everything else is a listing on paper.",
+        "section": "layout"
+      },
+      {
+        "name": "The Gutter Rule",
+        "body": "Log inset is 20px. Onboarding inset is 24px.",
+        "section": "layout"
+      },
+      {
+        "name": "The Flat Paper Rule",
+        "body": "Surfaces are flat at rest and in motion. Do not add a shadow to separate a band, a listing, a choice, or a control.",
+        "section": "elevation"
+      },
+      {
+        "name": "The Square Log Rule",
+        "body": "Authored log surfaces are square (0). The Android navigation indicator stays the Material pill, and dialogs stay platform-rounded, because the theme does not restyle them. That platform rounding does not extend to bands, listings, or buttons.",
+        "section": "shapes"
+      },
+      {
+        "name": "The On Air Control Rule",
+        "body": "A control on the station field inverts: onStation fill, station label. A control on paper is station fill, onStation label. The schedule action's disabled state is hairline fill and muted label in both places.",
+        "section": "components"
+      }
+    ],
+    "dos": [
+      "Do take color from the light or dark token set for the current platform brightness: paper, ink, muted, rule, station, onStation, onStationMuted.",
+      "Do set program titles in Barlow Condensed at weight 600, line height 0.95, and tracking at −2% of the size. The shipped sizes are 44px, 36px for an empty title, 28px, and 22px.",
+      "Do keep schedule headers on the platform face: 34px and weight 700 on iOS, 28px and weight 700 on Android, line height 1.05, in ink.",
+      "Do separate bands and listings with a 1px rule, and keep authored corners square (0).",
+      "Do keep Importar as one fixed line under the live band when the library has books, and keep the empty-library line Un EPUB de este dispositivo.",
+      "Do put Eliminar on each book, on the live band and on each listing.",
+      "Do leave the Spanish labels as they ship, including Leer, Importar, and the date line. Do show a book's cover once on the live band (72×108) and as a 36×52 mark on its listing, square and flat. A missing file keeps that frame and shows the title's first letter."
+    ],
+    "donts": [
+      "Don't add a second accent, a card, a cover grid, or a drop shadow to the log. A cover is the object in the row, not the way the library is organized.",
+      "Don't round bands, listings, choices, minute fields, habit marks, or schedule buttons.",
+      "Don't set a platform face on a program title, or Barlow Condensed on a header or a control.",
+      "Don't translate the interface into another language or a new tone.",
+      "Don't restyle the Android selection pill or the platform dialog into the square log, and don't copy their rounding onto bands and buttons.",
+      "Don't paint the book's stored page color as paper or station. Reader chrome is the only part of that screen in this system."
+    ]
+  }
+}

@@ -1,4 +1,5 @@
 import 'package:epub_reader/app/providers.dart';
+import 'package:epub_reader/app/schedule_widgets.dart';
 import 'package:epub_reader/features/profile/reader_profile_store.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
@@ -12,8 +13,9 @@ class ProfilePage extends ConsumerWidget {
     final profile = ref.watch(readerProfileProvider);
 
     return Scaffold(
-      appBar: AppBar(title: const Text('Perfil')),
-      body: profile.when(
+      body: SafeArea(
+        bottom: false,
+        child: profile.when(
         loading: () => const Center(child: CircularProgressIndicator()),
         error: (error, _) => Center(
           child: Padding(
@@ -30,7 +32,8 @@ class ProfilePage extends ConsumerWidget {
               : '${saved.dailyGoalMinutes} minutos';
           return ListView(
             children: [
-              const Divider(height: 1),
+              const ScheduleHeader(title: 'Perfil'),
+              const ScheduleRule(),
               ListTile(
                 title: const Text('Hábito de lectura'),
                 trailing: Text(goal),
@@ -50,6 +53,7 @@ class ProfilePage extends ConsumerWidget {
             ],
           );
         },
+        ),
       ),
     );
   }
