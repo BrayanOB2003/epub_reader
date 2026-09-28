@@ -265,7 +265,7 @@ PLATFORMS
   ruby
 
 DEPENDENCIES
-  fastlane
+  fastlane (>= 2.234.0)
   fastlane-plugin-firebase_app_distribution
 
 BUNDLED WITH
