@@ -305,6 +305,7 @@ class ScheduleListing extends StatelessWidget {
   const ScheduleListing({
     required this.title,
     this.subtitle,
+    this.caption,
     this.trailing,
     this.leading,
     this.cover,
@@ -321,6 +322,7 @@ class ScheduleListing extends StatelessWidget {
 
   final String title;
   final String? subtitle;
+  final String? caption;
   final String? trailing;
   final String? leading;
   final Uint8List? cover;
@@ -396,6 +398,16 @@ class ScheduleListing extends StatelessWidget {
                       style: Theme.of(context).textTheme.bodyMedium
                           ?.copyWith(color: muted),
                       maxLines: 2,
+                      overflow: TextOverflow.ellipsis,
+                    ),
+                  ],
+                  if (caption != null) ...[
+                    const SizedBox(height: 4),
+                    Text(
+                      caption!,
+                      style: Theme.of(context).textTheme.labelLarge
+                          ?.copyWith(color: muted),
+                      maxLines: 1,
                       overflow: TextOverflow.ellipsis,
                     ),
                   ],

@@ -6,6 +6,7 @@ import 'package:epub_reader/features/library/data/epub_importer.dart';
 import 'package:epub_reader/features/library/data/epub_metadata.dart';
 import 'package:epub_reader/features/profile/reader_profile_store.dart';
 import 'package:epub_reader/features/profile/reading_routine.dart';
+import 'package:epub_reader/l10n/app_localizations.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:go_router/go_router.dart';
@@ -22,16 +23,22 @@ class _HomePageState extends ConsumerState<HomePage> {
 
   Future<void> _import() async {
     if (_importing) return;
+    final l10n = AppLocalizations.of(context);
     setState(() => _importing = true);
     try {
-      final outcome = await ref.read(epubImporterProvider).pickAndImport();
+      final outcome = await ref
+          .read(epubImporterProvider)
+          .pickAndImport(dialogTitle: l10n.importEpub, untitled: l10n.untitled);
+      if (!mounted) return;
       if (outcome == ImportOutcome.alreadyInLibrary) {
-        _showMessage('Este libro ya está en la biblioteca.');
+        _showMessage(l10n.alreadyInLibrary);
       }
     } on EpubFormatException catch (error) {
-      _showMessage(error.message);
+      if (!mounted) return;
+      _showMessage(_epubMessage(l10n, error));
     } catch (_) {
-      _showMessage('No se pudo importar el EPUB.');
+      if (!mounted) return;
+      _showMessage(l10n.importFailed);
     } finally {
       if (mounted) setState(() => _importing = false);
     }
@@ -315,7 +322,7 @@ class _LiveBand extends StatelessWidget {
                       ),
                       const SizedBox(height: 4),
                       Text(
-                        period.label,
+                        period.label(AppLocalizations.of(context)),
                         style: Theme.of(context).textTheme.labelLarge
                             ?.copyWith(color: colors.onStation),
                       ),
@@ -450,4 +457,12 @@ int _secondsToday(List<ReadingSession> sessions, DateTime now) {
     if (day == today) total += session.engagedSeconds;
   }
   return total;
+}
+
+String _epubMessage(AppLocalizations l10n, EpubFormatException error) {
+  return switch (error.failure) {
+    EpubFormatFailure.notEpub => l10n.notAnEpub,
+    EpubFormatFailure.missingRoot => l10n.epubMissingRoot,
+    EpubFormatFailure.missingContent => l10n.epubMissingContent,
+  };
 }

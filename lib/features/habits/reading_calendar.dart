@@ -55,65 +55,66 @@ class _ReadingCalendarState extends State<ReadingCalendar> {
       cells.add(null);
     }
 
+    final labels = weekdayLabels(Localizations.localeOf(context).languageCode);
     return Padding(
       padding: const EdgeInsets.fromLTRB(8, 8, 8, 12),
       child: Column(
-          children: [
-            Row(
-              children: [
-                IconButton(
-                  tooltip: 'Mes anterior',
-                  onPressed: () => _shift(-1),
-                  icon: const Icon(Icons.chevron_left),
+        children: [
+          Row(
+            children: [
+              IconButton(
+                tooltip: 'Mes anterior',
+                onPressed: () => _shift(-1),
+                icon: const Icon(Icons.chevron_left),
+              ),
+              Expanded(
+                child: Text(
+                  formatReadingMonth(_month),
+                  textAlign: TextAlign.center,
+                  style: theme.textTheme.titleMedium,
                 ),
+              ),
+              IconButton(
+                tooltip: 'Mes siguiente',
+                onPressed: _canGoForward ? () => _shift(1) : null,
+                icon: const Icon(Icons.chevron_right),
+              ),
+            ],
+          ),
+          const SizedBox(height: 4),
+          Row(
+            children: [
+              for (final label in labels)
                 Expanded(
                   child: Text(
-                    formatReadingMonth(_month),
+                    label,
                     textAlign: TextAlign.center,
-                    style: theme.textTheme.titleMedium,
+                    style: theme.textTheme.labelMedium?.copyWith(
+                      color: color.onSurfaceVariant,
+                    ),
                   ),
                 ),
-                IconButton(
-                  tooltip: 'Mes siguiente',
-                  onPressed: _canGoForward ? () => _shift(1) : null,
-                  icon: const Icon(Icons.chevron_right),
-                ),
+            ],
+          ),
+          const SizedBox(height: 8),
+          for (var index = 0; index < cells.length; index += 7) ...[
+            Row(
+              children: [
+                for (final day in cells.sublist(index, index + 7))
+                  Expanded(
+                    child: day == null
+                        ? const SizedBox(height: 40)
+                        : _DayCell(
+                            day: day,
+                            isToday: _sameDay(day.day, widget.today),
+                          ),
+                  ),
               ],
             ),
             const SizedBox(height: 4),
-            Row(
-              children: [
-                for (final label in weekdayLabels)
-                  Expanded(
-                    child: Text(
-                      label,
-                      textAlign: TextAlign.center,
-                      style: theme.textTheme.labelMedium?.copyWith(
-                        color: color.onSurfaceVariant,
-                      ),
-                    ),
-                  ),
-              ],
-            ),
-            const SizedBox(height: 8),
-            for (var index = 0; index < cells.length; index += 7) ...[
-              Row(
-                children: [
-                  for (final day in cells.sublist(index, index + 7))
-                    Expanded(
-                      child: day == null
-                          ? const SizedBox(height: 40)
-                          : _DayCell(
-                              day: day,
-                              isToday: _sameDay(day.day, widget.today),
-                            ),
-                    ),
-                ],
-              ),
-              const SizedBox(height: 4),
-            ],
           ],
-        ),
+        ],
+      ),
     );
   }
 }

@@ -4,6 +4,7 @@ import 'package:epub_reader/features/profile/reader_profile_store.dart';
 import 'package:epub_reader/features/profile/reading_goal.dart';
 import 'package:epub_reader/features/profile/reading_routine.dart';
 import 'package:epub_reader/features/onboarding/onboarding_controller.dart';
+import 'package:epub_reader/l10n/app_localizations.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:go_router/go_router.dart';
@@ -170,6 +171,7 @@ class _OnboardingPageState extends ConsumerState<OnboardingPage> {
   }
 
   Widget _stepBody(ThemeData theme) {
+    final l10n = AppLocalizations.of(context);
     return switch (_step) {
       0 => _Welcome(theme: theme),
       1 => _Question(
@@ -178,7 +180,7 @@ class _OnboardingPageState extends ConsumerState<OnboardingPage> {
         children: [
           for (final motivation in ReadingMotivation.values)
             _ChoiceTile(
-              label: motivation.label,
+              label: motivation.label(l10n),
               selected: _answers.motivations.contains(motivation),
               onTap: () {
                 final next = {..._answers.motivations};
@@ -208,7 +210,7 @@ class _OnboardingPageState extends ConsumerState<OnboardingPage> {
         children: [
           for (final routine in ReadingRoutine.values)
             _ChoiceTile(
-              label: routine.label,
+              label: routine.label(l10n),
               selected: _answers.routine == routine,
               onTap: () =>
                   setState(() => _answers = _answers.withRoutine(routine)),
@@ -224,8 +226,8 @@ class _OnboardingPageState extends ConsumerState<OnboardingPage> {
                     child: Padding(
                       padding: const EdgeInsets.symmetric(horizontal: 3),
                       child: _DayLetter(
-                        letter: day.letter,
-                        label: day.label,
+                        letter: day.letter(l10n),
+                        label: day.label(l10n),
                         selected: _answers.weekdays.contains(day),
                         onTap: () {
                           final next = {..._answers.weekdays};
@@ -445,8 +447,7 @@ class _ChoiceTile extends StatelessWidget {
                       style: theme.textTheme.bodyLarge?.copyWith(color: ink),
                     ),
                   ),
-                  if (selected)
-                    Icon(Icons.check, color: colors.onStation),
+                  if (selected) Icon(Icons.check, color: colors.onStation),
                 ],
               ),
             ),

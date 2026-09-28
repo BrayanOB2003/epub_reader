@@ -40,85 +40,85 @@ class WeeklyReadingChart extends StatelessWidget {
     return Padding(
       padding: const EdgeInsets.fromLTRB(16, 16, 16, 12),
       child: Column(
-          crossAxisAlignment: CrossAxisAlignment.start,
-          children: [
-            Row(
-              children: [
-                Text(l10n.thisWeek, style: theme.textTheme.titleMedium),
-                const Spacer(),
-                if (goalFraction != null) ...[
-                  CustomPaint(
-                    size: const Size(22, 10),
-                    painter: _DashedGoalPainter(color: lineColor),
+        crossAxisAlignment: CrossAxisAlignment.start,
+        children: [
+          Row(
+            children: [
+              Text(l10n.thisWeek, style: theme.textTheme.titleMedium),
+              const Spacer(),
+              if (goalFraction != null) ...[
+                CustomPaint(
+                  size: const Size(22, 10),
+                  painter: _DashedGoalPainter(color: lineColor),
+                ),
+                const SizedBox(width: 6),
+                Text(
+                  l10n.goalLine(formatReadingDuration(goal!)),
+                  style: theme.textTheme.bodySmall?.copyWith(
+                    color: color.onSurfaceVariant,
                   ),
-                  const SizedBox(width: 6),
-                  Text(
-                    l10n.goalLine(formatReadingDuration(goal!)),
-                    style: theme.textTheme.bodySmall?.copyWith(
-                      color: color.onSurfaceVariant,
-                    ),
-                  ),
-                ],
+                ),
               ],
-            ),
-            const SizedBox(height: 16),
-            SizedBox(
-              height: 96,
-              child: Stack(
-                children: [
-                  Row(
-                    crossAxisAlignment: CrossAxisAlignment.stretch,
-                    children: [
-                      for (final day in days)
-                        Expanded(
-                          child: Padding(
-                            padding: const EdgeInsets.symmetric(horizontal: 5),
-                            child: _DayBar(
-                              fraction: day.engagedSeconds / scale,
-                              label:
-                                  '${weekdayLabels[day.day.weekday - 1]}, ${formatReadingDuration(day.engagedSeconds)}',
-                              filled: day.engagedSeconds > 0,
-                              isToday: _sameDay(day.day, today),
-                            ),
+            ],
+          ),
+          const SizedBox(height: 16),
+          SizedBox(
+            height: 96,
+            child: Stack(
+              children: [
+                Row(
+                  crossAxisAlignment: CrossAxisAlignment.stretch,
+                  children: [
+                    for (final day in days)
+                      Expanded(
+                        child: Padding(
+                          padding: const EdgeInsets.symmetric(horizontal: 5),
+                          child: _DayBar(
+                            fraction: day.engagedSeconds / scale,
+                            label:
+                                '${labels[day.day.weekday - 1]}, ${formatReadingDuration(day.engagedSeconds)}',
+                            filled: day.engagedSeconds > 0,
+                            isToday: _sameDay(day.day, today),
                           ),
                         ),
-                    ],
-                  ),
-                  if (goalFraction != null)
-                    Positioned(
-                      left: 0,
-                      right: 0,
-                      bottom: 96 * goalFraction - 1,
-                      height: 2,
-                      child: CustomPaint(
-                        painter: _DashedGoalPainter(color: lineColor),
                       ),
-                    ),
-                ],
-              ),
-            ),
-            const SizedBox(height: 8),
-            Row(
-              children: [
-                for (final day in days)
-                  Expanded(
-                    child: Text(
-                      weekdayLabels[day.day.weekday - 1],
-                      textAlign: TextAlign.center,
-                      style: theme.textTheme.labelMedium?.copyWith(
-                        color: _sameDay(day.day, today)
-                            ? color.primary
-                            : color.onSurfaceVariant,
-                        fontWeight: _sameDay(day.day, today)
-                            ? FontWeight.w700
-                            : FontWeight.w500,
-                      ),
+                  ],
+                ),
+                if (goalFraction != null)
+                  Positioned(
+                    left: 0,
+                    right: 0,
+                    bottom: 96 * goalFraction - 1,
+                    height: 2,
+                    child: CustomPaint(
+                      painter: _DashedGoalPainter(color: lineColor),
                     ),
                   ),
               ],
             ),
-          ],
-        ),
+          ),
+          const SizedBox(height: 8),
+          Row(
+            children: [
+              for (final day in days)
+                Expanded(
+                  child: Text(
+                    labels[day.day.weekday - 1],
+                    textAlign: TextAlign.center,
+                    style: theme.textTheme.labelMedium?.copyWith(
+                      color: _sameDay(day.day, today)
+                          ? color.primary
+                          : color.onSurfaceVariant,
+                      fontWeight: _sameDay(day.day, today)
+                          ? FontWeight.w700
+                          : FontWeight.w500,
+                    ),
+                  ),
+                ),
+            ],
+          ),
+        ],
+      ),
     );
   }
 }
