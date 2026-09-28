@@ -29,11 +29,9 @@ class WeeklyReadingChart extends StatelessWidget {
     final goalFraction = goal == null || goal <= 0 ? null : goal / scale;
     final lineColor = color.onSurface;
 
-    return Card(
-      margin: EdgeInsets.zero,
-      child: Padding(
-        padding: const EdgeInsets.fromLTRB(16, 16, 16, 12),
-        child: Column(
+    return Padding(
+      padding: const EdgeInsets.fromLTRB(16, 16, 16, 12),
+      child: Column(
           crossAxisAlignment: CrossAxisAlignment.start,
           children: [
             Row(
@@ -57,7 +55,7 @@ class WeeklyReadingChart extends StatelessWidget {
             ),
             const SizedBox(height: 16),
             SizedBox(
-              height: 148,
+              height: 96,
               child: Stack(
                 children: [
                   Row(
@@ -82,7 +80,7 @@ class WeeklyReadingChart extends StatelessWidget {
                     Positioned(
                       left: 0,
                       right: 0,
-                      bottom: 148 * goalFraction - 1,
+                      bottom: 96 * goalFraction - 1,
                       height: 2,
                       child: CustomPaint(
                         painter: _DashedGoalPainter(color: lineColor),
@@ -113,7 +111,6 @@ class WeeklyReadingChart extends StatelessWidget {
             ),
           ],
         ),
-      ),
     );
   }
 }
@@ -140,11 +137,7 @@ class _DayBar extends StatelessWidget {
       excludeSemantics: true,
       child: DecoratedBox(
         decoration: BoxDecoration(
-          color: color.surfaceContainerHighest.withValues(alpha: 0.55),
-          borderRadius: BorderRadius.circular(8),
-          border: isToday
-              ? Border.all(color: color.primary.withValues(alpha: 0.45))
-              : null,
+          color: isToday ? color.primary.withValues(alpha: 0.12) : null,
         ),
         child: filled
             ? Align(
@@ -153,10 +146,7 @@ class _DayBar extends StatelessWidget {
                   heightFactor: height == 0 ? 0.02 : height,
                   widthFactor: 1,
                   child: DecoratedBox(
-                    decoration: BoxDecoration(
-                      color: color.primary,
-                      borderRadius: BorderRadius.circular(8),
-                    ),
+                    decoration: BoxDecoration(color: color.primary),
                     child: const SizedBox.expand(),
                   ),
                 ),
