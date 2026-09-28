@@ -19,7 +19,6 @@ class HomePage extends ConsumerStatefulWidget {
 
 class _HomePageState extends ConsumerState<HomePage> {
   var _importing = false;
-  var _opening = false;
 
   Future<void> _import() async {
     if (_importing) return;
@@ -40,7 +39,8 @@ class _HomePageState extends ConsumerState<HomePage> {
 
   void _showMessage(String message) {
     if (!mounted) return;
-    ScaffoldMessenger.of(context).showSnackBar(SnackBar(content: Text(message)));
+    ScaffoldMessenger.of(context)
+        .showSnackBar(SnackBar(content: Text(message)));
   }
 
   Future<void> _delete(Book book) async {
@@ -70,22 +70,16 @@ class _HomePageState extends ConsumerState<HomePage> {
   }
 
   Future<void> _read(int bookId) async {
-    final reduce = MediaQuery.disableAnimationsOf(context);
-    if (!reduce) {
-      setState(() => _opening = true);
-      await Future<void>.delayed(const Duration(milliseconds: 220));
-    }
     if (!mounted) return;
     await context.push('/read/$bookId');
-    if (!mounted) return;
-    if (_opening) setState(() => _opening = false);
   }
 
   @override
   Widget build(BuildContext context) {
     final books = ref.watch(booksProvider);
     final profile = ref.watch(readerProfileProvider).asData?.value;
-    final sessions = ref.watch(readingSessionsProvider).asData?.value ?? const [];
+    final sessions =
+        ref.watch(readingSessionsProvider).asData?.value ?? const [];
 
     return Scaffold(
       body: SafeArea(
@@ -103,7 +97,6 @@ class _HomePageState extends ConsumerState<HomePage> {
             sessions: sessions,
             profile: profile,
             importing: _importing,
-            opening: _opening,
             onImport: _import,
             onRead: _read,
             onDelete: _delete,
@@ -120,7 +113,6 @@ class _Schedule extends StatelessWidget {
     required this.sessions,
     required this.profile,
     required this.importing,
-    required this.opening,
     required this.onImport,
     required this.onRead,
     required this.onDelete,
@@ -130,204 +122,135 @@ class _Schedule extends StatelessWidget {
   final List<ReadingSession> sessions;
   final ReaderProfile? profile;
   final bool importing;
-  final bool opening;
   final VoidCallback onImport;
   final ValueChanged<int> onRead;
   final ValueChanged<Book> onDelete;
 
   @override
   Widget build(BuildContext context) {
-    final routine = profile == null ? null : ReadingRoutine.byId(profile!.routine);
+    final routine = profile == null
+        ? null
+        : ReadingRoutine.byId(profile!.routine);
     final featured = _onAirBook(books, sessions);
-    final others = [
+    final shelf = [
       for (final book in books)
-        if (featured == null || book.id != featured.id) book,
+        if (routine == null || featured == null || book.id != featured.id) book,
     ];
     final todaySeconds = _secondsToday(sessions, DateTime.now());
     final goal = profile?.dailyGoalMinutes;
-    final expandLive = routine != null && opening;
 
     return Column(
       crossAxisAlignment: CrossAxisAlignment.stretch,
       children: [
         ScheduleHeader(title: 'Biblioteca', date: DateTime.now()),
         const ScheduleRule(),
-        for (final period in ReadingRoutine.values)
-          _band(
-            period: period,
-            live: routine == period,
-            featured: featured,
+        if (routine != null)
+          _LiveBand(
+            period: routine,
+            book: featured,
             todaySeconds: todaySeconds,
-            goal: goal,
+            goalMinutes: goal,
             hour: profile?.routineHour,
-            expand: expandLive && routine == period,
+            importing: importing,
+            onImport: onImport,
+            onRead: featured == null ? null : () => onRead(featured.id),
+            onDelete: featured == null ? null : () => onDelete(featured),
           ),
-        if (routine == null)
+        if (books.isEmpty && routine == null)
           Expanded(
-            child: _Unscheduled(
-              books: books,
-              importing: importing,
-              onImport: onImport,
-              onRead: onRead,
-              onDelete: onDelete,
-            ),
+            child: _EmptyLibrary(importing: importing, onImport: onImport),
           )
-        else if (featured != null && !opening)
-          Expanded(
-            child: ListView(
-              padding: const EdgeInsets.only(bottom: 16),
-              children: [
-                for (final book in others)
-                  ScheduleListing(
-                    key: ValueKey(book.id),
-                    title: book.title,
-                    subtitle: book.author,
-                    trailing: (book.progress * 100).round() == 0
-                        ? 'Sin empezar'
-                        : '${(book.progress * 100).round()} %',
-                    onTap: () => onRead(book.id),
-                  ),
-                ScheduleListing(
-                  title: importing ? 'Importando' : 'Importar',
-                  subtitle: 'Un EPUB de este dispositivo',
-                  onTap: importing ? null : onImport,
-                ),
-                ScheduleListing(
-                  title: 'Eliminar',
-                  subtitle: featured.title,
-                  onTap: () => onDelete(featured),
-                ),
-              ],
+        else if (books.isNotEmpty) ...[
+          _ImportLine(importing: importing, onImport: onImport),
+          const ScheduleRule(),
+          if (shelf.isNotEmpty)
+            Expanded(
+              child: ListView(
+                padding: const EdgeInsets.only(bottom: 24),
+                children: [
+                  for (final book in shelf)
+                    ScheduleListing(
+                      key: ValueKey(book.id),
+                      title: book.title,
+                      subtitle: book.author,
+                      cover: book.coverBytes,
+                      trailing: (book.progress * 100).round() == 0
+                          ? 'Sin empezar'
+                          : '${(book.progress * 100).round()} %',
+                      onTap: () => onRead(book.id),
+                      onDelete: () => onDelete(book),
+                    ),
+                ],
+              ),
             ),
-          ),
+        ],
       ],
     );
   }
-
-  Widget _band({
-    required ReadingRoutine period,
-    required bool live,
-    required Book? featured,
-    required int todaySeconds,
-    required int? goal,
-    required int? hour,
-    required bool expand,
-  }) {
-    if (!live) {
-      return Column(
-        mainAxisSize: MainAxisSize.min,
-        children: [
-          ClipRect(
-            child: AnimatedAlign(
-              alignment: Alignment.topCenter,
-              heightFactor: opening ? 0 : 1,
-              duration: const Duration(milliseconds: 220),
-              curve: Curves.easeOutCubic,
-              child: _OffAirBand(period: period),
-            ),
-          ),
-          const ScheduleRule(),
-        ],
-      );
-    }
-    final band = _LiveBand(
-      period: period,
-      book: featured,
-      todaySeconds: todaySeconds,
-      goalMinutes: goal,
-      hour: hour,
-      importing: importing,
-      expand: expand,
-      onImport: onImport,
-      onRead: featured == null ? null : () => onRead(featured.id),
-    );
-    if (expand) return Expanded(child: band);
-    return band;
-  }
 }
 
-class _Unscheduled extends StatelessWidget {
-  const _Unscheduled({
-    required this.books,
-    required this.importing,
-    required this.onImport,
-    required this.onRead,
-    required this.onDelete,
-  });
+class _EmptyLibrary extends StatelessWidget {
+  const _EmptyLibrary({required this.importing, required this.onImport});
 
-  final List<Book> books;
   final bool importing;
   final VoidCallback onImport;
-  final ValueChanged<int> onRead;
-  final ValueChanged<Book> onDelete;
 
   @override
   Widget build(BuildContext context) {
     final colors = ScheduleColors.of(context);
-    if (books.isEmpty) {
-      return Padding(
-        padding: const EdgeInsets.all(20),
-        child: Column(
-          crossAxisAlignment: CrossAxisAlignment.start,
-          children: [
-            Text(
-              'Todavía no hay libros',
-              style: programTitle(colors.ink, size: 36),
-            ),
-            const SizedBox(height: 8),
-            Text(
-              'Importa un EPUB para empezar a leer.',
-              style: Theme.of(context).textTheme.bodyLarge?.copyWith(
-                color: colors.muted,
-              ),
-            ),
-            const Spacer(),
-            ScheduleAction(
-              label: importing ? 'Importando' : 'Importar',
-              onPressed: importing ? null : onImport,
-            ),
-          ],
-        ),
-      );
-    }
-    return ListView.builder(
-      padding: const EdgeInsets.only(bottom: 24),
-      itemCount: books.length + 1,
-      itemBuilder: (context, index) {
-        if (index == books.length) {
-          return ScheduleListing(
-            title: importing ? 'Importando' : 'Importar',
-            subtitle: 'Un EPUB de este dispositivo',
-            onTap: importing ? null : onImport,
-          );
-        }
-        final book = books[index];
-        final percent = (book.progress * 100).round();
-        return ScheduleListing(
-          key: ValueKey(book.id),
-          title: book.title,
-          subtitle: book.author,
-          trailing: percent == 0 ? 'Sin empezar' : '$percent %',
-          onTap: () => onRead(book.id),
-        );
-      },
+    return Padding(
+      padding: const EdgeInsets.all(20),
+      child: Column(
+        crossAxisAlignment: CrossAxisAlignment.start,
+        children: [
+          Text(
+            'Todavía no hay libros',
+            style: programTitle(colors.ink, size: 36),
+          ),
+          const SizedBox(height: 8),
+          Text(
+            'Un EPUB de este dispositivo',
+            style: Theme.of(context).textTheme.bodyLarge
+                ?.copyWith(color: colors.muted),
+          ),
+          const Spacer(),
+          ScheduleAction(
+            label: importing ? 'Importando' : 'Importar',
+            onPressed: importing ? null : onImport,
+          ),
+        ],
+      ),
     );
   }
 }
 
-class _OffAirBand extends StatelessWidget {
-  const _OffAirBand({required this.period});
+class _ImportLine extends StatelessWidget {
+  const _ImportLine({required this.importing, required this.onImport});
 
-  final ReadingRoutine period;
+  final bool importing;
+  final VoidCallback onImport;
 
   @override
   Widget build(BuildContext context) {
-    return ScheduleListing(
-      leading: _span(period),
-      title: period.label,
-      subtitle: 'Fuera de aire',
-      titleSize: 28,
-      rule: false,
+    final colors = ScheduleColors.of(context);
+    return Semantics(
+      button: true,
+      child: InkWell(
+        onTap: importing ? null : onImport,
+        child: ConstrainedBox(
+          constraints: const BoxConstraints(minHeight: 48),
+          child: Padding(
+            padding: const EdgeInsets.symmetric(horizontal: 20),
+            child: Align(
+              alignment: Alignment.centerLeft,
+              child: Text(
+                importing ? 'Importando' : 'Importar',
+                style: programTitle(colors.station, size: 22),
+              ),
+            ),
+          ),
+        ),
+      ),
     );
   }
 }
@@ -340,9 +263,9 @@ class _LiveBand extends StatelessWidget {
     required this.goalMinutes,
     required this.hour,
     required this.importing,
-    required this.expand,
     required this.onImport,
     required this.onRead,
+    required this.onDelete,
   });
 
   final ReadingRoutine period;
@@ -351,17 +274,22 @@ class _LiveBand extends StatelessWidget {
   final int? goalMinutes;
   final int? hour;
   final bool importing;
-  final bool expand;
   final VoidCallback onImport;
   final VoidCallback? onRead;
+  final VoidCallback? onDelete;
 
   @override
   Widget build(BuildContext context) {
     final colors = ScheduleColors.of(context);
     final title = book?.title ?? 'Todavía no hay libros';
     final minutes = todaySeconds ~/ 60;
-    final met = goalMinutes != null && todaySeconds >= goalMinutes! * 60 && todaySeconds > 0;
-    final minuteLabel = goalMinutes == null ? '$minutes min' : '$minutes / $goalMinutes';
+    final met =
+        goalMinutes != null &&
+        todaySeconds >= goalMinutes! * 60 &&
+        todaySeconds > 0;
+    final minuteLabel = goalMinutes == null
+        ? '$minutes min'
+        : '$minutes / $goalMinutes';
 
     return ColoredBox(
       color: colors.station,
@@ -388,13 +316,23 @@ class _LiveBand extends StatelessWidget {
                       const SizedBox(height: 4),
                       Text(
                         period.label,
-                        style: Theme.of(context).textTheme.labelLarge?.copyWith(
-                          color: colors.onStation,
-                        ),
+                        style: Theme.of(context).textTheme.labelLarge
+                            ?.copyWith(color: colors.onStation),
                       ),
                     ],
                   ),
                 ),
+                if (book != null &&
+                    book!.coverBytes != null &&
+                    book!.coverBytes!.isNotEmpty) ...[
+                  ScheduleCover(
+                    bytes: book!.coverBytes!,
+                    width: 72,
+                    height: 108,
+                    borderColor: colors.onStationMuted,
+                  ),
+                  const SizedBox(width: 16),
+                ],
                 Expanded(
                   child: Column(
                     crossAxisAlignment: CrossAxisAlignment.start,
@@ -411,28 +349,35 @@ class _LiveBand extends StatelessWidget {
                       const SizedBox(height: 8),
                       if (book == null)
                         Text(
-                          'Importa un EPUB para empezar a leer.',
-                          style: Theme.of(context).textTheme.bodyLarge?.copyWith(
-                            color: colors.onStationMuted,
-                          ),
+                          'Un EPUB de este dispositivo',
+                          style: Theme.of(context).textTheme.bodyLarge
+                              ?.copyWith(color: colors.onStationMuted),
                         )
                       else if (book!.author != null)
                         Text(
                           book!.author!,
-                          style: Theme.of(context).textTheme.bodyLarge?.copyWith(
-                            color: colors.onStationMuted,
-                          ),
+                          style: Theme.of(context).textTheme.bodyLarge
+                              ?.copyWith(color: colors.onStationMuted),
                           maxLines: 1,
                           overflow: TextOverflow.ellipsis,
                         ),
                     ],
                   ),
                 ),
+                if (onDelete != null)
+                  TextButton(
+                    onPressed: onDelete,
+                    style: TextButton.styleFrom(
+                      foregroundColor: colors.onStationMuted,
+                      minimumSize: const Size(44, 44),
+                      tapTargetSize: MaterialTapTargetSize.shrinkWrap,
+                    ),
+                    child: const Text('Eliminar'),
+                  ),
               ],
             ),
             const SizedBox(height: 16),
             _MinuteField(label: minuteLabel, met: met),
-            if (expand) const Spacer(),
             const SizedBox(height: 16),
             if (book == null)
               ScheduleAction(
@@ -441,11 +386,7 @@ class _LiveBand extends StatelessWidget {
                 onAir: true,
               )
             else
-              ScheduleAction(
-                label: 'Leer',
-                onPressed: onRead,
-                onAir: true,
-              ),
+              ScheduleAction(label: 'Leer', onPressed: onRead, onAir: true),
           ],
         ),
       ),
@@ -471,10 +412,7 @@ class _MinuteField extends StatelessWidget {
       ),
       child: Padding(
         padding: const EdgeInsets.symmetric(horizontal: 12, vertical: 8),
-        child: Text(
-          label,
-          style: programTitle(foreground, size: 28),
-        ),
+        child: Text(label, style: programTitle(foreground, size: 28)),
       ),
     );
   }

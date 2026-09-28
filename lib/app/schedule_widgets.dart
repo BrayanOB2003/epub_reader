@@ -1,3 +1,5 @@
+import 'dart:typed_data';
+
 import 'package:epub_reader/app/schedule_theme.dart';
 import 'package:flutter/cupertino.dart';
 import 'package:flutter/material.dart';
@@ -62,12 +64,129 @@ class ScheduleHeader extends StatelessWidget {
             const SizedBox(height: 8),
             Text(
               scheduleDate(date!),
-              style: Theme.of(context).textTheme.bodyLarge?.copyWith(
-                color: colors.muted,
-              ),
+              style: Theme.of(context).textTheme.bodyLarge
+                  ?.copyWith(color: colors.muted),
             ),
           ],
         ],
+      ),
+    );
+  }
+}
+
+/// The book as an object: one cover on the live program, a small mark in a row.
+/// Square, flat, no grid. Absent bytes leave no frame.
+class ScheduleCover extends StatelessWidget {
+  const ScheduleCover({
+    required this.bytes,
+    required this.width,
+    required this.height,
+    this.borderColor,
+    super.key,
+  });
+
+  final Uint8List bytes;
+  final double width;
+  final double height;
+  final Color? borderColor;
+
+  @override
+  Widget build(BuildContext context) {
+    if (bytes.isEmpty) return const SizedBox.shrink();
+    final ratio = MediaQuery.devicePixelRatioOf(context);
+    return _CoverFrame(
+      width: width,
+      height: height,
+      borderColor: borderColor ?? ScheduleColors.of(context).rule,
+      child: Image.memory(
+        bytes,
+        width: width,
+        height: height,
+        fit: BoxFit.cover,
+        gaplessPlayback: true,
+        filterQuality: FilterQuality.medium,
+        cacheWidth: (width * ratio).round(),
+        cacheHeight: (height * ratio).round(),
+        excludeFromSemantics: true,
+      ),
+    );
+  }
+}
+
+class _CoverFrame extends StatelessWidget {
+  const _CoverFrame({
+    required this.width,
+    required this.height,
+    required this.borderColor,
+    required this.child,
+  });
+
+  final double width;
+  final double height;
+  final Color borderColor;
+  final Widget child;
+
+  @override
+  Widget build(BuildContext context) {
+    return SizedBox(
+      width: width,
+      height: height,
+      child: DecoratedBox(
+        decoration: BoxDecoration(border: Border.all(color: borderColor)),
+        child: child,
+      ),
+    );
+  }
+}
+
+class _NetworkCover extends StatefulWidget {
+  const _NetworkCover({
+    required this.url,
+    required this.width,
+    required this.height,
+  });
+
+  final String url;
+  final double width;
+  final double height;
+
+  @override
+  State<_NetworkCover> createState() => _NetworkCoverState();
+}
+
+class _NetworkCoverState extends State<_NetworkCover> {
+  var _failed = false;
+
+  @override
+  void didUpdateWidget(_NetworkCover oldWidget) {
+    super.didUpdateWidget(oldWidget);
+    if (oldWidget.url != widget.url) _failed = false;
+  }
+
+  @override
+  Widget build(BuildContext context) {
+    if (_failed || widget.url.isEmpty) return const SizedBox.shrink();
+    final ratio = MediaQuery.devicePixelRatioOf(context);
+    return _CoverFrame(
+      width: widget.width,
+      height: widget.height,
+      borderColor: ScheduleColors.of(context).rule,
+      child: Image.network(
+        widget.url,
+        width: widget.width,
+        height: widget.height,
+        fit: BoxFit.cover,
+        gaplessPlayback: true,
+        filterQuality: FilterQuality.medium,
+        cacheWidth: (widget.width * ratio).round(),
+        cacheHeight: (widget.height * ratio).round(),
+        excludeFromSemantics: true,
+        errorBuilder: (context, error, stackTrace) {
+          WidgetsBinding.instance.addPostFrameCallback((_) {
+            if (mounted && !_failed) setState(() => _failed = true);
+          });
+          return const SizedBox.shrink();
+        },
       ),
     );
   }
@@ -92,7 +211,12 @@ class ScheduleListing extends StatelessWidget {
     this.subtitle,
     this.trailing,
     this.leading,
+    this.cover,
+    this.coverUrl,
+    this.coverWidth = 36,
+    this.coverHeight = 52,
     this.onTap,
+    this.onDelete,
     this.onAir = false,
     this.rule = true,
     this.titleSize = 22,
@@ -103,7 +227,12 @@ class ScheduleListing extends StatelessWidget {
   final String? subtitle;
   final String? trailing;
   final String? leading;
+  final Uint8List? cover;
+  final String? coverUrl;
+  final double coverWidth;
+  final double coverHeight;
   final VoidCallback? onTap;
+  final VoidCallback? onDelete;
   final bool onAir;
   final bool rule;
   final double titleSize;
@@ -113,12 +242,19 @@ class ScheduleListing extends StatelessWidget {
     final colors = ScheduleColors.of(context);
     final ink = onAir ? colors.onStation : colors.ink;
     final muted = onAir ? colors.onStationMuted : colors.muted;
+    final coverBytes = cover;
+    final hasBytes = coverBytes != null && coverBytes.isNotEmpty;
+    final url = coverUrl;
+    final hasUrl = !hasBytes && url != null && url.isNotEmpty;
+    final hasCover = hasBytes || hasUrl;
     final child = ConstrainedBox(
       constraints: const BoxConstraints(minHeight: 48),
       child: Padding(
         padding: const EdgeInsets.symmetric(horizontal: 20, vertical: 8),
         child: Row(
-          crossAxisAlignment: CrossAxisAlignment.start,
+          crossAxisAlignment: hasCover
+              ? CrossAxisAlignment.center
+              : CrossAxisAlignment.start,
           children: [
             if (leading != null)
               SizedBox(
@@ -131,6 +267,17 @@ class ScheduleListing extends StatelessWidget {
                   ),
                 ),
               ),
+            if (hasBytes) ...[
+              ScheduleCover(
+                bytes: coverBytes,
+                width: coverWidth,
+                height: coverHeight,
+              ),
+              const SizedBox(width: 12),
+            ] else if (url != null && url.isNotEmpty) ...[
+              _NetworkCover(url: url, width: coverWidth, height: coverHeight),
+              const SizedBox(width: 12),
+            ],
             Expanded(
               child: Column(
                 crossAxisAlignment: CrossAxisAlignment.start,
@@ -145,9 +292,8 @@ class ScheduleListing extends StatelessWidget {
                     const SizedBox(height: 4),
                     Text(
                       subtitle!,
-                      style: Theme.of(context).textTheme.bodyMedium?.copyWith(
-                        color: muted,
-                      ),
+                      style: Theme.of(context).textTheme.bodyMedium
+                          ?.copyWith(color: muted),
                       maxLines: 2,
                       overflow: TextOverflow.ellipsis,
                     ),
@@ -155,13 +301,29 @@ class ScheduleListing extends StatelessWidget {
                 ],
               ),
             ),
-            if (trailing != null) ...[
+            if (trailing != null || onDelete != null) ...[
               const SizedBox(width: 12),
-              Text(
-                trailing!,
-                style: Theme.of(context).textTheme.labelLarge?.copyWith(
-                  color: ink,
-                ),
+              Column(
+                crossAxisAlignment: CrossAxisAlignment.end,
+                children: [
+                  if (trailing != null)
+                    Text(
+                      trailing!,
+                      style: Theme.of(context).textTheme.labelLarge
+                          ?.copyWith(color: ink),
+                    ),
+                  if (onDelete != null)
+                    TextButton(
+                      onPressed: onDelete,
+                      style: TextButton.styleFrom(
+                        foregroundColor: muted,
+                        minimumSize: const Size(44, 44),
+                        tapTargetSize: MaterialTapTargetSize.shrinkWrap,
+                        padding: const EdgeInsets.symmetric(horizontal: 4),
+                      ),
+                      child: const Text('Eliminar'),
+                    ),
+                ],
               ),
             ],
           ],

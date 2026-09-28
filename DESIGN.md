@@ -219,15 +219,15 @@ The palette is cool paper, one blue, and the inks that sit on each. Light tokens
 
 ## Layout
 
-The log is a phone column. The safe area keeps the header below the status bar; the tab bar closes the bottom, so scroll padding does not add a second bottom inset. A scheduled home is a header, a hairline, three bands, then listings. Off-air bands are short. The live band holds the hour, the period, the book, the minute field, and the control. Other books, import, and delete are listings under that.
+The log is a phone column. The safe area keeps the header below the status bar; the tab bar closes the bottom, so scroll padding does not add a second bottom inset. A scheduled home is a header, a hairline, the live band, a fixed Importar line, then listings. The live band holds the hour, the period, the book, the minute field, and the control. Other books are listings under Importar, each with Eliminar.
 
 The horizontal inset of the log is 20px. Header padding is 20px, 20px, 20px, 12px. Listing padding is 8px vertical and 20px horizontal, with a 48px minimum height. The live band's padding is 20px, 16px, 20px, 16px. Tight stacks inside a band are 4px or 8px. The gap before the control is 16px. Onboarding uses a 24px inset. The week chart is inset 16px; the calendar is inset 8px.
 
-The time column is 64px on a listing and 72px on the live band. Listing trailing text sits 12px off the title. Opening a book collapses the off-air bands on their height over 220ms, leaving the hairlines, and skips that collapse when the platform disables animations.
+The time column is 64px on a listing and 72px on the live band. Listing trailing text sits 12px off the title. Opening a book goes straight to the reader.
 
 ### Named Rules
 
-**The Three Bands Rule.** A scheduled day is three bands split by 1px rules. Off air stays a short listing. On air is the station field. Everything else is a listing on paper.
+**The One Band Rule.** A scheduled day is the chosen band, the station field. Importar is one line under it when the library has books. Everything else is a listing on paper.
 
 **The Gutter Rule.** Log inset is 20px. Onboarding inset is 24px.
 
@@ -289,9 +289,9 @@ The schedule header is not a navigation bar. It is ink, in the headline role, wi
 
 ### Live band
 
-The signature is the on-air band. Station fill. A 72px column holds the hour (tabular, `onStationMuted`) and the period name (`onStation`). The book title is display type in `onStation`; the author is body in `onStationMuted`. Below, the minute field, then the on-air control. Empty, the title is the program face at 36px and the control is Importar. Off-air bands are listings: a time span, the period, and the caption Fuera de aire, then a hairline.
+The signature is the on-air band, and it is the only band. Station fill. A 72px column holds the hour (tabular, `onStationMuted`) and the period name (`onStation`). Beside it, the book's cover is the record on air: 72×108, square, a 1px `onStationMuted` edge, only when the file has a cover. The book title is display type in `onStation`; the author is body in `onStationMuted`. Eliminar sits on that book as a text control. Below, the minute field, then the on-air control. Empty, the title is the program face at 36px, the line is "Un EPUB de este dispositivo", and the control is Importar. When the library has books, Importar is one fixed line under the band, in station type, before the shelf. Other books are listings with a 36×52 cover mark when the file has one, and Eliminar on the row.
 
-Opening a book collapses off-air bands over 220ms with an ease-out cubic, leaving the rules. Reduced motion skips the collapse. Reader chrome, separate from the stored page color, uses the light program values: paper at 95% (`#F2F4F7FB`), a 3px station progress color, and an ink track at 20% (`#330E1A2B`). The bar folds in 180ms ease-out. It does not read the dark tokens.
+Opening a book goes straight to the reader. Reader chrome, separate from the stored page color, uses the light program values: paper at 95% (`#F2F4F7FB`), a 3px station progress color, and an ink track at 20% (`#330E1A2B`). The bar folds in 180ms ease-out. It does not read the dark tokens.
 
 ### Habit marks
 
@@ -309,12 +309,14 @@ Week bars are square station columns. The plot is 96px tall. Today’s column ha
 - **Do** set program titles in Barlow Condensed at weight 600, line height 0.95, and tracking at −2% of the size. The shipped sizes are 44px, 36px for an empty title, 28px, and 22px.
 - **Do** keep schedule headers on the platform face: 34px and weight 700 on iOS, 28px and weight 700 on Android, line height 1.05, in ink.
 - **Do** separate bands and listings with a 1px rule, and keep authored corners square (0).
-- **Do** collapse off-air bands over 220ms ease-out cubic when a book opens, and skip that collapse when the platform disables animations.
-- **Do** leave the Spanish labels as they ship, including Leer, Fuera de aire, Importar, and the date line.
+- **Do** keep Importar as one fixed line under the live band when the library has books, and keep "Un EPUB de este dispositivo" for the empty library.
+- **Do** put Eliminar on each book, on the live band and on each listing.
+- **Do** leave the Spanish labels as they ship, including Leer, Importar, and the date line.
+- **Do** show a book's cover once on the live band (72×108) and as a 36×52 mark on its listing, square and flat, only when the file has one.
 
 ### Don't:
 
-- **Don't** add a second accent, a card, a cover grid, or a drop shadow to the log.
+- **Don't** add a second accent, a card, a cover grid, or a drop shadow to the log. A cover is the object in the row, not the way the library is organized.
 - **Don't** round bands, listings, choices, minute fields, habit marks, or schedule buttons.
 - **Don't** set a platform face on a program title, or Barlow Condensed on a header or a control.
 - **Don't** translate the interface into another language or a new tone.

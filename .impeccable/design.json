@@ -136,11 +136,6 @@
     ],
     "motion": [
       {
-        "name": "band-collapse",
-        "value": "220ms cubic-bezier(0.215, 0.61, 0.355, 1)",
-        "purpose": "Off-air bands collapse on height when a book opens. Skipped when the platform disables animations."
-      },
-      {
         "name": "chrome-collapse",
         "value": "180ms cubic-bezier(0, 0, 0.58, 1)",
         "purpose": "Reader chrome folds away. The page color under it is the book's stored color."
@@ -184,14 +179,14 @@
       "name": "Listing",
       "kind": "custom",
       "refersTo": "listing",
-      "description": "An off-air row. Program title, muted subtitle, tabular time, a 1px rule.",
-      "html": "<button class=\"ds-listing\" type=\"button\"><span class=\"ds-listing-time\">12–18</span><span class=\"ds-listing-copy\"><span class=\"ds-listing-title\">Tarde</span><span class=\"ds-listing-sub\">Fuera de aire</span></span></button>",
+      "description": "A book row. Program title, muted subtitle, a 36×52 cover mark when the file has one, and a 1px rule.",
+      "html": "<button class=\"ds-listing\" type=\"button\"><span class=\"ds-listing-time\">12–18</span><span class=\"ds-listing-copy\"><span class=\"ds-listing-title\">Tarde</span></span></button>",
       "css": ".ds-listing { display: flex; align-items: flex-start; gap: 0; width: 100%; min-height: 48px; margin: 0; padding: 8px 20px; border: none; border-bottom: 1px solid #D5DBE3; border-radius: 0; background: #F4F7FB; text-align: left; cursor: pointer; } .ds-listing-time { width: 64px; flex: none; color: #3A4C66; font-family: CupertinoSystemText, Roboto, sans-serif; font-size: 14px; font-weight: 500; letter-spacing: 0.1px; font-variant-numeric: tabular-nums; } .ds-listing-copy { display: flex; flex-direction: column; gap: 4px; min-width: 0; } .ds-listing-title { color: #0E1A2B; font-family: BarlowCondensed, sans-serif; font-size: 22px; font-weight: 600; line-height: 0.95; letter-spacing: -0.02em; } .ds-listing-sub { color: #3A4C66; font-family: CupertinoSystemText, Roboto, sans-serif; font-size: 14px; font-weight: 400; letter-spacing: 0.25px; } .ds-listing:hover { background: color-mix(in srgb, #0E1A2B 6%, #F4F7FB); } .ds-listing:focus-visible { outline: 2px solid #0C4DA2; outline-offset: -2px; }"
     },
     {
       "name": "Live band",
       "kind": "custom",
-      "description": "The on-air band. Station field, display title, open minute field, inverted control.",
+      "description": "The on-air band. Station field, a 72×108 cover when the file has one, display title, open minute field, inverted control.",
       "html": "<section class=\"ds-live\"><div class=\"ds-live-top\"><div class=\"ds-live-when\"><span class=\"ds-live-hour\">06:00</span><span class=\"ds-live-period\">Mañana</span></div><div class=\"ds-live-book\"><span class=\"ds-live-title\">Memoirs of an Infantry Officer</span><span class=\"ds-live-author\">Siegfried Sassoon</span></div></div><div class=\"ds-minute\">0 / 10</div><button class=\"ds-live-action\" type=\"button\">Leer</button></section>",
       "css": ".ds-live { display: flex; flex-direction: column; align-items: stretch; gap: 16px; width: 100%; padding: 16px 20px; background: #0C4DA2; color: #F4F7FB; border-radius: 0; } .ds-live-top { display: flex; align-items: flex-start; gap: 0; } .ds-live-when { width: 72px; flex: none; display: flex; flex-direction: column; gap: 4px; } .ds-live-hour { color: #D5E3F8; font-family: CupertinoSystemText, Roboto, sans-serif; font-size: 14px; font-weight: 500; letter-spacing: 0.1px; font-variant-numeric: tabular-nums; } .ds-live-period { color: #F4F7FB; font-family: CupertinoSystemText, Roboto, sans-serif; font-size: 14px; font-weight: 500; letter-spacing: 0.1px; } .ds-live-book { display: flex; flex-direction: column; gap: 8px; min-width: 0; } .ds-live-title { color: #F4F7FB; font-family: BarlowCondensed, sans-serif; font-size: 44px; font-weight: 600; line-height: 0.95; letter-spacing: -0.02em; } .ds-live-author { color: #D5E3F8; font-family: CupertinoSystemText, Roboto, sans-serif; font-size: 16px; font-weight: 400; letter-spacing: 0.5px; } .ds-minute { align-self: flex-start; padding: 8px 12px; border: 1px solid #D5E3F8; border-radius: 0; background: transparent; color: #F4F7FB; font-family: BarlowCondensed, sans-serif; font-size: 28px; font-weight: 600; line-height: 0.95; letter-spacing: -0.02em; } .ds-live-action { display: block; width: 100%; height: 48px; margin: 0; border: none; border-radius: 0; background: #F4F7FB; color: #0C4DA2; font-family: CupertinoSystemText, sans-serif; font-size: 17px; font-weight: 600; letter-spacing: -0.41px; cursor: pointer; } .ds-live-action:hover { opacity: 0.92; } .ds-live-action:focus-visible { outline: 2px solid #F4F7FB; outline-offset: 2px; }"
     },
@@ -260,8 +255,8 @@
         "section": "typography"
       },
       {
-        "name": "The Three Bands Rule",
-        "body": "A scheduled day is three bands split by 1px rules. Off air stays a short listing. On air is the station field. Everything else is a listing on paper.",
+        "name": "The One Band Rule",
+        "body": "A scheduled day is the chosen band, the station field. Importar is one line under it when the library has books. Everything else is a listing on paper.",
         "section": "layout"
       },
       {
@@ -290,11 +285,12 @@
       "Do set program titles in Barlow Condensed at weight 600, line height 0.95, and tracking at −2% of the size. The shipped sizes are 44px, 36px for an empty title, 28px, and 22px.",
       "Do keep schedule headers on the platform face: 34px and weight 700 on iOS, 28px and weight 700 on Android, line height 1.05, in ink.",
       "Do separate bands and listings with a 1px rule, and keep authored corners square (0).",
-      "Do collapse off-air bands over 220ms ease-out cubic when a book opens, and skip that collapse when the platform disables animations.",
-      "Do leave the Spanish labels as they ship, including Leer, Fuera de aire, Importar, and the date line."
+      "Do keep Importar as one fixed line under the live band when the library has books, and keep the empty-library line Un EPUB de este dispositivo.",
+      "Do put Eliminar on each book, on the live band and on each listing.",
+      "Do leave the Spanish labels as they ship, including Leer, Importar, and the date line. Do show a book's cover once on the live band (72×108) and as a 36×52 mark on its listing, square and flat, only when the file has one."
     ],
     "donts": [
-      "Don't add a second accent, a card, a cover grid, or a drop shadow to the log.",
+      "Don't add a second accent, a card, a cover grid, or a drop shadow to the log. A cover is the object in the row, not the way the library is organized.",
       "Don't round bands, listings, choices, minute fields, habit marks, or schedule buttons.",
       "Don't set a platform face on a program title, or Barlow Condensed on a header or a control.",
       "Don't translate the interface into another language or a new tone.",

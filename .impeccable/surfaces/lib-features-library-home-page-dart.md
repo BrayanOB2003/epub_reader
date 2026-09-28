@@ -17,7 +17,7 @@ OWN-WORLD: Cool program paper (#f4f7fb), ink (#0e1a2b), hairline rules (#d5dbe3)
 
 STORY: You see your hour, the book in that slot, and whether today's minutes are in. Leer opens that book. Import, the catalog, the week, and the habit are later pages of the same log.
 
-FIRST VIEWPORT: Paper, edge to edge. The date is the schedule header. Three bands, split by 1px rules. Off-air bands are short: a time column, the period name, "Fuera de aire". The live band is blue: the hour in the column, the book title in Barlow Condensed at display size, the author, the field "12 / 20", and Leer as a paper control at the foot of the band. Other books are ruled listings underneath, same face, smaller. The platform tab bar closes the screen. Signature, Al aire: Leer collapses the off-air bands to rules, the live band takes the height, then the reader pushes. 220ms ease-out. Reduce motion skips the collapse.
+FIRST VIEWPORT: Paper, edge to edge. The date is the schedule header. One live band: the hour in the column, the book's cover when the file has one, the book title in Barlow Condensed at display size, the author, the field "12 / 20", and Leer as a paper control at the foot of the band. Importar is one line under that band when the library has books. Other books are ruled listings underneath, same face, smaller, each with a small cover mark when the file has one, and Eliminar on the row. The platform tab bar closes the screen.
 
 FORM: Parrilla del día, first on the grounded list. Seed 928be946.
 
