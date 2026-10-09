@@ -4,6 +4,7 @@ import 'package:epub_reader/app/providers.dart';
 import 'package:epub_reader/app/schedule_theme.dart';
 import 'package:epub_reader/app/schedule_widgets.dart';
 import 'package:epub_reader/core/database/app_database.dart';
+import 'package:epub_reader/features/discover/catalog_cover.dart';
 import 'package:epub_reader/features/discover/data/catalog.dart';
 import 'package:epub_reader/l10n/app_localizations.dart';
 import 'package:flutter/material.dart';
@@ -167,7 +168,7 @@ class _DiscoverPageState extends ConsumerState<DiscoverPage> {
               subtitle: book.authors,
               caption: catalogGenreLabel(book.genres),
               cover: stored,
-              coverUrl: stored == null ? book.coverUrl : null,
+              artwork: stored == null ? _catalogCover(book, l10n) : null,
               trailing: downloading ? '…' : l10n.read,
               onTap: downloading ? null : () => _open(book),
             );
@@ -197,7 +198,9 @@ class _DiscoverPageState extends ConsumerState<DiscoverPage> {
               subtitle: book.authors,
               caption: catalogGenreLabel(book.genres),
               cover: stored,
-              coverUrl: stored == null ? book.coverUrl : null,
+              artwork: stored == null
+                  ? _catalogCover(book, l10n, width: 72, height: 108)
+                  : null,
               coverWidth: 72,
               coverHeight: 108,
               trailing: downloading ? '…' : l10n.add,
@@ -421,6 +424,21 @@ String _catalogMessage(AppLocalizations l10n, CatalogException error) {
     CatalogFailure.download => l10n.downloadFailed(error.statusCode ?? 0),
     CatalogFailure.missingKey => l10n.missingApiKey,
   };
+}
+
+CatalogCover _catalogCover(
+  CatalogBook book,
+  AppLocalizations l10n, {
+  double width = 36,
+  double height = 52,
+}) {
+  return CatalogCover(
+    bookId: book.id,
+    url: book.coverUrl,
+    width: width,
+    height: height,
+    title: _shownTitle(book.title, l10n),
+  );
 }
 
 Uint8List? _storedCover(List<Book> library, String? identifier) {

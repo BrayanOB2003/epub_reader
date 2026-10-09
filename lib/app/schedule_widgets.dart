@@ -311,6 +311,7 @@ class ScheduleListing extends StatelessWidget {
     this.leading,
     this.cover,
     this.coverUrl,
+    this.artwork,
     this.coverWidth = 36,
     this.coverHeight = 52,
     this.onTap,
@@ -328,6 +329,7 @@ class ScheduleListing extends StatelessWidget {
   final String? leading;
   final Uint8List? cover;
   final String? coverUrl;
+  final Widget? artwork;
   final double coverWidth;
   final double coverHeight;
   final VoidCallback? onTap;
@@ -362,7 +364,9 @@ class ScheduleListing extends StatelessWidget {
                   ),
                 ),
               ),
-            if (hasBytes)
+            if (artwork != null)
+              artwork!
+            else if (hasBytes)
               ScheduleCover(
                 bytes: coverBytes,
                 width: coverWidth,

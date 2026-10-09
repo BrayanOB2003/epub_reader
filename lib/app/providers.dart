@@ -6,6 +6,8 @@ import 'package:flutter_riverpod/flutter_riverpod.dart';
 
 export 'package:epub_reader/features/discover/data/catalog_cache.dart'
     show catalogCacheProvider;
+export 'package:epub_reader/features/discover/data/cover_cache.dart'
+    show coverCacheProvider;
 export 'package:epub_reader/features/discover/data/catalog_client.dart'
     show catalogClientProvider;
 export 'package:epub_reader/features/discover/data/catalog_notifier.dart'
