@@ -75,9 +75,9 @@ class _ReaderPageState extends ConsumerState<ReaderPage>
   }
 
   Future<void> _open() async {
-    final l10n = AppLocalizations.of(context);
     final book = await _repository.getBook(widget.bookId);
     if (!mounted) return;
+    final l10n = AppLocalizations.of(context);
     if (book == null) {
       setState(() {
         _loading = false;
