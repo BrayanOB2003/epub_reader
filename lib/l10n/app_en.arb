@@ -118,6 +118,20 @@
   "previousMonth": "Previous month",
   "nextMonth": "Next month",
   "today": "Today",
+  "goalLabel": "Goal",
+  "minutesShort": "{count} min",
+  "@minutesShort": {
+    "placeholders": {
+      "count": {"type": "int"}
+    }
+  },
+  "minutesOfGoal": "{done} / {goal} min",
+  "@minutesOfGoal": {
+    "placeholders": {
+      "done": {"type": "int"},
+      "goal": {"type": "int"}
+    }
+  },
   "yesterday": "Yesterday",
   "goalMet": "goal met",
   "partialReading": "read, goal not met",

@@ -289,6 +289,41 @@ class _NetworkCoverState extends State<_NetworkCover> {
   }
 }
 
+/// A 4px reading mark. The track is the hairline; the fill is the portion read.
+class ScheduleProgress extends StatelessWidget {
+  const ScheduleProgress({required this.value, this.onAir = false, super.key});
+
+  final double value;
+  final bool onAir;
+
+  @override
+  Widget build(BuildContext context) {
+    final colors = ScheduleColors.of(context);
+    final track = onAir ? colors.onStationMuted : colors.rule;
+    final fill = onAir ? colors.onStation : colors.station;
+    final fraction = value.clamp(0.0, 1.0);
+    return SizedBox(
+      height: 4,
+      width: double.infinity,
+      child: Stack(
+        fit: StackFit.expand,
+        children: [
+          ColoredBox(color: track),
+          if (fraction > 0)
+            Align(
+              alignment: Alignment.centerLeft,
+              child: FractionallySizedBox(
+                widthFactor: fraction,
+                heightFactor: 1,
+                child: ColoredBox(color: fill),
+              ),
+            ),
+        ],
+      ),
+    );
+  }
+}
+
 class ScheduleRule extends StatelessWidget {
   const ScheduleRule({super.key});
 
@@ -307,6 +342,7 @@ class ScheduleListing extends StatelessWidget {
     required this.title,
     this.subtitle,
     this.caption,
+    this.progress,
     this.trailing,
     this.leading,
     this.cover,
@@ -325,6 +361,9 @@ class ScheduleListing extends StatelessWidget {
   final String title;
   final String? subtitle;
   final String? caption;
+
+  /// Portion of the book already read, from 0 to 1. Null hides the mark.
+  final double? progress;
   final String? trailing;
   final String? leading;
   final Uint8List? cover;
@@ -415,6 +454,10 @@ class ScheduleListing extends StatelessWidget {
                       maxLines: 1,
                       overflow: TextOverflow.ellipsis,
                     ),
+                  ],
+                  if (progress != null) ...[
+                    const SizedBox(height: 8),
+                    ScheduleProgress(value: progress!, onAir: onAir),
                   ],
                 ],
               ),

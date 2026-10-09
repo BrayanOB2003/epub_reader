@@ -392,6 +392,19 @@ class AppLocalizationsEn extends AppLocalizations {
   String get today => 'Today';
 
   @override
+  String get goalLabel => 'Goal';
+
+  @override
+  String minutesShort(int count) {
+    return '$count min';
+  }
+
+  @override
+  String minutesOfGoal(int done, int goal) {
+    return '$done / $goal min';
+  }
+
+  @override
   String get yesterday => 'Yesterday';
 
   @override

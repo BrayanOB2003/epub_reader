@@ -806,6 +806,24 @@ abstract class AppLocalizations {
   /// **'Hoy'**
   String get today;
 
+  /// No description provided for @goalLabel.
+  ///
+  /// In es, this message translates to:
+  /// **'Meta'**
+  String get goalLabel;
+
+  /// No description provided for @minutesShort.
+  ///
+  /// In es, this message translates to:
+  /// **'{count} min'**
+  String minutesShort(int count);
+
+  /// No description provided for @minutesOfGoal.
+  ///
+  /// In es, this message translates to:
+  /// **'{done} / {goal} min'**
+  String minutesOfGoal(int done, int goal);
+
   /// No description provided for @yesterday.
   ///
   /// In es, this message translates to:

@@ -169,6 +169,20 @@
   "previousMonth": "Mes anterior",
   "nextMonth": "Mes siguiente",
   "today": "Hoy",
+  "goalLabel": "Meta",
+  "minutesShort": "{count} min",
+  "@minutesShort": {
+    "placeholders": {
+      "count": {"type": "int"}
+    }
+  },
+  "minutesOfGoal": "{done} / {goal} min",
+  "@minutesOfGoal": {
+    "placeholders": {
+      "done": {"type": "int"},
+      "goal": {"type": "int"}
+    }
+  },
   "yesterday": "Ayer",
   "goalMet": "meta cumplida",
   "partialReading": "leído sin cumplir la meta",
