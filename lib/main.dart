@@ -1,6 +1,7 @@
 import 'package:epub_reader/app/app.dart';
 import 'package:epub_reader/firebase_options.dart';
 import 'package:firebase_core/firebase_core.dart';
+import 'package:firebase_crashlytics/firebase_crashlytics.dart';
 import 'package:flutter/foundation.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
@@ -19,6 +20,19 @@ Future<void> _initializeFirebase() async {
       await Firebase.initializeApp(
         options: DefaultFirebaseOptions.currentPlatform,
       );
+      final crashlytics = FirebaseCrashlytics.instance;
+      final collectCrashes = !kDebugMode;
+      await crashlytics.setCrashlyticsCollectionEnabled(collectCrashes);
+      if (!collectCrashes) {
+        await crashlytics.deleteUnsentReports();
+        return;
+      }
+      FlutterError.onError = crashlytics.recordFlutterFatalError;
+      PlatformDispatcher.instance.onError = (error, stack) {
+        crashlytics.recordError(error, stack, fatal: true);
+        return true;
+      };
+      return;
     case TargetPlatform.macOS:
     case TargetPlatform.windows:
     case TargetPlatform.linux:
