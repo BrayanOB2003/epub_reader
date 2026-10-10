@@ -50,10 +50,15 @@ class DailyReading {
 enum ReadingDayMark { none, partial, met }
 
 class ReadingCalendarDay {
-  const ReadingCalendarDay({required this.day, required this.mark});
+  const ReadingCalendarDay({
+    required this.day,
+    required this.mark,
+    required this.engagedSeconds,
+  });
 
   final DateTime day;
   final ReadingDayMark mark;
+  final int engagedSeconds;
 }
 
 class ReadingMonth {
@@ -66,6 +71,21 @@ class ReadingMonth {
   final DateTime month;
   final int leadingBlanks;
   final List<ReadingCalendarDay> days;
+}
+
+ReadingCalendarDay _calendarDay({
+  required DateTime date,
+  required int engagedSeconds,
+  required int? goalSeconds,
+}) {
+  return ReadingCalendarDay(
+    day: date,
+    engagedSeconds: engagedSeconds,
+    mark: readingDayMark(
+      engagedSeconds: engagedSeconds,
+      goalSeconds: goalSeconds,
+    ),
+  );
 }
 
 ReadingDayMark readingDayMark({
@@ -96,12 +116,10 @@ ReadingMonth readingMonth({
     leadingBlanks: first.weekday - DateTime.monday,
     days: [
       for (var day = 1; day <= lastDay; day++)
-        ReadingCalendarDay(
-          day: DateTime(first.year, first.month, day),
-          mark: readingDayMark(
-            engagedSeconds: totals[day] ?? 0,
-            goalSeconds: goalSeconds,
-          ),
+        _calendarDay(
+          date: DateTime(first.year, first.month, day),
+          engagedSeconds: totals[day] ?? 0,
+          goalSeconds: goalSeconds,
         ),
     ],
   );

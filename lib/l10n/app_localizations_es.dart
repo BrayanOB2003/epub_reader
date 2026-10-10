@@ -436,8 +436,18 @@ class AppLocalizationsEs extends AppLocalizations {
   String get noReading => 'sin lectura';
 
   @override
-  String calendarDay(int day, String month, String state) {
-    return '$day de $month, $state';
+  String calendarDate(int day, String month) {
+    return '$day de $month';
+  }
+
+  @override
+  String dayReading(String day, String duration) {
+    return '$day · $duration';
+  }
+
+  @override
+  String calendarDay(int day, String month, String duration, String state) {
+    return '$day de $month, $duration, $state';
   }
 
   @override

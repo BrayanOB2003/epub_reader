@@ -434,8 +434,18 @@ class AppLocalizationsEn extends AppLocalizations {
   String get noReading => 'no reading';
 
   @override
-  String calendarDay(int day, String month, String state) {
-    return '$month $day, $state';
+  String calendarDate(int day, String month) {
+    return '$month $day';
+  }
+
+  @override
+  String dayReading(String day, String duration) {
+    return '$day · $duration';
+  }
+
+  @override
+  String calendarDay(int day, String month, String duration, String state) {
+    return '$month $day, $duration, $state';
   }
 
   @override

@@ -192,11 +192,26 @@
   "goalMet": "meta cumplida",
   "partialReading": "leído sin cumplir la meta",
   "noReading": "sin lectura",
-  "calendarDay": "{day} de {month}, {state}",
+  "calendarDate": "{day} de {month}",
+  "@calendarDate": {
+    "placeholders": {
+      "day": {"type": "int"},
+      "month": {"type": "String"}
+    }
+  },
+  "dayReading": "{day} · {duration}",
+  "@dayReading": {
+    "placeholders": {
+      "day": {"type": "String"},
+      "duration": {"type": "String"}
+    }
+  },
+  "calendarDay": "{day} de {month}, {duration}, {state}",
   "@calendarDay": {
     "placeholders": {
       "day": {"type": "int"},
       "month": {"type": "String"},
+      "duration": {"type": "String"},
       "state": {"type": "String"}
     }
   },

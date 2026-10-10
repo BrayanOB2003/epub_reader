@@ -878,11 +878,23 @@ abstract class AppLocalizations {
   /// **'sin lectura'**
   String get noReading;
 
+  /// No description provided for @calendarDate.
+  ///
+  /// In es, this message translates to:
+  /// **'{day} de {month}'**
+  String calendarDate(int day, String month);
+
+  /// No description provided for @dayReading.
+  ///
+  /// In es, this message translates to:
+  /// **'{day} · {duration}'**
+  String dayReading(String day, String duration);
+
   /// No description provided for @calendarDay.
   ///
   /// In es, this message translates to:
-  /// **'{day} de {month}, {state}'**
-  String calendarDay(int day, String month, String state);
+  /// **'{day} de {month}, {duration}, {state}'**
+  String calendarDay(int day, String month, String duration, String state);
 
   /// No description provided for @libraryLoadFailed.
   ///
