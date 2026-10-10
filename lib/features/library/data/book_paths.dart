@@ -6,8 +6,9 @@ import 'package:path/path.dart' as p;
 /// stored relative to it, so a new iOS container still finds them.
 String portableBookPath(String stored, String documentsPath) {
   if (!p.isAbsolute(stored)) return p.normalize(stored);
-  if (p.isWithin(documentsPath, stored))
+  if (p.isWithin(documentsPath, stored)) {
     return p.relative(stored, from: documentsPath);
+  }
 
   final name = p.basename(stored);
   final parent = p.basename(p.dirname(stored));
