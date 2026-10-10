@@ -270,6 +270,11 @@ class _ReaderPageState extends ConsumerState<ReaderPage>
     }
   }
 
+  void _hideChrome() {
+    if (!_chromeVisible || !mounted) return;
+    setState(() => _chromeVisible = false);
+  }
+
   void _onZone(ReaderZone zone) {
     if (_textSelected || _sharing) return;
     switch (zone) {
@@ -603,7 +608,7 @@ class _ReaderPageState extends ConsumerState<ReaderPage>
             scroll: _scroll,
             textSelected: _textSelected || _sharing,
             onZone: _onZone,
-            onSwipe: (forward) => _turnPage(forward: forward),
+            onPageDrag: _hideChrome,
             onSelectionTap: _onSelectionTap,
           ),
         ),
