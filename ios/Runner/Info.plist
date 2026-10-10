@@ -32,6 +32,10 @@
 	</array>
 	<key>LSRequiresIPhoneOS</key>
 	<true/>
+	<key>NSPhotoLibraryAddUsageDescription</key>
+	<string>Liora guarda la imagen de la cita en Fotos.</string>
+	<key>NSPhotoLibraryUsageDescription</key>
+	<string>Liora guarda la imagen de la cita en Fotos.</string>
 	<key>NSAppTransportSecurity</key>
 	<dict>
 		<key>NSAllowsLocalNetworking</key>

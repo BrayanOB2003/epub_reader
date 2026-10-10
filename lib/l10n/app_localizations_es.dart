@@ -618,4 +618,96 @@ class AppLocalizationsEs extends AppLocalizations {
 
   @override
   String get focusGuideOpenFailed => 'No se pudo abrir Atajos.';
+
+  @override
+  String get createQuoteImage => 'Crear imagen';
+
+  @override
+  String get quoteImageTitle => 'Imagen';
+
+  @override
+  String get saveToPhotos => 'Guardar en fotos';
+
+  @override
+  String get quoteImageSaved => 'Imagen guardada en fotos';
+
+  @override
+  String get quoteImageSaveFailed => 'No se pudo guardar la imagen.';
+
+  @override
+  String get quoteImageShareFailed => 'No se pudo compartir la imagen.';
+
+  @override
+  String get quoteImageTooLong =>
+      'Este pasaje es demasiado largo para este formato.';
+
+  @override
+  String get quoteImageImportFailed => 'No se pudo usar esa imagen.';
+
+  @override
+  String get quoteImageTooLarge => 'Esa imagen pesa demasiado.';
+
+  @override
+  String get quoteBackgroundFailed => 'No se pudo abrir el fondo.';
+
+  @override
+  String get quoteImageMissing => 'Esta cita ya no está.';
+
+  @override
+  String get removeQuoteBackground => '¿Quitar este fondo?';
+
+  @override
+  String get removeQuoteBackgroundBody =>
+      'Se borra la copia guardada en este dispositivo.';
+
+  @override
+  String get importQuoteBackground => 'Importar fondo';
+
+  @override
+  String get removeImportedBackground => 'Quitar fondo';
+
+  @override
+  String get quoteFormatStory => 'Historia';
+
+  @override
+  String get quoteFormatPost => 'Publicación';
+
+  @override
+  String get quoteFormatSquare => 'Cuadrada';
+
+  @override
+  String get quoteFormatScreen => 'Pantalla';
+
+  @override
+  String get quoteFontSerif => 'Serif';
+
+  @override
+  String get quoteFontCondensed => 'Condensada';
+
+  @override
+  String get quoteFontPlain => 'Texto';
+
+  @override
+  String get quoteTextSize => 'Tamaño';
+
+  @override
+  String get quoteVeil => 'Velo';
+
+  @override
+  String get quoteInkPaper => 'Papel';
+
+  @override
+  String get quoteInkWhite => 'Blanco';
+
+  @override
+  String get quoteInkCream => 'Crema';
+
+  @override
+  String get quoteInkInk => 'Tinta';
+
+  @override
+  String get quoteInkBlack => 'Negro';
+
+  @override
+  String get quoteInkStation => 'Azul';
 }

@@ -15,6 +15,7 @@ class ReadingQuote {
     required this.locatorJson,
     required this.savedAt,
     required this.bookTitle,
+    this.author,
   });
 
   final int id;
@@ -23,6 +24,7 @@ class ReadingQuote {
   final String locatorJson;
   final DateTime savedAt;
   final String bookTitle;
+  final String? author;
 }
 
 class BookRepository {
@@ -301,6 +303,7 @@ class BookRepository {
             locatorJson: row.readTable(_database.savedQuotes).locatorJson,
             savedAt: row.readTable(_database.savedQuotes).savedAt,
             bookTitle: row.readTable(_database.books).title,
+            author: row.readTable(_database.books).author,
           ),
       ];
     });

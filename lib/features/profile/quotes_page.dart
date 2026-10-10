@@ -3,6 +3,7 @@ import 'package:epub_reader/app/schedule_theme.dart';
 import 'package:epub_reader/app/schedule_widgets.dart';
 import 'package:epub_reader/features/analytics/analytics_events.dart';
 import 'package:epub_reader/features/library/data/book_repository.dart';
+import 'package:epub_reader/features/quotes/quote_card_model.dart';
 import 'package:epub_reader/l10n/app_localizations.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
@@ -108,37 +109,49 @@ class _QuoteTile extends StatelessWidget {
     final bookTitle = title.isEmpty ? l10n.untitled : title;
     return Column(
       children: [
-        Semantics(
-          button: true,
-          label: '${quote.text}, $bookTitle',
-          excludeSemantics: true,
-          child: InkWell(
-            onTap: () =>
-                context.push(quoteReadingRoute(quote.bookId, quote.id)),
-            child: ConstrainedBox(
-              constraints: const BoxConstraints(minHeight: 48),
-              child: Padding(
-                padding: const EdgeInsets.fromLTRB(20, 16, 20, 16),
-                child: Column(
-                  crossAxisAlignment: CrossAxisAlignment.start,
-                  children: [
-                    Text(
-                      quote.text,
-                      style: Theme.of(context).textTheme.bodyLarge,
-                      maxLines: 4,
-                      overflow: TextOverflow.ellipsis,
+        Row(
+          crossAxisAlignment: CrossAxisAlignment.start,
+          children: [
+            Expanded(
+              child: Semantics(
+                button: true,
+                label: '${quote.text}, $bookTitle',
+                excludeSemantics: true,
+                child: InkWell(
+                  onTap: () =>
+                      context.push(quoteReadingRoute(quote.bookId, quote.id)),
+                  child: ConstrainedBox(
+                    constraints: const BoxConstraints(minHeight: 48),
+                    child: Padding(
+                      padding: const EdgeInsets.fromLTRB(20, 16, 8, 16),
+                      child: Column(
+                        crossAxisAlignment: CrossAxisAlignment.start,
+                        children: [
+                          Text(
+                            quote.text,
+                            style: Theme.of(context).textTheme.bodyLarge,
+                            maxLines: 4,
+                            overflow: TextOverflow.ellipsis,
+                          ),
+                          const SizedBox(height: 8),
+                          Text(
+                            bookTitle,
+                            style: Theme.of(context).textTheme.labelLarge
+                                ?.copyWith(color: colors.muted),
+                          ),
+                        ],
+                      ),
                     ),
-                    const SizedBox(height: 8),
-                    Text(
-                      bookTitle,
-                      style: Theme.of(context).textTheme.labelLarge
-                          ?.copyWith(color: colors.muted),
-                    ),
-                  ],
+                  ),
                 ),
               ),
             ),
-          ),
+            IconButton(
+              tooltip: l10n.createQuoteImage,
+              onPressed: () => context.push(quoteCardRoute(quote.id)),
+              icon: const Icon(Icons.image_outlined),
+            ),
+          ],
         ),
         const ScheduleRule(),
       ],
