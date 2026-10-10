@@ -5,6 +5,35 @@ import 'package:flutter_readium/flutter_readium.dart';
 import 'package:flutter_test/flutter_test.dart';
 
 void main() {
+  test('book progress uses the chapter when the locator has no total', () {
+    const hrefs = ['c1.xhtml', 'c2.xhtml#start', 'c3.xhtml'];
+    Locator at(String href, {double? total, double? within}) => Locator(
+      href: href,
+      type: 'application/xhtml+xml',
+      locations: Locations(totalProgression: total, progression: within),
+    );
+
+    expect(
+      readingProgress(locator: at('c1.xhtml', total: 0.42), hrefs: hrefs),
+      0.42,
+    );
+    expect(
+      readingProgress(locator: at('c2.xhtml', within: 0.5), hrefs: hrefs),
+      closeTo(0.5, 0.001),
+    );
+    expect(
+      readingProgress(
+        locator: at('file:///books/c3.xhtml', within: 1),
+        hrefs: hrefs,
+      ),
+      1,
+    );
+    expect(
+      readingProgress(locator: at('missing.xhtml', within: 0.2), hrefs: hrefs),
+      isNull,
+    );
+  });
+
   test('side taps follow reading direction and the center opens the menu', () {
     expect(readerZoneAt(x: 10, width: 100, rtl: false), ReaderZone.previous);
     expect(readerZoneAt(x: 50, width: 100, rtl: false), ReaderZone.menu);

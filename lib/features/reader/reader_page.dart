@@ -126,8 +126,7 @@ class _ReaderPageState extends ConsumerState<ReaderPage>
         _book = book;
         _publication = publication;
         _fixedLayout = fixedLayout;
-        _progress =
-            _initialLocator?.locations?.totalProgression ?? book.progress;
+        _progress = _bookProgress(_initialLocator) ?? book.progress;
         _loading = false;
       });
     } catch (error, stack) {
@@ -140,13 +139,21 @@ class _ReaderPageState extends ConsumerState<ReaderPage>
     }
   }
 
+  double? _bookProgress(Locator? locator) {
+    final order = _publication?.readingOrder;
+    return readingProgress(
+      locator: locator,
+      hrefs: [for (final link in order ?? const <Link>[]) link.href],
+    );
+  }
+
   void _onLocator(Locator locator) {
     final previous = _latestLocator;
     _latestLocator = locator;
     final leftChapter =
         _textSelected && previous != null && previous.href != locator.href;
     if (leftChapter) _textSelected = false;
-    final progression = locator.locations?.totalProgression;
+    final progression = _bookProgress(locator);
     final progressChanged = progression != null && progression != _progress;
     if (mounted && (leftChapter || progressChanged)) {
       setState(() {
@@ -314,7 +321,7 @@ class _ReaderPageState extends ConsumerState<ReaderPage>
   Future<void> _persist() async {
     final locator = _latestLocator;
     if (locator == null) return;
-    final progress = locator.locations?.totalProgression ?? _progress;
+    final progress = _bookProgress(locator) ?? _progress;
     await _repository.saveProgress(
       id: widget.bookId,
       locatorJson: jsonEncode(locator.toJson()),
@@ -479,7 +486,7 @@ class _ReaderPageState extends ConsumerState<ReaderPage>
         _repository.saveProgress(
           id: widget.bookId,
           locatorJson: jsonEncode(locator.toJson()),
-          progress: locator.locations?.totalProgression ?? _progress,
+          progress: _bookProgress(locator) ?? _progress,
         ),
       );
     }
