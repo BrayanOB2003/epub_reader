@@ -1,12 +1,16 @@
 import 'package:drift/drift.dart';
 import 'package:epub_reader/app/providers.dart';
 import 'package:epub_reader/core/database/app_database.dart';
+import 'package:epub_reader/features/analytics/app_analytics.dart';
 import 'package:epub_reader/features/profile/reading_goal.dart';
 import 'package:epub_reader/features/profile/reading_routine.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 
 final readerProfileStoreProvider = Provider<ReaderProfileStore>((ref) {
-  return ReaderProfileStore(ref.watch(databaseProvider));
+  return ReaderProfileStore(
+    ref.watch(databaseProvider),
+    analytics: ref.watch(appAnalyticsProvider),
+  );
 });
 
 final readerProfileProvider = StreamProvider<ReaderProfile?>((ref) {
@@ -14,9 +18,13 @@ final readerProfileProvider = StreamProvider<ReaderProfile?>((ref) {
 });
 
 class ReaderProfileStore {
-  ReaderProfileStore(this._database);
+  ReaderProfileStore(
+    this._database, {
+    this.analytics = const NoopAppAnalytics(),
+  });
 
   final AppDatabase _database;
+  final AppAnalytics analytics;
 
   Stream<ReaderProfile?> watch() {
     final query = _database.select(_database.readerProfiles);
@@ -26,6 +34,11 @@ class ReaderProfileStore {
   Future<bool> exists() async {
     final existing = await _database.select(_database.readerProfiles).get();
     return existing.isNotEmpty;
+  }
+
+  Future<ReaderProfile?> current() async {
+    final existing = await _database.select(_database.readerProfiles).get();
+    return existing.isEmpty ? null : existing.first;
   }
 
   Future<void> save({
@@ -101,10 +114,11 @@ class ReaderProfileStore {
         );
   }
 
-  Future<void> setFocusMode(bool enabled) {
-    return _database
+  Future<void> setFocusMode(bool enabled) async {
+    await _database
         .update(_database.readerProfiles)
         .write(ReaderProfilesCompanion(focusMode: Value(enabled)));
+    await analytics.logFocusModeSet(enabled: enabled);
   }
 
   Future<void> clear() {

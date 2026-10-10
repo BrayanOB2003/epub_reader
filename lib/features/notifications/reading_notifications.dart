@@ -192,6 +192,27 @@ bool readingGoalCrossed({
   return beforeSeconds < goal && afterSeconds >= goal;
 }
 
+/// True when this visit is what pushed the local day across the goal.
+/// [sessions] already include the visit.
+bool sessionCrossedReadingGoal({
+  required Iterable<NotificationSession> sessions,
+  required DateTime sessionStartedAt,
+  required int sessionSeconds,
+  required int goalMinutes,
+  required DateTime now,
+}) {
+  final after = readingSecondsOnDay(sessions, now);
+  final before = _sameDay(sessionStartedAt, now)
+      ? after - sessionSeconds
+      : after;
+  if (before < 0) return false;
+  return readingGoalCrossed(
+    beforeSeconds: before,
+    afterSeconds: after,
+    goalMinutes: goalMinutes,
+  );
+}
+
 int readingSecondsOnDay(Iterable<NotificationSession> sessions, DateTime day) {
   final date = _localDate(day);
   var total = 0;

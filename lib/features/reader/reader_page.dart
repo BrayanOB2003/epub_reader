@@ -4,8 +4,12 @@ import 'dart:convert';
 import 'package:epub_reader/app/providers.dart';
 import 'package:epub_reader/core/database/app_database.dart';
 import 'package:epub_reader/core/reading/readium_reading_engine.dart';
+import 'package:epub_reader/features/analytics/analytics_events.dart';
+import 'package:epub_reader/features/analytics/app_analytics.dart';
 import 'package:epub_reader/features/library/data/book_repository.dart';
 import 'package:epub_reader/features/habits/reading_engagement.dart';
+import 'package:epub_reader/features/notifications/reading_notifications.dart';
+import 'package:epub_reader/features/profile/reader_profile_store.dart';
 import 'package:epub_reader/features/reader/reader_gestures.dart';
 import 'package:epub_reader/features/reader/reader_preferences.dart';
 import 'package:epub_reader/l10n/app_localizations.dart';
@@ -18,9 +22,14 @@ import 'package:go_router/go_router.dart';
 import 'package:share_plus/share_plus.dart';
 
 class ReaderPage extends ConsumerStatefulWidget {
-  const ReaderPage({required this.bookId, super.key});
+  const ReaderPage({
+    required this.bookId,
+    this.source = readingSourceLibrary,
+    super.key,
+  });
 
   final int bookId;
+  final String source;
 
   @override
   ConsumerState<ReaderPage> createState() => _ReaderPageState();
@@ -30,6 +39,8 @@ class _ReaderPageState extends ConsumerState<ReaderPage>
     with WidgetsBindingObserver {
   late final BookRepository _repository;
   late final ReadiumReadingEngine _engine;
+  late final AppAnalytics _analytics;
+  late final ReaderProfileStore _profiles;
 
   Book? _book;
   Publication? _publication;
@@ -49,6 +60,7 @@ class _ReaderPageState extends ConsumerState<ReaderPage>
   ReadingEngagement? _engagement;
   int? _readingSessionId;
   Future<void> _sessionWrite = Future<void>.value();
+  var _sessionReported = false;
 
   @override
   void initState() {
@@ -56,6 +68,8 @@ class _ReaderPageState extends ConsumerState<ReaderPage>
     WidgetsBinding.instance.addObserver(this);
     _repository = ref.read(bookRepositoryProvider);
     _engine = ref.read(readingEngineProvider);
+    _analytics = ref.read(appAnalyticsProvider);
+    _profiles = ref.read(readerProfileStoreProvider);
     _open();
   }
 
@@ -114,7 +128,8 @@ class _ReaderPageState extends ConsumerState<ReaderPage>
         _progress = book.progress;
         _loading = false;
       });
-    } catch (error) {
+    } catch (error, stack) {
+      unawaited(_analytics.recordUnexpected('reader_open_failed', stack));
       if (!mounted) return;
       setState(() {
         _loading = false;
@@ -333,6 +348,43 @@ class _ReaderPageState extends ConsumerState<ReaderPage>
     });
   }
 
+  Future<void> _reportSession() async {
+    if (_sessionReported) return;
+    _sessionReported = true;
+    await _sessionWrite;
+    final engagement = _engagement;
+    if (engagement == null ||
+        !engagement.shouldPersist ||
+        _readingSessionId == null) {
+      return;
+    }
+    await _analytics.logReadingSession(
+      engagedSeconds: engagement.engagedSeconds,
+      advanced: engagement.advanced,
+      source: widget.source,
+    );
+    final goalMinutes = (await _profiles.current())?.dailyGoalMinutes;
+    if (goalMinutes == null) return;
+    final rows = await _repository.loadReadingSessions();
+    final crossed = sessionCrossedReadingGoal(
+      sessions: [
+        for (final row in rows)
+          NotificationSession(
+            bookId: row.bookId,
+            startedAt: row.startedAt,
+            endedAt: row.endedAt,
+            engagedSeconds: row.engagedSeconds,
+          ),
+      ],
+      sessionStartedAt: engagement.startedAt,
+      sessionSeconds: engagement.engagedSeconds,
+      goalMinutes: goalMinutes,
+      now: DateTime.now(),
+    );
+    if (!crossed) return;
+    await _analytics.logDailyGoalReached();
+  }
+
   Future<void> _turnPage({required bool forward}) async {
     final now = DateTime.now();
     final last = _lastPageTurn;
@@ -383,6 +435,7 @@ class _ReaderPageState extends ConsumerState<ReaderPage>
     WidgetsBinding.instance.removeObserver(this);
     _engagement?.close();
     _syncEngagement();
+    unawaited(_reportSession());
     _saveTimer?.cancel();
     final locator = _latestLocator;
     if (locator != null) {

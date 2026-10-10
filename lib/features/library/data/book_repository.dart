@@ -18,6 +18,10 @@ class BookRepository {
   final Future<Directory> Function() _documentsDirectory;
   Directory? _documents;
 
+  Future<List<ReadingSession>> loadReadingSessions() {
+    return _database.select(_database.readingSessions).get();
+  }
+
   Stream<List<ReadingSession>> watchReadingSessions() {
     final query = _database.select(_database.readingSessions)
       ..orderBy([

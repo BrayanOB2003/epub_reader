@@ -5,6 +5,7 @@ import 'package:epub_reader/features/notifications/reading_notification_schedule
 
 import 'dart:async';
 
+import 'package:epub_reader/features/analytics/analytics_events.dart';
 import 'package:epub_reader/features/notifications/notification_destination.dart';
 import 'package:epub_reader/features/notifications/notification_prompt.dart';
 import 'package:epub_reader/features/onboarding/onboarding_controller.dart';
@@ -173,7 +174,7 @@ class _NotificationBindingState extends ConsumerState<NotificationBinding>
     ref.read(pendingNotificationLocationProvider.notifier).clear();
     final location = tap.location;
     if (location == null) return;
-    ref.read(appRouterProvider).go(location);
+    ref.read(appRouterProvider).go(routeOpenedFromNotification(location));
   }
 
   @override

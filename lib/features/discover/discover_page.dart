@@ -1,6 +1,10 @@
 import 'dart:typed_data';
 
 import 'package:epub_reader/app/providers.dart';
+import 'package:epub_reader/features/analytics/analytics_events.dart';
+import 'package:epub_reader/features/analytics/app_analytics.dart';
+import 'package:epub_reader/features/library/data/epub_importer.dart';
+import 'package:epub_reader/features/library/data/epub_metadata.dart';
 import 'package:epub_reader/app/schedule_theme.dart';
 import 'package:epub_reader/app/schedule_widgets.dart';
 import 'package:epub_reader/core/database/app_database.dart';
@@ -32,12 +36,13 @@ class _DiscoverPageState extends ConsumerState<DiscoverPage> {
           .findByBookUid(identifier);
       if (!mounted) return;
       if (saved != null) {
-        context.push('/read/${saved.id}');
+        context.push(readingRoute(saved.id, readingSourceCatalog));
         return;
       }
     }
 
     setState(() => _downloadingId = book.id);
+    final analytics = ref.read(appAnalyticsProvider);
     try {
       var catalog = await ref.read(catalogProvider.future);
       if (catalog.urlsExpired) {
@@ -50,12 +55,28 @@ class _DiscoverPageState extends ConsumerState<DiscoverPage> {
       final imported = await ref
           .read(epubImporterProvider)
           .importBytes(bytes, fallbackTitle: _shownTitle(source.title, l10n));
+      await analytics.logBookAdded(
+        source: bookSourceCatalog,
+        result: imported.outcome == ImportOutcome.alreadyInLibrary
+            ? bookResultAlreadyInLibrary
+            : bookResultImported,
+        catalogBookId: book.id,
+      );
       if (!mounted) return;
-      context.push('/read/${imported.bookId}');
+      context.push(readingRoute(imported.bookId, readingSourceCatalog));
     } on CatalogException catch (error) {
       if (!mounted) return;
       _showMessage(_catalogMessage(l10n, error));
-    } catch (_) {
+    } on EpubFormatException {
+      await analytics.logBookAdded(
+        source: bookSourceCatalog,
+        result: bookResultInvalid,
+        catalogBookId: book.id,
+      );
+      if (!mounted) return;
+      _showMessage(l10n.addFailed);
+    } catch (_, stack) {
+      await analytics.recordUnexpected('catalog_add_failed', stack);
       if (!mounted) return;
       _showMessage(l10n.addFailed);
     } finally {

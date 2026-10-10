@@ -1,5 +1,6 @@
 import 'package:epub_reader/app/app.dart';
 import 'package:epub_reader/firebase_options.dart';
+import 'package:firebase_analytics/firebase_analytics.dart';
 import 'package:firebase_core/firebase_core.dart';
 import 'package:firebase_crashlytics/firebase_crashlytics.dart';
 import 'package:flutter/foundation.dart';
@@ -19,6 +20,9 @@ Future<void> _initializeFirebase() async {
     case TargetPlatform.iOS:
       await Firebase.initializeApp(
         options: DefaultFirebaseOptions.currentPlatform,
+      );
+      await FirebaseAnalytics.instance.setAnalyticsCollectionEnabled(
+        kReleaseMode,
       );
       final crashlytics = FirebaseCrashlytics.instance;
       final collectCrashes = !kDebugMode;

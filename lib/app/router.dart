@@ -1,4 +1,7 @@
 import 'package:epub_reader/app/app_shell.dart';
+import 'package:epub_reader/features/analytics/analytics_events.dart';
+import 'package:epub_reader/features/analytics/app_analytics.dart';
+import 'package:firebase_analytics/firebase_analytics.dart';
 import 'package:epub_reader/features/discover/discover_page.dart';
 import 'package:epub_reader/features/focus/focus_guide_page.dart';
 import 'package:epub_reader/features/habits/reading_time_page.dart';
@@ -27,6 +30,13 @@ final appRouterProvider = Provider<GoRouter>((ref) {
   final router = GoRouter(
     initialLocation: '/library',
     refreshListenable: refresh,
+    observers: [
+      if (firebaseReady)
+        FirebaseAnalyticsObserver(
+          analytics: FirebaseAnalytics.instance,
+          nameExtractor: analyticsScreenName,
+        ),
+    ],
     redirect: (context, state) {
       final status = ref.read(onboardingControllerProvider);
       final bool? completed = status.isLoading
@@ -64,19 +74,26 @@ final appRouterProvider = Provider<GoRouter>((ref) {
     },
     routes: [
       GoRoute(path: '/', redirect: (_, _) => '/library'),
-      GoRoute(path: '/boot', builder: (context, state) => const _BootPage()),
+      GoRoute(
+        path: '/boot',
+        name: 'boot',
+        builder: (context, state) => const _BootPage(),
+      ),
       GoRoute(
         path: '/onboarding',
+        name: 'onboarding',
         builder: (context, state) => OnboardingRoute(
           editing: state.uri.queryParameters['editar'] == '1',
         ),
       ),
       GoRoute(
         path: '/focus',
+        name: 'focus',
         builder: (context, state) => const FocusGuidePage(),
       ),
       GoRoute(
         path: '/notifications',
+        name: 'notifications',
         builder: (context, state) => NotificationPermissionPage(
           returnLocation: state.uri.queryParameters['volver'],
         ),
@@ -89,6 +106,7 @@ final appRouterProvider = Provider<GoRouter>((ref) {
             routes: [
               GoRoute(
                 path: '/discover',
+                name: 'discover',
                 builder: (context, state) => const DiscoverPage(),
               ),
             ],
@@ -97,6 +115,7 @@ final appRouterProvider = Provider<GoRouter>((ref) {
             routes: [
               GoRoute(
                 path: '/library',
+                name: 'library',
                 builder: (context, state) => const HomePage(),
               ),
             ],
@@ -105,6 +124,7 @@ final appRouterProvider = Provider<GoRouter>((ref) {
             routes: [
               GoRoute(
                 path: '/time',
+                name: 'time',
                 builder: (context, state) => const ReadingTimePage(),
               ),
             ],
@@ -113,6 +133,7 @@ final appRouterProvider = Provider<GoRouter>((ref) {
             routes: [
               GoRoute(
                 path: '/profile',
+                name: 'profile',
                 builder: (context, state) => const ProfilePage(),
               ),
             ],
@@ -121,6 +142,7 @@ final appRouterProvider = Provider<GoRouter>((ref) {
       ),
       GoRoute(
         path: '/read/:bookId',
+        name: 'read',
         builder: (context, state) {
           final bookId = int.tryParse(state.pathParameters['bookId'] ?? '');
           if (bookId == null) {
@@ -130,7 +152,10 @@ final appRouterProvider = Provider<GoRouter>((ref) {
               ),
             );
           }
-          return ReaderPage(bookId: bookId);
+          return ReaderPage(
+            bookId: bookId,
+            source: readingSessionSource(state.uri.queryParameters['origen']),
+          );
         },
       ),
     ],

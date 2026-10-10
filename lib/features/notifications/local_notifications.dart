@@ -1,3 +1,7 @@
+import 'dart:async';
+
+import 'package:epub_reader/features/analytics/analytics_events.dart';
+import 'package:epub_reader/features/analytics/app_analytics.dart';
 import 'package:epub_reader/features/notifications/notification_destination.dart';
 import 'package:flutter/foundation.dart';
 import 'package:flutter/widgets.dart';
@@ -65,6 +69,11 @@ class PendingNotificationLocation extends Notifier<String?> {
     final destination = notificationLocation(location);
     if (destination == null || destination == state) return;
     state = destination;
+    unawaited(
+      ref
+          .read(appAnalyticsProvider)
+          .logNotificationOpen(notificationOpenDestination(destination)),
+    );
   }
 
   void clear() {

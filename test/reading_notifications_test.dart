@@ -80,6 +80,33 @@ void main() {
       isFalse,
     );
     expect(
+      sessionCrossedReadingGoal(
+        sessions: after,
+        sessionStartedAt: now,
+        sessionSeconds: 20 * 60,
+        goalMinutes: 20,
+        now: now,
+      ),
+      isTrue,
+    );
+    expect(
+      sessionCrossedReadingGoal(
+        sessions: [
+          NotificationSession(
+            bookId: 1,
+            startedAt: now,
+            endedAt: now,
+            engagedSeconds: 25 * 60,
+          ),
+        ],
+        sessionStartedAt: now,
+        sessionSeconds: 5 * 60,
+        goalMinutes: 20,
+        now: now,
+      ),
+      isFalse,
+    );
+    expect(
       readingNotificationMessage(goalMetNotification(20), l10n).body,
       'Cerraste el día. 20 min.',
     );

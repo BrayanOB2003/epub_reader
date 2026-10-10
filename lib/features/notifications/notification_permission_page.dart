@@ -1,6 +1,8 @@
 import 'dart:async';
 
 import 'package:epub_reader/app/schedule_theme.dart';
+import 'package:epub_reader/features/analytics/analytics_events.dart';
+import 'package:epub_reader/features/analytics/app_analytics.dart';
 import 'package:epub_reader/app/schedule_widgets.dart';
 import 'package:epub_reader/features/notifications/local_notifications.dart';
 import 'package:epub_reader/features/notifications/notification_destination.dart';
@@ -44,9 +46,16 @@ class _NotificationPermissionPageState
   Future<void> _allow() async {
     if (_busy) return;
     setState(() => _busy = true);
+    final analytics = ref.read(appAnalyticsProvider);
     try {
-      await ref.read(localNotificationsProvider).requestPermission();
-    } catch (_) {
+      final granted = await ref
+          .read(localNotificationsProvider)
+          .requestPermission();
+      await analytics.logNotificationPermission(
+        granted ? notificationResultGranted : notificationResultDenied,
+      );
+    } catch (_, stack) {
+      await analytics.recordUnexpected('notification_permission_failed', stack);
       if (!mounted) return;
       setState(() => _busy = false);
       ScaffoldMessenger.of(context).showSnackBar(
@@ -65,6 +74,9 @@ class _NotificationPermissionPageState
   Future<void> _skip() async {
     if (_busy) return;
     setState(() => _busy = true);
+    await ref
+        .read(appAnalyticsProvider)
+        .logNotificationPermission(notificationResultSkipped);
     await _leave();
   }
 
@@ -72,10 +84,11 @@ class _NotificationPermissionPageState
     final pending = ref.read(pendingNotificationLocationProvider);
     ref.read(pendingNotificationLocationProvider.notifier).clear();
     if (!mounted) return;
+    final fromNotification = notificationLocation(pending);
     context.go(
-      notificationLocation(pending) ??
-          notificationLocation(widget.returnLocation) ??
-          '/library',
+      fromNotification == null
+          ? notificationLocation(widget.returnLocation) ?? '/library'
+          : routeOpenedFromNotification(fromNotification),
     );
   }
 

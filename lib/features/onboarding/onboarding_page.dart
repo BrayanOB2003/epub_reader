@@ -1,4 +1,8 @@
+import 'dart:async';
+
 import 'package:epub_reader/app/schedule_theme.dart';
+import 'package:epub_reader/features/analytics/app_analytics.dart';
+import 'package:epub_reader/features/analytics/analytics_events.dart';
 import 'package:epub_reader/features/notifications/local_notifications.dart';
 import 'package:epub_reader/features/notifications/notification_destination.dart';
 import 'package:epub_reader/features/onboarding/onboarding_answers.dart';
@@ -73,6 +77,9 @@ class _OnboardingPageState extends ConsumerState<OnboardingPage> {
     super.initState();
     _step = widget.editing ? 1 : 0;
     _answers = widget.initial ?? const OnboardingAnswers();
+    if (!widget.editing) {
+      unawaited(ref.read(appAnalyticsProvider).logTutorialBegin());
+    }
   }
 
   bool get _canContinue {
@@ -118,7 +125,9 @@ class _OnboardingPageState extends ConsumerState<OnboardingPage> {
         final pending = ref.read(pendingNotificationLocationProvider);
         ref.read(pendingNotificationLocationProvider.notifier).clear();
         context.go(
-          notificationLanding(editing: true, pendingLocation: pending),
+          routeOpenedFromNotification(
+            notificationLanding(editing: true, pendingLocation: pending),
+          ),
         );
         return;
       }
@@ -130,7 +139,11 @@ class _OnboardingPageState extends ConsumerState<OnboardingPage> {
       }
       final pending = ref.read(pendingNotificationLocationProvider);
       ref.read(pendingNotificationLocationProvider.notifier).clear();
-      context.go(notificationLanding(editing: false, pendingLocation: pending));
+      context.go(
+        routeOpenedFromNotification(
+          notificationLanding(editing: false, pendingLocation: pending),
+        ),
+      );
     } catch (_) {
       if (!mounted) return;
       setState(() => _saving = false);

@@ -1,4 +1,6 @@
 import 'package:epub_reader/app/providers.dart';
+import 'package:epub_reader/features/analytics/analytics_events.dart';
+import 'package:epub_reader/features/analytics/app_analytics.dart';
 import 'package:epub_reader/app/schedule_theme.dart';
 import 'package:epub_reader/app/schedule_widgets.dart';
 import 'package:epub_reader/core/database/app_database.dart';
@@ -24,19 +26,36 @@ class _HomePageState extends ConsumerState<HomePage> {
   Future<void> _import() async {
     if (_importing) return;
     final l10n = AppLocalizations.of(context);
+    final analytics = ref.read(appAnalyticsProvider);
     setState(() => _importing = true);
     try {
       final outcome = await ref
           .read(epubImporterProvider)
           .pickAndImport(dialogTitle: l10n.importEpub, untitled: l10n.untitled);
+      if (outcome == ImportOutcome.imported) {
+        await analytics.logBookAdded(
+          source: bookSourceImport,
+          result: bookResultImported,
+        );
+      } else if (outcome == ImportOutcome.alreadyInLibrary) {
+        await analytics.logBookAdded(
+          source: bookSourceImport,
+          result: bookResultAlreadyInLibrary,
+        );
+      }
       if (!mounted) return;
       if (outcome == ImportOutcome.alreadyInLibrary) {
         _showMessage(l10n.alreadyInLibrary);
       }
     } on EpubFormatException catch (error) {
+      await analytics.logBookAdded(
+        source: bookSourceImport,
+        result: bookResultInvalid,
+      );
       if (!mounted) return;
       _showMessage(_epubMessage(l10n, error));
-    } catch (_) {
+    } catch (_, stack) {
+      await analytics.recordUnexpected('import_failed', stack);
       if (!mounted) return;
       _showMessage(l10n.importFailed);
     } finally {
@@ -80,7 +99,7 @@ class _HomePageState extends ConsumerState<HomePage> {
 
   Future<void> _read(int bookId) async {
     if (!mounted) return;
-    await context.push('/read/$bookId');
+    await context.push(readingRoute(bookId, readingSourceLibrary));
   }
 
   @override
