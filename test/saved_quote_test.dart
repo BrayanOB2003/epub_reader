@@ -6,7 +6,6 @@ import 'package:epub_reader/app/schedule_theme.dart';
 import 'package:epub_reader/core/database/app_database.dart';
 import 'package:epub_reader/features/library/data/book_repository.dart';
 import 'package:epub_reader/features/profile/quotes_page.dart';
-import 'package:epub_reader/features/reader/reader_selection_bar.dart';
 import 'package:epub_reader/l10n/app_localizations.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
@@ -44,33 +43,6 @@ void main() {
     final book = await repository.getBook(bookId);
     await repository.delete(book!);
     expect(await database.select(database.savedQuotes).get(), isEmpty);
-  });
-
-  testWidgets('the selection bar offers copy, share and save as icons', (
-    tester,
-  ) async {
-    await tester.pumpWidget(
-      MaterialApp(
-        locale: const Locale('es'),
-        localizationsDelegates: AppLocalizations.localizationsDelegates,
-        supportedLocales: AppLocalizations.supportedLocales,
-        home: Scaffold(
-          body: ReaderSelectionBar(
-            onCopy: () {},
-            onShare: () {},
-            onSave: () {},
-          ),
-        ),
-      ),
-    );
-
-    expect(find.byTooltip('Copiar'), findsOneWidget);
-    expect(find.byTooltip('Compartir'), findsOneWidget);
-    expect(find.byTooltip('Guardar cita'), findsOneWidget);
-    expect(find.byIcon(Icons.content_copy), findsOneWidget);
-    expect(find.byIcon(Icons.share), findsOneWidget);
-    expect(find.byIcon(Icons.bookmark_add_outlined), findsOneWidget);
-    expect(find.text('Copiar'), findsNothing);
   });
 
   testWidgets('tapping a saved quote opens that passage', (tester) async {

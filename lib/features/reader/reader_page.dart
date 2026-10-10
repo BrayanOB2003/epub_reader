@@ -12,14 +12,11 @@ import 'package:epub_reader/features/notifications/reading_notifications.dart';
 import 'package:epub_reader/features/profile/reader_profile_store.dart';
 import 'package:epub_reader/features/reader/reader_gestures.dart';
 import 'package:epub_reader/features/reader/reader_preferences.dart';
-import 'package:epub_reader/features/reader/reader_selection_bar.dart';
 import 'package:epub_reader/l10n/app_localizations.dart';
 import 'package:flutter/material.dart';
-import 'package:flutter/services.dart';
 import 'package:flutter_readium/flutter_readium.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:go_router/go_router.dart';
-import 'package:share_plus/share_plus.dart';
 
 class ReaderPage extends ConsumerStatefulWidget {
   const ReaderPage({
@@ -48,7 +45,6 @@ class _ReaderPageState extends ConsumerState<ReaderPage>
   Publication? _publication;
   Locator? _initialLocator;
   Locator? _latestLocator;
-  TextSelectionEvent? _selection;
   StreamSubscription<Locator>? _locatorSubscription;
   Timer? _saveTimer;
   var _progress = 0.0;
@@ -59,8 +55,6 @@ class _ReaderPageState extends ConsumerState<ReaderPage>
   var _fontSize = readerFontSizeDefault;
   var _fixedLayout = false;
   var _textSelected = false;
-  var _sharing = false;
-  final _shareButtonKey = GlobalKey();
   DateTime? _lastPageTurn;
   String? _error;
   ReadingEngagement? _engagement;
@@ -151,10 +145,7 @@ class _ReaderPageState extends ConsumerState<ReaderPage>
     _latestLocator = locator;
     final leftChapter =
         _textSelected && previous != null && previous.href != locator.href;
-    if (leftChapter) {
-      _textSelected = false;
-      _selection = null;
-    }
+    if (leftChapter) _textSelected = false;
     final progression = locator.locations?.totalProgression;
     final progressChanged = progression != null && progression != _progress;
     if (mounted && (leftChapter || progressChanged)) {
@@ -276,7 +267,7 @@ class _ReaderPageState extends ConsumerState<ReaderPage>
   }
 
   void _onZone(ReaderZone zone) {
-    if (_textSelected || _sharing) return;
+    if (_textSelected) return;
     switch (zone) {
       case ReaderZone.previous:
         _turnPage(forward: false);
@@ -289,75 +280,21 @@ class _ReaderPageState extends ConsumerState<ReaderPage>
 
   void _onTextSelected(TextSelectionEvent event) {
     final text = event.selectedText?.trim();
-    if (text == null || text.isEmpty || !mounted) return;
-    if (_textSelected && _selection?.selectedText?.trim() == text) return;
-    setState(() {
-      _textSelected = true;
-      _selection = event;
-    });
+    if (text == null || text.isEmpty || !mounted || _textSelected) return;
+    setState(() => _textSelected = true);
   }
 
-  void _onSelectionTap() {
-    if (_sharing) return;
-    _clearSelection();
-  }
-
-  String? get _selectedText {
-    final text = _selection?.selectedText?.trim();
-    if (text == null || text.isEmpty) return null;
-    return text;
-  }
+  void _onSelectionTap() => _clearSelection();
 
   void _clearSelection() {
     if (!_textSelected || !mounted) return;
-    setState(() {
-      _textSelected = false;
-      _selection = null;
-    });
+    setState(() => _textSelected = false);
   }
 
-  /// Hides copy, share and save. The marked text stays selected, so the next
-  /// tap on the page clears it instead of opening the reader menu.
-  void _hideSelectionBar() {
-    if (_selection == null || !mounted) return;
-    setState(() => _selection = null);
-  }
-
-  Rect? _shareOrigin() {
-    final box =
-        _shareButtonKey.currentContext?.findRenderObject() as RenderBox?;
-    if (box == null || !box.hasSize) return null;
-    return box.localToGlobal(Offset.zero) & box.size;
-  }
-
-  Future<void> _copySelection() async {
-    final text = _selectedText;
-    if (text == null) return;
-    await Clipboard.setData(ClipboardData(text: text));
-    if (!mounted) return;
-    _hideSelectionBar();
-    _showMessage(AppLocalizations.of(context).copied);
-  }
-
-  Future<void> _shareSelection() async {
-    final text = _selectedText;
-    if (text == null || _sharing) return;
-    final origin = _shareOrigin();
-    setState(() => _sharing = true);
-    _hideSelectionBar();
-    try {
-      await SharePlus.instance.share(
-        ShareParams(text: text, sharePositionOrigin: origin),
-      );
-    } finally {
-      if (mounted) setState(() => _sharing = false);
-    }
-  }
-
-  Future<void> _saveQuote() async {
-    final event = _selection;
-    final text = _selectedText;
-    if (event == null || text == null) return;
+  Future<void> _onSelectionAction(SelectionActionEvent event) async {
+    if (event.actionId != 'save') return;
+    final text = event.selectedText?.trim();
+    if (text == null || text.isEmpty) return;
     final l10n = AppLocalizations.of(context);
     try {
       await _repository.saveQuote(
@@ -371,7 +308,6 @@ class _ReaderPageState extends ConsumerState<ReaderPage>
       return;
     }
     if (!mounted) return;
-    _hideSelectionBar();
     _showMessage(l10n.quoteSaved);
   }
 
@@ -583,6 +519,7 @@ class _ReaderPageState extends ConsumerState<ReaderPage>
 
     final rtl =
         publication.metadata.readingProgression == ReadingProgression.rtl;
+    final l10n = AppLocalizations.of(context);
 
     return Stack(
       children: [
@@ -594,8 +531,15 @@ class _ReaderPageState extends ConsumerState<ReaderPage>
           child: ReadiumReaderWidget(
             publication: publication,
             initialLocator: _initialLocator,
-            allowedDefaultActions: const <DefaultSelectionAction>{},
+            allowedDefaultActions: const {
+              DefaultSelectionAction.copy,
+              DefaultSelectionAction.share,
+            },
+            selectionActions: [
+              SelectionAction(id: 'save', title: l10n.saveQuote),
+            ],
             onTextSelected: _onTextSelected,
+            onSelectionAction: _onSelectionAction,
           ),
         ),
         Positioned(
@@ -606,25 +550,13 @@ class _ReaderPageState extends ConsumerState<ReaderPage>
           child: ReaderGestureLayer(
             rtl: rtl,
             scroll: _scroll,
-            textSelected: _textSelected || _sharing,
+            textSelected: _textSelected,
             onZone: _onZone,
             onPageDrag: _hideChrome,
             onSelectionTap: _onSelectionTap,
           ),
         ),
         Positioned(top: 0, left: 0, right: 0, child: _readerChrome()),
-        if (_selectedText != null)
-          Positioned(
-            left: 0,
-            right: 0,
-            bottom: 0,
-            child: ReaderSelectionBar(
-              shareButtonKey: _shareButtonKey,
-              onCopy: () => unawaited(_copySelection()),
-              onShare: () => unawaited(_shareSelection()),
-              onSave: () => unawaited(_saveQuote()),
-            ),
-          ),
       ],
     );
   }
