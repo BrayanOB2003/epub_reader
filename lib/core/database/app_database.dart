@@ -59,6 +59,9 @@ class ReaderProfiles extends Table {
 
   /// Local calendar day (yyyy-MM-dd) of the last "not now".
   TextColumn get notificationPromptSkippedOn => text().nullable()();
+
+  /// Reader asked Liora to silence the phone while the app is open.
+  BoolColumn get focusMode => boolean().withDefault(const Constant(false))();
 }
 
 class ReadingSessions extends Table {
@@ -78,7 +81,7 @@ class AppDatabase extends _$AppDatabase {
   AppDatabase(super.e);
 
   @override
-  int get schemaVersion => 9;
+  int get schemaVersion => 10;
 
   @override
   MigrationStrategy get migration {
@@ -117,6 +120,9 @@ class AppDatabase extends _$AppDatabase {
             readerProfiles,
             readerProfiles.notificationPromptSkippedOn,
           );
+        }
+        if (from < 10) {
+          await migrator.addColumn(readerProfiles, readerProfiles.focusMode);
         }
       },
     );

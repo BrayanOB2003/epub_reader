@@ -1,5 +1,6 @@
 import 'package:epub_reader/app/app_shell.dart';
 import 'package:epub_reader/features/discover/discover_page.dart';
+import 'package:epub_reader/features/focus/focus_guide_page.dart';
 import 'package:epub_reader/features/habits/reading_time_page.dart';
 import 'package:epub_reader/features/library/home_page.dart';
 import 'package:epub_reader/features/notifications/notification_permission_page.dart';
@@ -69,6 +70,10 @@ final appRouterProvider = Provider<GoRouter>((ref) {
         builder: (context, state) => OnboardingRoute(
           editing: state.uri.queryParameters['editar'] == '1',
         ),
+      ),
+      GoRoute(
+        path: '/focus',
+        builder: (context, state) => const FocusGuidePage(),
       ),
       GoRoute(
         path: '/notifications',

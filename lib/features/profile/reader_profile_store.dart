@@ -64,6 +64,7 @@ class ReaderProfileStore {
     final skippedOn = existing.isEmpty
         ? null
         : existing.first.notificationPromptSkippedOn;
+    final focusMode = existing.isEmpty ? false : existing.first.focusMode;
     await _database.transaction(() async {
       await _database.delete(_database.readerProfiles).go();
       await _database
@@ -78,6 +79,7 @@ class ReaderProfileStore {
               completedAt: DateTime.now().toUtc(),
               notificationsPrompted: Value(prompted),
               notificationPromptSkippedOn: Value(skippedOn),
+              focusMode: Value(focusMode),
             ),
           );
     });
@@ -97,6 +99,12 @@ class ReaderProfileStore {
         .write(
           ReaderProfilesCompanion(notificationPromptSkippedOn: Value(today)),
         );
+  }
+
+  Future<void> setFocusMode(bool enabled) {
+    return _database
+        .update(_database.readerProfiles)
+        .write(ReaderProfilesCompanion(focusMode: Value(enabled)));
   }
 
   Future<void> clear() {

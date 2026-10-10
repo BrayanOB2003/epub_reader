@@ -145,5 +145,22 @@
   "libraryLoadFailed": "The library could not be loaded.\n{error}",
   "sampleBookTitle": "Sample reading",
   "notificationChannelName": "Notices",
-  "notificationChannelDescription": "Notices from Liora"
+  "notificationChannelDescription": "Notices from Liora",
+  "focusMode": "Focus mode",
+  "focusModeAndroidBody": "Silences notifications and calls while Liora is open. Alarms still ring.",
+  "focusModeIosBody": "When you open Liora, your iPhone can turn on Do Not Disturb once you set up Shortcuts.",
+  "focusModeIosOnBody": "On. To remove it completely, delete the automation in Shortcuts.",
+  "focusModePermissionNeeded": "To silence the phone, allow Liora access to Do Not Disturb.",
+  "focusModeChangeFailed": "Do Not Disturb could not be changed.",
+  "focusModeIosRemains": "The Shortcuts automation stays until you delete it.",
+  "focusGuideTitle": "Do Not Disturb while you read",
+  "focusGuideBody": "iOS does not let an app turn on Do Not Disturb. Shortcuts can, once you set it up.",
+  "focusGuideOpenHeading": "When Liora opens",
+  "focusGuideOpenSteps": "1. In Shortcuts, open Automation and tap +.\n2. Choose App, then Liora, and leave Is Opened selected.\n3. Add Set Focus, choose Do Not Disturb, and turn it On.\n4. Turn off Ask Before Running.",
+  "focusGuideCloseHeading": "When Liora closes",
+  "focusGuideCloseSteps": "Repeat the steps with Is Closed, and turn Do Not Disturb Off.",
+  "focusGuideOpenShortcuts": "Open Shortcuts",
+  "focusGuideDone": "Done",
+  "focusGuideNotNow": "Not now",
+  "focusGuideOpenFailed": "Shortcuts could not be opened."
 }

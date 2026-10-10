@@ -1277,6 +1277,21 @@ class $ReaderProfilesTable extends ReaderProfiles
         type: DriftSqlType.string,
         requiredDuringInsert: false,
       );
+  static const VerificationMeta _focusModeMeta = const VerificationMeta(
+    'focusMode',
+  );
+  @override
+  late final GeneratedColumn<bool> focusMode = GeneratedColumn<bool>(
+    'focus_mode',
+    aliasedName,
+    false,
+    type: DriftSqlType.bool,
+    requiredDuringInsert: false,
+    defaultConstraints: GeneratedColumn.constraintIsAlways(
+      'CHECK ("focus_mode" IN (0, 1))',
+    ),
+    defaultValue: const Constant(false),
+  );
   @override
   List<GeneratedColumn> get $columns => [
     id,
@@ -1288,6 +1303,7 @@ class $ReaderProfilesTable extends ReaderProfiles
     completedAt,
     notificationsPrompted,
     notificationPromptSkippedOn,
+    focusMode,
   ];
   @override
   String get aliasedName => _alias ?? actualTableName;
@@ -1381,6 +1397,12 @@ class $ReaderProfilesTable extends ReaderProfiles
         ),
       );
     }
+    if (data.containsKey('focus_mode')) {
+      context.handle(
+        _focusModeMeta,
+        focusMode.isAcceptableOrUnknown(data['focus_mode']!, _focusModeMeta),
+      );
+    }
     return context;
   }
 
@@ -1426,6 +1448,10 @@ class $ReaderProfilesTable extends ReaderProfiles
         DriftSqlType.string,
         data['${effectivePrefix}notification_prompt_skipped_on'],
       ),
+      focusMode: attachedDatabase.typeMapping.read(
+        DriftSqlType.bool,
+        data['${effectivePrefix}focus_mode'],
+      )!,
     );
   }
 
@@ -1450,6 +1476,9 @@ class ReaderProfile extends DataClass implements Insertable<ReaderProfile> {
 
   /// Local calendar day (yyyy-MM-dd) of the last "not now".
   final String? notificationPromptSkippedOn;
+
+  /// Reader asked Liora to silence the phone while the app is open.
+  final bool focusMode;
   const ReaderProfile({
     required this.id,
     required this.motivations,
@@ -1460,6 +1489,7 @@ class ReaderProfile extends DataClass implements Insertable<ReaderProfile> {
     required this.completedAt,
     required this.notificationsPrompted,
     this.notificationPromptSkippedOn,
+    required this.focusMode,
   });
   @override
   Map<String, Expression> toColumns(bool nullToAbsent) {
@@ -1481,6 +1511,7 @@ class ReaderProfile extends DataClass implements Insertable<ReaderProfile> {
         notificationPromptSkippedOn,
       );
     }
+    map['focus_mode'] = Variable<bool>(focusMode);
     return map;
   }
 
@@ -1502,6 +1533,7 @@ class ReaderProfile extends DataClass implements Insertable<ReaderProfile> {
           notificationPromptSkippedOn == null && nullToAbsent
           ? const Value.absent()
           : Value(notificationPromptSkippedOn),
+      focusMode: Value(focusMode),
     );
   }
 
@@ -1524,6 +1556,7 @@ class ReaderProfile extends DataClass implements Insertable<ReaderProfile> {
       notificationPromptSkippedOn: serializer.fromJson<String?>(
         json['notificationPromptSkippedOn'],
       ),
+      focusMode: serializer.fromJson<bool>(json['focusMode']),
     );
   }
   @override
@@ -1541,6 +1574,7 @@ class ReaderProfile extends DataClass implements Insertable<ReaderProfile> {
       'notificationPromptSkippedOn': serializer.toJson<String?>(
         notificationPromptSkippedOn,
       ),
+      'focusMode': serializer.toJson<bool>(focusMode),
     };
   }
 
@@ -1554,6 +1588,7 @@ class ReaderProfile extends DataClass implements Insertable<ReaderProfile> {
     DateTime? completedAt,
     bool? notificationsPrompted,
     Value<String?> notificationPromptSkippedOn = const Value.absent(),
+    bool? focusMode,
   }) => ReaderProfile(
     id: id ?? this.id,
     motivations: motivations ?? this.motivations,
@@ -1566,6 +1601,7 @@ class ReaderProfile extends DataClass implements Insertable<ReaderProfile> {
     notificationPromptSkippedOn: notificationPromptSkippedOn.present
         ? notificationPromptSkippedOn.value
         : this.notificationPromptSkippedOn,
+    focusMode: focusMode ?? this.focusMode,
   );
   ReaderProfile copyWithCompanion(ReaderProfilesCompanion data) {
     return ReaderProfile(
@@ -1592,6 +1628,7 @@ class ReaderProfile extends DataClass implements Insertable<ReaderProfile> {
       notificationPromptSkippedOn: data.notificationPromptSkippedOn.present
           ? data.notificationPromptSkippedOn.value
           : this.notificationPromptSkippedOn,
+      focusMode: data.focusMode.present ? data.focusMode.value : this.focusMode,
     );
   }
 
@@ -1606,7 +1643,8 @@ class ReaderProfile extends DataClass implements Insertable<ReaderProfile> {
           ..write('routineDays: $routineDays, ')
           ..write('completedAt: $completedAt, ')
           ..write('notificationsPrompted: $notificationsPrompted, ')
-          ..write('notificationPromptSkippedOn: $notificationPromptSkippedOn')
+          ..write('notificationPromptSkippedOn: $notificationPromptSkippedOn, ')
+          ..write('focusMode: $focusMode')
           ..write(')'))
         .toString();
   }
@@ -1622,6 +1660,7 @@ class ReaderProfile extends DataClass implements Insertable<ReaderProfile> {
     completedAt,
     notificationsPrompted,
     notificationPromptSkippedOn,
+    focusMode,
   );
   @override
   bool operator ==(Object other) =>
@@ -1636,7 +1675,8 @@ class ReaderProfile extends DataClass implements Insertable<ReaderProfile> {
           other.completedAt == this.completedAt &&
           other.notificationsPrompted == this.notificationsPrompted &&
           other.notificationPromptSkippedOn ==
-              this.notificationPromptSkippedOn);
+              this.notificationPromptSkippedOn &&
+          other.focusMode == this.focusMode);
 }
 
 class ReaderProfilesCompanion extends UpdateCompanion<ReaderProfile> {
@@ -1649,6 +1689,7 @@ class ReaderProfilesCompanion extends UpdateCompanion<ReaderProfile> {
   final Value<DateTime> completedAt;
   final Value<bool> notificationsPrompted;
   final Value<String?> notificationPromptSkippedOn;
+  final Value<bool> focusMode;
   const ReaderProfilesCompanion({
     this.id = const Value.absent(),
     this.motivations = const Value.absent(),
@@ -1659,6 +1700,7 @@ class ReaderProfilesCompanion extends UpdateCompanion<ReaderProfile> {
     this.completedAt = const Value.absent(),
     this.notificationsPrompted = const Value.absent(),
     this.notificationPromptSkippedOn = const Value.absent(),
+    this.focusMode = const Value.absent(),
   });
   ReaderProfilesCompanion.insert({
     this.id = const Value.absent(),
@@ -1670,6 +1712,7 @@ class ReaderProfilesCompanion extends UpdateCompanion<ReaderProfile> {
     required DateTime completedAt,
     this.notificationsPrompted = const Value.absent(),
     this.notificationPromptSkippedOn = const Value.absent(),
+    this.focusMode = const Value.absent(),
   }) : motivations = Value(motivations),
        dailyGoalMinutes = Value(dailyGoalMinutes),
        routine = Value(routine),
@@ -1684,6 +1727,7 @@ class ReaderProfilesCompanion extends UpdateCompanion<ReaderProfile> {
     Expression<DateTime>? completedAt,
     Expression<bool>? notificationsPrompted,
     Expression<String>? notificationPromptSkippedOn,
+    Expression<bool>? focusMode,
   }) {
     return RawValuesInsertable({
       if (id != null) 'id': id,
@@ -1697,6 +1741,7 @@ class ReaderProfilesCompanion extends UpdateCompanion<ReaderProfile> {
         'notifications_prompted': notificationsPrompted,
       if (notificationPromptSkippedOn != null)
         'notification_prompt_skipped_on': notificationPromptSkippedOn,
+      if (focusMode != null) 'focus_mode': focusMode,
     });
   }
 
@@ -1710,6 +1755,7 @@ class ReaderProfilesCompanion extends UpdateCompanion<ReaderProfile> {
     Value<DateTime>? completedAt,
     Value<bool>? notificationsPrompted,
     Value<String?>? notificationPromptSkippedOn,
+    Value<bool>? focusMode,
   }) {
     return ReaderProfilesCompanion(
       id: id ?? this.id,
@@ -1723,6 +1769,7 @@ class ReaderProfilesCompanion extends UpdateCompanion<ReaderProfile> {
           notificationsPrompted ?? this.notificationsPrompted,
       notificationPromptSkippedOn:
           notificationPromptSkippedOn ?? this.notificationPromptSkippedOn,
+      focusMode: focusMode ?? this.focusMode,
     );
   }
 
@@ -1760,6 +1807,9 @@ class ReaderProfilesCompanion extends UpdateCompanion<ReaderProfile> {
         notificationPromptSkippedOn.value,
       );
     }
+    if (focusMode.present) {
+      map['focus_mode'] = Variable<bool>(focusMode.value);
+    }
     return map;
   }
 
@@ -1774,7 +1824,8 @@ class ReaderProfilesCompanion extends UpdateCompanion<ReaderProfile> {
           ..write('routineDays: $routineDays, ')
           ..write('completedAt: $completedAt, ')
           ..write('notificationsPrompted: $notificationsPrompted, ')
-          ..write('notificationPromptSkippedOn: $notificationPromptSkippedOn')
+          ..write('notificationPromptSkippedOn: $notificationPromptSkippedOn, ')
+          ..write('focusMode: $focusMode')
           ..write(')'))
         .toString();
   }
@@ -2602,6 +2653,7 @@ typedef $$ReaderProfilesTableCreateCompanionBuilder =
       required DateTime completedAt,
       Value<bool> notificationsPrompted,
       Value<String?> notificationPromptSkippedOn,
+      Value<bool> focusMode,
     });
 typedef $$ReaderProfilesTableUpdateCompanionBuilder =
     ReaderProfilesCompanion Function({
@@ -2614,6 +2666,7 @@ typedef $$ReaderProfilesTableUpdateCompanionBuilder =
       Value<DateTime> completedAt,
       Value<bool> notificationsPrompted,
       Value<String?> notificationPromptSkippedOn,
+      Value<bool> focusMode,
     });
 
 class $$ReaderProfilesTableFilterComposer
@@ -2667,6 +2720,11 @@ class $$ReaderProfilesTableFilterComposer
 
   ColumnFilters<String> get notificationPromptSkippedOn => $composableBuilder(
     column: $table.notificationPromptSkippedOn,
+    builder: (column) => ColumnFilters(column),
+  );
+
+  ColumnFilters<bool> get focusMode => $composableBuilder(
+    column: $table.focusMode,
     builder: (column) => ColumnFilters(column),
   );
 }
@@ -2724,6 +2782,11 @@ class $$ReaderProfilesTableOrderingComposer
     column: $table.notificationPromptSkippedOn,
     builder: (column) => ColumnOrderings(column),
   );
+
+  ColumnOrderings<bool> get focusMode => $composableBuilder(
+    column: $table.focusMode,
+    builder: (column) => ColumnOrderings(column),
+  );
 }
 
 class $$ReaderProfilesTableAnnotationComposer
@@ -2775,6 +2838,9 @@ class $$ReaderProfilesTableAnnotationComposer
     column: $table.notificationPromptSkippedOn,
     builder: (column) => column,
   );
+
+  GeneratedColumn<bool> get focusMode =>
+      $composableBuilder(column: $table.focusMode, builder: (column) => column);
 }
 
 class $$ReaderProfilesTableTableManager
@@ -2820,6 +2886,7 @@ class $$ReaderProfilesTableTableManager
                 Value<bool> notificationsPrompted = const Value.absent(),
                 Value<String?> notificationPromptSkippedOn =
                     const Value.absent(),
+                Value<bool> focusMode = const Value.absent(),
               }) => ReaderProfilesCompanion(
                 id: id,
                 motivations: motivations,
@@ -2830,6 +2897,7 @@ class $$ReaderProfilesTableTableManager
                 completedAt: completedAt,
                 notificationsPrompted: notificationsPrompted,
                 notificationPromptSkippedOn: notificationPromptSkippedOn,
+                focusMode: focusMode,
               ),
           createCompanionCallback:
               ({
@@ -2843,6 +2911,7 @@ class $$ReaderProfilesTableTableManager
                 Value<bool> notificationsPrompted = const Value.absent(),
                 Value<String?> notificationPromptSkippedOn =
                     const Value.absent(),
+                Value<bool> focusMode = const Value.absent(),
               }) => ReaderProfilesCompanion.insert(
                 id: id,
                 motivations: motivations,
@@ -2853,6 +2922,7 @@ class $$ReaderProfilesTableTableManager
                 completedAt: completedAt,
                 notificationsPrompted: notificationsPrompted,
                 notificationPromptSkippedOn: notificationPromptSkippedOn,
+                focusMode: focusMode,
               ),
           withReferenceMapper: (p0) => p0
               .map(

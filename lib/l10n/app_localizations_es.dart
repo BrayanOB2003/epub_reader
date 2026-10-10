@@ -453,4 +453,63 @@ class AppLocalizationsEs extends AppLocalizations {
 
   @override
   String get notificationChannelDescription => 'Avisos de Liora';
+
+  @override
+  String get focusMode => 'Modo concentración';
+
+  @override
+  String get focusModeAndroidBody =>
+      'Silencia notificaciones y llamadas mientras Liora está abierta. Las alarmas siguen sonando.';
+
+  @override
+  String get focusModeIosBody =>
+      'Al abrir Liora, el iPhone entra en No molestar si preparas Atajos una vez.';
+
+  @override
+  String get focusModeIosOnBody =>
+      'Activo. Para quitarlo del todo, borra la automatización en Atajos.';
+
+  @override
+  String get focusModePermissionNeeded =>
+      'Para silenciar el teléfono, permite a Liora el acceso a No molestar.';
+
+  @override
+  String get focusModeChangeFailed => 'No se pudo cambiar No molestar.';
+
+  @override
+  String get focusModeIosRemains =>
+      'La automatización de Atajos sigue hasta que la borres.';
+
+  @override
+  String get focusGuideTitle => 'No molestar al leer';
+
+  @override
+  String get focusGuideBody =>
+      'iOS no deja que una app encienda No molestar. Atajos sí, si lo dejas preparado una vez.';
+
+  @override
+  String get focusGuideOpenHeading => 'Al abrir Liora';
+
+  @override
+  String get focusGuideOpenSteps =>
+      '1. En Atajos, entra en Automatización y pulsa +.\n2. Elige App, luego Liora, y deja marcada la opción de al abrirla.\n3. Añade Definir concentración, elige No molestar y ponlo en Activado.\n4. Desactiva Preguntar antes de ejecutar.';
+
+  @override
+  String get focusGuideCloseHeading => 'Al cerrar Liora';
+
+  @override
+  String get focusGuideCloseSteps =>
+      'Repite los pasos con la opción de al cerrarla y No molestar en Desactivado.';
+
+  @override
+  String get focusGuideOpenShortcuts => 'Abrir Atajos';
+
+  @override
+  String get focusGuideDone => 'Listo';
+
+  @override
+  String get focusGuideNotNow => 'Ahora no';
+
+  @override
+  String get focusGuideOpenFailed => 'No se pudo abrir Atajos.';
 }

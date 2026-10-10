@@ -907,6 +907,108 @@ abstract class AppLocalizations {
   /// In es, this message translates to:
   /// **'Avisos de Liora'**
   String get notificationChannelDescription;
+
+  /// No description provided for @focusMode.
+  ///
+  /// In es, this message translates to:
+  /// **'Modo concentración'**
+  String get focusMode;
+
+  /// No description provided for @focusModeAndroidBody.
+  ///
+  /// In es, this message translates to:
+  /// **'Silencia notificaciones y llamadas mientras Liora está abierta. Las alarmas siguen sonando.'**
+  String get focusModeAndroidBody;
+
+  /// No description provided for @focusModeIosBody.
+  ///
+  /// In es, this message translates to:
+  /// **'Al abrir Liora, el iPhone entra en No molestar si preparas Atajos una vez.'**
+  String get focusModeIosBody;
+
+  /// No description provided for @focusModeIosOnBody.
+  ///
+  /// In es, this message translates to:
+  /// **'Activo. Para quitarlo del todo, borra la automatización en Atajos.'**
+  String get focusModeIosOnBody;
+
+  /// No description provided for @focusModePermissionNeeded.
+  ///
+  /// In es, this message translates to:
+  /// **'Para silenciar el teléfono, permite a Liora el acceso a No molestar.'**
+  String get focusModePermissionNeeded;
+
+  /// No description provided for @focusModeChangeFailed.
+  ///
+  /// In es, this message translates to:
+  /// **'No se pudo cambiar No molestar.'**
+  String get focusModeChangeFailed;
+
+  /// No description provided for @focusModeIosRemains.
+  ///
+  /// In es, this message translates to:
+  /// **'La automatización de Atajos sigue hasta que la borres.'**
+  String get focusModeIosRemains;
+
+  /// No description provided for @focusGuideTitle.
+  ///
+  /// In es, this message translates to:
+  /// **'No molestar al leer'**
+  String get focusGuideTitle;
+
+  /// No description provided for @focusGuideBody.
+  ///
+  /// In es, this message translates to:
+  /// **'iOS no deja que una app encienda No molestar. Atajos sí, si lo dejas preparado una vez.'**
+  String get focusGuideBody;
+
+  /// No description provided for @focusGuideOpenHeading.
+  ///
+  /// In es, this message translates to:
+  /// **'Al abrir Liora'**
+  String get focusGuideOpenHeading;
+
+  /// No description provided for @focusGuideOpenSteps.
+  ///
+  /// In es, this message translates to:
+  /// **'1. En Atajos, entra en Automatización y pulsa +.\n2. Elige App, luego Liora, y deja marcada la opción de al abrirla.\n3. Añade Definir concentración, elige No molestar y ponlo en Activado.\n4. Desactiva Preguntar antes de ejecutar.'**
+  String get focusGuideOpenSteps;
+
+  /// No description provided for @focusGuideCloseHeading.
+  ///
+  /// In es, this message translates to:
+  /// **'Al cerrar Liora'**
+  String get focusGuideCloseHeading;
+
+  /// No description provided for @focusGuideCloseSteps.
+  ///
+  /// In es, this message translates to:
+  /// **'Repite los pasos con la opción de al cerrarla y No molestar en Desactivado.'**
+  String get focusGuideCloseSteps;
+
+  /// No description provided for @focusGuideOpenShortcuts.
+  ///
+  /// In es, this message translates to:
+  /// **'Abrir Atajos'**
+  String get focusGuideOpenShortcuts;
+
+  /// No description provided for @focusGuideDone.
+  ///
+  /// In es, this message translates to:
+  /// **'Listo'**
+  String get focusGuideDone;
+
+  /// No description provided for @focusGuideNotNow.
+  ///
+  /// In es, this message translates to:
+  /// **'Ahora no'**
+  String get focusGuideNotNow;
+
+  /// No description provided for @focusGuideOpenFailed.
+  ///
+  /// In es, this message translates to:
+  /// **'No se pudo abrir Atajos.'**
+  String get focusGuideOpenFailed;
 }
 
 class _AppLocalizationsDelegate

@@ -451,4 +451,63 @@ class AppLocalizationsEn extends AppLocalizations {
 
   @override
   String get notificationChannelDescription => 'Notices from Liora';
+
+  @override
+  String get focusMode => 'Focus mode';
+
+  @override
+  String get focusModeAndroidBody =>
+      'Silences notifications and calls while Liora is open. Alarms still ring.';
+
+  @override
+  String get focusModeIosBody =>
+      'When you open Liora, your iPhone can turn on Do Not Disturb once you set up Shortcuts.';
+
+  @override
+  String get focusModeIosOnBody =>
+      'On. To remove it completely, delete the automation in Shortcuts.';
+
+  @override
+  String get focusModePermissionNeeded =>
+      'To silence the phone, allow Liora access to Do Not Disturb.';
+
+  @override
+  String get focusModeChangeFailed => 'Do Not Disturb could not be changed.';
+
+  @override
+  String get focusModeIosRemains =>
+      'The Shortcuts automation stays until you delete it.';
+
+  @override
+  String get focusGuideTitle => 'Do Not Disturb while you read';
+
+  @override
+  String get focusGuideBody =>
+      'iOS does not let an app turn on Do Not Disturb. Shortcuts can, once you set it up.';
+
+  @override
+  String get focusGuideOpenHeading => 'When Liora opens';
+
+  @override
+  String get focusGuideOpenSteps =>
+      '1. In Shortcuts, open Automation and tap +.\n2. Choose App, then Liora, and leave Is Opened selected.\n3. Add Set Focus, choose Do Not Disturb, and turn it On.\n4. Turn off Ask Before Running.';
+
+  @override
+  String get focusGuideCloseHeading => 'When Liora closes';
+
+  @override
+  String get focusGuideCloseSteps =>
+      'Repeat the steps with Is Closed, and turn Do Not Disturb Off.';
+
+  @override
+  String get focusGuideOpenShortcuts => 'Open Shortcuts';
+
+  @override
+  String get focusGuideDone => 'Done';
+
+  @override
+  String get focusGuideNotNow => 'Not now';
+
+  @override
+  String get focusGuideOpenFailed => 'Shortcuts could not be opened.';
 }

@@ -117,6 +117,7 @@ void main() {
       expect(saved.routineDays, '1,2,3,4,5,6,7');
       expect(saved.notificationsPrompted, isFalse);
       expect(saved.notificationPromptSkippedOn, isNull);
+      expect(saved.focusMode, isFalse);
 
       await store.rememberNotificationPromptShown('2026-10-09');
       final skipped = await database
@@ -139,10 +140,12 @@ void main() {
       expect(keptSkip.notificationPromptSkippedOn, '2026-10-09');
 
       await store.markNotificationsPrompted();
+      await store.setFocusMode(true);
       final prompted = await database
           .select(database.readerProfiles)
           .getSingle();
       expect(prompted.notificationsPrompted, isTrue);
+      expect(prompted.focusMode, isTrue);
 
       await store.save(
         motivations: answers.motivationsStorage,
@@ -154,6 +157,7 @@ void main() {
       final kept = await database.select(database.readerProfiles).getSingle();
       expect(kept.notificationsPrompted, isTrue);
       expect(kept.notificationPromptSkippedOn, '2026-10-09');
+      expect(kept.focusMode, isTrue);
 
       await store.clear();
       expect(await store.exists(), isFalse);
@@ -174,6 +178,7 @@ void main() {
       expect(updated.routineHour, 21);
       expect(updated.notificationsPrompted, isFalse);
       expect(updated.notificationPromptSkippedOn, isNull);
+      expect(updated.focusMode, isFalse);
     },
   );
 
