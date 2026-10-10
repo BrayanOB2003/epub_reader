@@ -1,5 +1,6 @@
 import 'package:epub_reader/core/database/app_database.dart';
 import 'package:epub_reader/features/habits/reading_calendar.dart';
+import 'package:epub_reader/features/habits/weekly_reading_chart.dart';
 import 'package:epub_reader/l10n/app_localizations.dart';
 import 'package:epub_reader/features/habits/reading_time.dart';
 import 'package:flutter/material.dart';
@@ -156,8 +157,11 @@ void main() {
     expect(month.month, DateTime(2026, 9));
     expect(month.leadingBlanks, DateTime(2026, 9, 1).weekday - 1);
     expect(month.days, hasLength(30));
+    expect(month.days[9].engagedSeconds, 10 * 60);
     expect(month.days[9].mark, ReadingDayMark.met);
+    expect(month.days[10].engagedSeconds, 9 * 60);
     expect(month.days[10].mark, ReadingDayMark.partial);
+    expect(month.days[11].engagedSeconds, 0);
     expect(month.days[11].mark, ReadingDayMark.none);
     expect(formatReadingMonth(month.month), 'Septiembre 2026');
   });
@@ -200,17 +204,31 @@ void main() {
 
       expect(find.text('Septiembre 2026'), findsOneWidget);
       expect(
-        find.bySemanticsLabel('10 de septiembre, meta cumplida'),
+        find.bySemanticsLabel('10 de septiembre, 10 min, meta cumplida'),
         findsOneWidget,
       );
       expect(
-        find.bySemanticsLabel('11 de septiembre, leído sin cumplir la meta'),
+        find.bySemanticsLabel(
+          '11 de septiembre, 9 min, leído sin cumplir la meta',
+        ),
         findsOneWidget,
       );
       expect(
-        find.bySemanticsLabel('12 de septiembre, sin lectura'),
+        find.bySemanticsLabel('12 de septiembre, 0 s, sin lectura'),
         findsOneWidget,
       );
+
+      await tester.tap(
+        find.bySemanticsLabel('10 de septiembre, 10 min, meta cumplida'),
+      );
+      await tester.pump();
+      expect(find.text('10 de septiembre · 10 min'), findsOneWidget);
+
+      await tester.tap(
+        find.bySemanticsLabel('12 de septiembre, 0 s, sin lectura'),
+      );
+      await tester.pump();
+      expect(find.text('12 de septiembre · 0 s'), findsOneWidget);
       expect(
         tester
             .widget<IconButton>(
@@ -227,6 +245,50 @@ void main() {
       await tester.tap(find.byTooltip('Mes siguiente'));
       await tester.pump();
       expect(find.text('Septiembre 2026'), findsOneWidget);
+    } finally {
+      semantics.dispose();
+    }
+  });
+
+  testWidgets('tapping a week bar states that day reading time', (
+    tester,
+  ) async {
+    final semantics = tester.ensureSemantics();
+    try {
+      final now = DateTime(2026, 9, 26, 18);
+      await tester.pumpWidget(
+        MaterialApp(
+          locale: const Locale('es'),
+          localizationsDelegates: AppLocalizations.localizationsDelegates,
+          supportedLocales: AppLocalizations.supportedLocales,
+          home: Scaffold(
+            body: WeeklyReadingChart(
+              days: weeklyReading(
+                now: now,
+                sessions: [
+                  _session(
+                    id: 1,
+                    bookId: 1,
+                    startedAt: DateTime(2026, 9, 21, 8).toUtc(),
+                    endedAt: DateTime(2026, 9, 21, 8, 12).toUtc(),
+                    seconds: 12 * 60,
+                  ),
+                ],
+              ),
+              goalSeconds: 10 * 60,
+              today: now,
+            ),
+          ),
+        ),
+      );
+
+      await tester.tap(find.bySemanticsLabel('Lunes · 12 min'));
+      await tester.pump();
+      expect(find.text('Lunes · 12 min'), findsOneWidget);
+
+      await tester.tap(find.bySemanticsLabel('Martes · 0 s'));
+      await tester.pump();
+      expect(find.text('Martes · 0 s'), findsOneWidget);
     } finally {
       semantics.dispose();
     }

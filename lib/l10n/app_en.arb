@@ -44,6 +44,14 @@
   "noContents": "This book has no table of contents.",
   "copy": "Copy",
   "share": "Share",
+  "copied": "Copied",
+  "saveQuote": "Save quote",
+  "quoteSaved": "Quote saved",
+  "quoteSaveFailed": "The quote could not be saved.",
+  "savedQuotes": "Quotes",
+  "noQuotes": "No quotes yet",
+  "noQuotesBody": "Select a passage while reading and save it.",
+  "quotesLoadFailed": "Quotes could not be loaded.\n{error}",
   "bookGone": "This book is no longer in the library.",
   "chapterFailed": "This chapter could not be opened.",
   "preferencesFailed": "The reading settings could not be applied.",
@@ -67,6 +75,11 @@
   "welcomeTitle": "Build a reading habit",
   "welcomeBody": "A place to read a little every day and keep that habit going.",
   "welcomeAccount": "No account. Your books and progress stay on this device.",
+  "notificationPermissionTitle": "A reminder at your time",
+  "notificationPermissionBody": "When the time you chose arrives, Liora can remind you to read.",
+  "notificationPermissionAllow": "Turn on reminders",
+  "notificationPermissionSkip": "Not now",
+  "notificationPermissionFailed": "The permission request could not be shown.",
   "stepOf": "{step} of {total}",
   "start": "Start",
   "startReading": "I want to start reading",
@@ -118,11 +131,95 @@
   "previousMonth": "Previous month",
   "nextMonth": "Next month",
   "today": "Today",
+  "goalLabel": "Goal",
+  "minutesShort": "{count} min",
+  "@minutesShort": {
+    "placeholders": {
+      "count": {"type": "int"}
+    }
+  },
+  "minutesOfGoal": "{done} / {goal} min",
+  "@minutesOfGoal": {
+    "placeholders": {
+      "done": {"type": "int"},
+      "goal": {"type": "int"}
+    }
+  },
   "yesterday": "Yesterday",
   "goalMet": "goal met",
   "partialReading": "read, goal not met",
   "noReading": "no reading",
-  "calendarDay": "{month} {day}, {state}",
+  "calendarDate": "{month} {day}",
+  "dayReading": "{day} · {duration}",
+  "calendarDay": "{month} {day}, {duration}, {state}",
   "libraryLoadFailed": "The library could not be loaded.\n{error}",
-  "sampleBookTitle": "Sample reading"
+  "sampleBookTitle": "Sample reading",
+  "notificationChannelName": "Notices",
+  "notificationChannelDescription": "Notices from Liora",
+  "notificationRoutineTitle": "Time to read",
+  "notificationRoutineBody": "It's {hour}. Today's goal is {minutes} min.",
+  "@notificationRoutineBody": {
+    "placeholders": {
+      "hour": {"type": "String"},
+      "minutes": {"type": "int"}
+    }
+  },
+  "notificationGoalTitle": "Today's goal",
+  "notificationGoalRemainingBody": "{minutes} min left to close the day.",
+  "@notificationGoalRemainingBody": {
+    "placeholders": {
+      "minutes": {"type": "int"}
+    }
+  },
+  "notificationGoalMetTitle": "Goal met",
+  "notificationGoalMetBody": "You closed the day. {minutes} min.",
+  "@notificationGoalMetBody": {
+    "placeholders": {
+      "minutes": {"type": "int"}
+    }
+  },
+  "notificationResumeChapterBody": "You're still on chapter {chapter} of {title}.",
+  "@notificationResumeChapterBody": {
+    "placeholders": {
+      "chapter": {"type": "int"},
+      "title": {"type": "String"}
+    }
+  },
+  "notificationResumeSectionBody": "You're still in {section} of {title}.",
+  "@notificationResumeSectionBody": {
+    "placeholders": {
+      "section": {"type": "String"},
+      "title": {"type": "String"}
+    }
+  },
+  "notificationResumeBookBody": "You're still with {title}.",
+  "@notificationResumeBookBody": {
+    "placeholders": {
+      "title": {"type": "String"}
+    }
+  },
+  "notificationStreakTitle": "Your streak",
+  "notificationStreakBody": "{days} days in a row. Today counts too.",
+  "@notificationStreakBody": {
+    "placeholders": {
+      "days": {"type": "int"}
+    }
+  },
+  "focusMode": "Focus mode",
+  "focusModeAndroidBody": "Silences notifications and calls while Liora is open. Alarms still ring.",
+  "focusModeIosBody": "When you open Liora, your iPhone can turn on Do Not Disturb once you set up Shortcuts.",
+  "focusModeIosOnBody": "On. To remove it completely, delete the automation in Shortcuts.",
+  "focusModePermissionNeeded": "To silence the phone, allow Liora access to Do Not Disturb.",
+  "focusModeChangeFailed": "Do Not Disturb could not be changed.",
+  "focusModeIosRemains": "The Shortcuts automation stays until you delete it.",
+  "focusGuideTitle": "Do Not Disturb while you read",
+  "focusGuideBody": "iOS does not let an app turn on Do Not Disturb. Shortcuts can, once you set it up.",
+  "focusGuideOpenHeading": "When Liora opens",
+  "focusGuideOpenSteps": "1. In Shortcuts, open Automation and tap +.\n2. Choose App, then Liora, and leave Is Opened selected.\n3. Add Set Focus, choose Do Not Disturb, and turn it On.\n4. Turn off Ask Before Running.",
+  "focusGuideCloseHeading": "When Liora closes",
+  "focusGuideCloseSteps": "Repeat the steps with Is Closed, and turn Do Not Disturb Off.",
+  "focusGuideOpenShortcuts": "Open Shortcuts",
+  "focusGuideDone": "Done",
+  "focusGuideNotNow": "Not now",
+  "focusGuideOpenFailed": "Shortcuts could not be opened."
 }

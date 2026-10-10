@@ -3,6 +3,8 @@ import 'package:epub_reader/app/app.dart';
 import 'package:epub_reader/app/providers.dart';
 import 'package:epub_reader/core/database/app_database.dart';
 import 'package:epub_reader/features/discover/data/catalog.dart';
+import 'package:epub_reader/features/notifications/local_notifications.dart';
+import 'package:epub_reader/features/notifications/notification_prompt.dart';
 import 'package:epub_reader/features/onboarding/onboarding_answers.dart';
 import 'package:epub_reader/features/profile/reader_profile_store.dart';
 import 'package:epub_reader/features/profile/reading_routine.dart';
@@ -35,6 +37,26 @@ void main() {
       isNull,
     );
     expect(onboardingRedirect(completed: true, location: '/library'), isNull);
+    expect(
+      onboardingRedirect(
+        completed: true,
+        location: '/library',
+        notificationPromptDue: true,
+      ),
+      '/notifications',
+    );
+    expect(
+      onboardingRedirect(
+        completed: true,
+        location: '/notifications',
+        notificationPromptDue: true,
+      ),
+      isNull,
+    );
+    expect(
+      onboardingRedirect(completed: true, location: '/notifications'),
+      isNull,
+    );
   });
 
   test(
@@ -93,6 +115,49 @@ void main() {
       expect(saved.routine, 'night');
       expect(saved.routineHour, 21);
       expect(saved.routineDays, '1,2,3,4,5,6,7');
+      expect(saved.notificationsPrompted, isFalse);
+      expect(saved.notificationPromptSkippedOn, isNull);
+      expect(saved.focusMode, isFalse);
+
+      await store.rememberNotificationPromptShown('2026-10-09');
+      final skipped = await database
+          .select(database.readerProfiles)
+          .getSingle();
+      expect(skipped.notificationsPrompted, isFalse);
+      expect(skipped.notificationPromptSkippedOn, '2026-10-09');
+
+      await store.save(
+        motivations: answers.motivationsStorage,
+        dailyGoalMinutes: answers.dailyGoalMinutes!,
+        routine: answers.routine!.id,
+        routineHour: answers.routineHour!,
+        routineDays: answers.weekdaysStorage,
+      );
+      final keptSkip = await database
+          .select(database.readerProfiles)
+          .getSingle();
+      expect(keptSkip.notificationsPrompted, isFalse);
+      expect(keptSkip.notificationPromptSkippedOn, '2026-10-09');
+
+      await store.markNotificationsPrompted();
+      await store.setFocusMode(true);
+      final prompted = await database
+          .select(database.readerProfiles)
+          .getSingle();
+      expect(prompted.notificationsPrompted, isTrue);
+      expect(prompted.focusMode, isTrue);
+
+      await store.save(
+        motivations: answers.motivationsStorage,
+        dailyGoalMinutes: answers.dailyGoalMinutes!,
+        routine: answers.routine!.id,
+        routineHour: answers.routineHour!,
+        routineDays: answers.weekdaysStorage,
+      );
+      final kept = await database.select(database.readerProfiles).getSingle();
+      expect(kept.notificationsPrompted, isTrue);
+      expect(kept.notificationPromptSkippedOn, '2026-10-09');
+      expect(kept.focusMode, isTrue);
 
       await store.clear();
       expect(await store.exists(), isFalse);
@@ -111,6 +176,9 @@ void main() {
       expect(updated.motivations, 'habit,read_more');
       expect(updated.routine, 'night');
       expect(updated.routineHour, 21);
+      expect(updated.notificationsPrompted, isFalse);
+      expect(updated.notificationPromptSkippedOn, isNull);
+      expect(updated.focusMode, isFalse);
     },
   );
 
@@ -134,6 +202,9 @@ void main() {
                 books: [],
               );
             }),
+            localNotificationsProvider.overrideWithValue(
+              const _DeniedNotifications(),
+            ),
           ],
           child: const EpubReaderApp(),
         ),
@@ -188,13 +259,35 @@ void main() {
       await tester.tap(find.text('Quiero empezar a leer'));
       await tester.pumpAndSettle();
 
+      expect(find.text('Te aviso a tu hora'), findsOneWidget);
+      expect(
+        find.text(
+          'Cuando llega el momento que elegiste, Liora puede recordarte que leas.',
+        ),
+        findsOneWidget,
+      );
+      await tester.tap(find.text('Ahora no'));
+      await tester.pumpAndSettle();
+
       expect(find.text('Todavía no hay libros'), findsOneWidget);
       expect(find.text('Importar'), findsOneWidget);
       final saved = await database.select(database.readerProfiles).getSingle();
       expect(saved.routineDays, '1,2,3,4,5,6,7');
+      expect(saved.notificationsPrompted, isFalse);
+      expect(
+        saved.notificationPromptSkippedOn,
+        notificationPromptDay(DateTime.now()),
+      );
 
       await tester.pumpWidget(const SizedBox.shrink());
       await tester.pump(Duration.zero);
     },
   );
+}
+
+class _DeniedNotifications extends SilentLocalNotifications {
+  const _DeniedNotifications();
+
+  @override
+  Future<bool> hasPermission() async => false;
 }

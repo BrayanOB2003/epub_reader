@@ -149,6 +149,32 @@ class AppLocalizationsEn extends AppLocalizations {
   String get share => 'Share';
 
   @override
+  String get copied => 'Copied';
+
+  @override
+  String get saveQuote => 'Save quote';
+
+  @override
+  String get quoteSaved => 'Quote saved';
+
+  @override
+  String get quoteSaveFailed => 'The quote could not be saved.';
+
+  @override
+  String get savedQuotes => 'Quotes';
+
+  @override
+  String get noQuotes => 'No quotes yet';
+
+  @override
+  String get noQuotesBody => 'Select a passage while reading and save it.';
+
+  @override
+  String quotesLoadFailed(String error) {
+    return 'Quotes could not be loaded.\n$error';
+  }
+
+  @override
   String get bookGone => 'This book is no longer in the library.';
 
   @override
@@ -220,6 +246,23 @@ class AppLocalizationsEn extends AppLocalizations {
   @override
   String get welcomeAccount =>
       'No account. Your books and progress stay on this device.';
+
+  @override
+  String get notificationPermissionTitle => 'A reminder at your time';
+
+  @override
+  String get notificationPermissionBody =>
+      'When the time you chose arrives, Liora can remind you to read.';
+
+  @override
+  String get notificationPermissionAllow => 'Turn on reminders';
+
+  @override
+  String get notificationPermissionSkip => 'Not now';
+
+  @override
+  String get notificationPermissionFailed =>
+      'The permission request could not be shown.';
 
   @override
   String stepOf(int step, int total) {
@@ -392,6 +435,19 @@ class AppLocalizationsEn extends AppLocalizations {
   String get today => 'Today';
 
   @override
+  String get goalLabel => 'Goal';
+
+  @override
+  String minutesShort(int count) {
+    return '$count min';
+  }
+
+  @override
+  String minutesOfGoal(int done, int goal) {
+    return '$done / $goal min';
+  }
+
+  @override
   String get yesterday => 'Yesterday';
 
   @override
@@ -404,8 +460,18 @@ class AppLocalizationsEn extends AppLocalizations {
   String get noReading => 'no reading';
 
   @override
-  String calendarDay(int day, String month, String state) {
-    return '$month $day, $state';
+  String calendarDate(int day, String month) {
+    return '$month $day';
+  }
+
+  @override
+  String dayReading(String day, String duration) {
+    return '$day · $duration';
+  }
+
+  @override
+  String calendarDay(int day, String month, String duration, String state) {
+    return '$month $day, $duration, $state';
   }
 
   @override
@@ -415,4 +481,116 @@ class AppLocalizationsEn extends AppLocalizations {
 
   @override
   String get sampleBookTitle => 'Sample reading';
+
+  @override
+  String get notificationChannelName => 'Notices';
+
+  @override
+  String get notificationChannelDescription => 'Notices from Liora';
+
+  @override
+  String get notificationRoutineTitle => 'Time to read';
+
+  @override
+  String notificationRoutineBody(String hour, int minutes) {
+    return 'It\'s $hour. Today\'s goal is $minutes min.';
+  }
+
+  @override
+  String get notificationGoalTitle => 'Today\'s goal';
+
+  @override
+  String notificationGoalRemainingBody(int minutes) {
+    return '$minutes min left to close the day.';
+  }
+
+  @override
+  String get notificationGoalMetTitle => 'Goal met';
+
+  @override
+  String notificationGoalMetBody(int minutes) {
+    return 'You closed the day. $minutes min.';
+  }
+
+  @override
+  String notificationResumeChapterBody(int chapter, String title) {
+    return 'You\'re still on chapter $chapter of $title.';
+  }
+
+  @override
+  String notificationResumeSectionBody(String section, String title) {
+    return 'You\'re still in $section of $title.';
+  }
+
+  @override
+  String notificationResumeBookBody(String title) {
+    return 'You\'re still with $title.';
+  }
+
+  @override
+  String get notificationStreakTitle => 'Your streak';
+
+  @override
+  String notificationStreakBody(int days) {
+    return '$days days in a row. Today counts too.';
+  }
+
+  @override
+  String get focusMode => 'Focus mode';
+
+  @override
+  String get focusModeAndroidBody =>
+      'Silences notifications and calls while Liora is open. Alarms still ring.';
+
+  @override
+  String get focusModeIosBody =>
+      'When you open Liora, your iPhone can turn on Do Not Disturb once you set up Shortcuts.';
+
+  @override
+  String get focusModeIosOnBody =>
+      'On. To remove it completely, delete the automation in Shortcuts.';
+
+  @override
+  String get focusModePermissionNeeded =>
+      'To silence the phone, allow Liora access to Do Not Disturb.';
+
+  @override
+  String get focusModeChangeFailed => 'Do Not Disturb could not be changed.';
+
+  @override
+  String get focusModeIosRemains =>
+      'The Shortcuts automation stays until you delete it.';
+
+  @override
+  String get focusGuideTitle => 'Do Not Disturb while you read';
+
+  @override
+  String get focusGuideBody =>
+      'iOS does not let an app turn on Do Not Disturb. Shortcuts can, once you set it up.';
+
+  @override
+  String get focusGuideOpenHeading => 'When Liora opens';
+
+  @override
+  String get focusGuideOpenSteps =>
+      '1. In Shortcuts, open Automation and tap +.\n2. Choose App, then Liora, and leave Is Opened selected.\n3. Add Set Focus, choose Do Not Disturb, and turn it On.\n4. Turn off Ask Before Running.';
+
+  @override
+  String get focusGuideCloseHeading => 'When Liora closes';
+
+  @override
+  String get focusGuideCloseSteps =>
+      'Repeat the steps with Is Closed, and turn Do Not Disturb Off.';
+
+  @override
+  String get focusGuideOpenShortcuts => 'Open Shortcuts';
+
+  @override
+  String get focusGuideDone => 'Done';
+
+  @override
+  String get focusGuideNotNow => 'Not now';
+
+  @override
+  String get focusGuideOpenFailed => 'Shortcuts could not be opened.';
 }

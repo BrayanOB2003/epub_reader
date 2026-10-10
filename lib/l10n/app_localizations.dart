@@ -362,6 +362,54 @@ abstract class AppLocalizations {
   /// **'Compartir'**
   String get share;
 
+  /// No description provided for @copied.
+  ///
+  /// In es, this message translates to:
+  /// **'Copiado'**
+  String get copied;
+
+  /// No description provided for @saveQuote.
+  ///
+  /// In es, this message translates to:
+  /// **'Guardar cita'**
+  String get saveQuote;
+
+  /// No description provided for @quoteSaved.
+  ///
+  /// In es, this message translates to:
+  /// **'Cita guardada'**
+  String get quoteSaved;
+
+  /// No description provided for @quoteSaveFailed.
+  ///
+  /// In es, this message translates to:
+  /// **'No se pudo guardar la cita.'**
+  String get quoteSaveFailed;
+
+  /// No description provided for @savedQuotes.
+  ///
+  /// In es, this message translates to:
+  /// **'Citas'**
+  String get savedQuotes;
+
+  /// No description provided for @noQuotes.
+  ///
+  /// In es, this message translates to:
+  /// **'Todavía no hay citas'**
+  String get noQuotes;
+
+  /// No description provided for @noQuotesBody.
+  ///
+  /// In es, this message translates to:
+  /// **'Selecciona un pasaje en la lectura y guárdalo.'**
+  String get noQuotesBody;
+
+  /// No description provided for @quotesLoadFailed.
+  ///
+  /// In es, this message translates to:
+  /// **'No se pudieron cargar las citas.\n{error}'**
+  String quotesLoadFailed(String error);
+
   /// No description provided for @bookGone.
   ///
   /// In es, this message translates to:
@@ -499,6 +547,36 @@ abstract class AppLocalizations {
   /// In es, this message translates to:
   /// **'Sin cuenta. Tus libros y tu progreso se guardan en este dispositivo.'**
   String get welcomeAccount;
+
+  /// No description provided for @notificationPermissionTitle.
+  ///
+  /// In es, this message translates to:
+  /// **'Te aviso a tu hora'**
+  String get notificationPermissionTitle;
+
+  /// No description provided for @notificationPermissionBody.
+  ///
+  /// In es, this message translates to:
+  /// **'Cuando llega el momento que elegiste, Liora puede recordarte que leas.'**
+  String get notificationPermissionBody;
+
+  /// No description provided for @notificationPermissionAllow.
+  ///
+  /// In es, this message translates to:
+  /// **'Activar avisos'**
+  String get notificationPermissionAllow;
+
+  /// No description provided for @notificationPermissionSkip.
+  ///
+  /// In es, this message translates to:
+  /// **'Ahora no'**
+  String get notificationPermissionSkip;
+
+  /// No description provided for @notificationPermissionFailed.
+  ///
+  /// In es, this message translates to:
+  /// **'No se pudo pedir el permiso.'**
+  String get notificationPermissionFailed;
 
   /// No description provided for @stepOf.
   ///
@@ -806,6 +884,24 @@ abstract class AppLocalizations {
   /// **'Hoy'**
   String get today;
 
+  /// No description provided for @goalLabel.
+  ///
+  /// In es, this message translates to:
+  /// **'Meta'**
+  String get goalLabel;
+
+  /// No description provided for @minutesShort.
+  ///
+  /// In es, this message translates to:
+  /// **'{count} min'**
+  String minutesShort(int count);
+
+  /// No description provided for @minutesOfGoal.
+  ///
+  /// In es, this message translates to:
+  /// **'{done} / {goal} min'**
+  String minutesOfGoal(int done, int goal);
+
   /// No description provided for @yesterday.
   ///
   /// In es, this message translates to:
@@ -830,11 +926,23 @@ abstract class AppLocalizations {
   /// **'sin lectura'**
   String get noReading;
 
+  /// No description provided for @calendarDate.
+  ///
+  /// In es, this message translates to:
+  /// **'{day} de {month}'**
+  String calendarDate(int day, String month);
+
+  /// No description provided for @dayReading.
+  ///
+  /// In es, this message translates to:
+  /// **'{day} · {duration}'**
+  String dayReading(String day, String duration);
+
   /// No description provided for @calendarDay.
   ///
   /// In es, this message translates to:
-  /// **'{day} de {month}, {state}'**
-  String calendarDay(int day, String month, String state);
+  /// **'{day} de {month}, {duration}, {state}'**
+  String calendarDay(int day, String month, String duration, String state);
 
   /// No description provided for @libraryLoadFailed.
   ///
@@ -847,6 +955,186 @@ abstract class AppLocalizations {
   /// In es, this message translates to:
   /// **'Lectura de ejemplo'**
   String get sampleBookTitle;
+
+  /// No description provided for @notificationChannelName.
+  ///
+  /// In es, this message translates to:
+  /// **'Avisos'**
+  String get notificationChannelName;
+
+  /// No description provided for @notificationChannelDescription.
+  ///
+  /// In es, this message translates to:
+  /// **'Avisos de Liora'**
+  String get notificationChannelDescription;
+
+  /// No description provided for @notificationRoutineTitle.
+  ///
+  /// In es, this message translates to:
+  /// **'Hora de leer'**
+  String get notificationRoutineTitle;
+
+  /// No description provided for @notificationRoutineBody.
+  ///
+  /// In es, this message translates to:
+  /// **'Son las {hour}. Hoy tu meta es {minutes} min.'**
+  String notificationRoutineBody(String hour, int minutes);
+
+  /// No description provided for @notificationGoalTitle.
+  ///
+  /// In es, this message translates to:
+  /// **'La meta de hoy'**
+  String get notificationGoalTitle;
+
+  /// No description provided for @notificationGoalRemainingBody.
+  ///
+  /// In es, this message translates to:
+  /// **'Te faltan {minutes} min para cerrar el día.'**
+  String notificationGoalRemainingBody(int minutes);
+
+  /// No description provided for @notificationGoalMetTitle.
+  ///
+  /// In es, this message translates to:
+  /// **'Meta cumplida'**
+  String get notificationGoalMetTitle;
+
+  /// No description provided for @notificationGoalMetBody.
+  ///
+  /// In es, this message translates to:
+  /// **'Cerraste el día. {minutes} min.'**
+  String notificationGoalMetBody(int minutes);
+
+  /// No description provided for @notificationResumeChapterBody.
+  ///
+  /// In es, this message translates to:
+  /// **'Sigues en el capítulo {chapter} de {title}.'**
+  String notificationResumeChapterBody(int chapter, String title);
+
+  /// No description provided for @notificationResumeSectionBody.
+  ///
+  /// In es, this message translates to:
+  /// **'Sigues en {section} de {title}.'**
+  String notificationResumeSectionBody(String section, String title);
+
+  /// No description provided for @notificationResumeBookBody.
+  ///
+  /// In es, this message translates to:
+  /// **'Sigues con {title}.'**
+  String notificationResumeBookBody(String title);
+
+  /// No description provided for @notificationStreakTitle.
+  ///
+  /// In es, this message translates to:
+  /// **'Tu racha'**
+  String get notificationStreakTitle;
+
+  /// No description provided for @notificationStreakBody.
+  ///
+  /// In es, this message translates to:
+  /// **'Llevas {days} días. Hoy también cuenta.'**
+  String notificationStreakBody(int days);
+
+  /// No description provided for @focusMode.
+  ///
+  /// In es, this message translates to:
+  /// **'Modo concentración'**
+  String get focusMode;
+
+  /// No description provided for @focusModeAndroidBody.
+  ///
+  /// In es, this message translates to:
+  /// **'Silencia notificaciones y llamadas mientras Liora está abierta. Las alarmas siguen sonando.'**
+  String get focusModeAndroidBody;
+
+  /// No description provided for @focusModeIosBody.
+  ///
+  /// In es, this message translates to:
+  /// **'Al abrir Liora, el iPhone entra en No molestar si preparas Atajos una vez.'**
+  String get focusModeIosBody;
+
+  /// No description provided for @focusModeIosOnBody.
+  ///
+  /// In es, this message translates to:
+  /// **'Activo. Para quitarlo del todo, borra la automatización en Atajos.'**
+  String get focusModeIosOnBody;
+
+  /// No description provided for @focusModePermissionNeeded.
+  ///
+  /// In es, this message translates to:
+  /// **'Para silenciar el teléfono, permite a Liora el acceso a No molestar.'**
+  String get focusModePermissionNeeded;
+
+  /// No description provided for @focusModeChangeFailed.
+  ///
+  /// In es, this message translates to:
+  /// **'No se pudo cambiar No molestar.'**
+  String get focusModeChangeFailed;
+
+  /// No description provided for @focusModeIosRemains.
+  ///
+  /// In es, this message translates to:
+  /// **'La automatización de Atajos sigue hasta que la borres.'**
+  String get focusModeIosRemains;
+
+  /// No description provided for @focusGuideTitle.
+  ///
+  /// In es, this message translates to:
+  /// **'No molestar al leer'**
+  String get focusGuideTitle;
+
+  /// No description provided for @focusGuideBody.
+  ///
+  /// In es, this message translates to:
+  /// **'iOS no deja que una app encienda No molestar. Atajos sí, si lo dejas preparado una vez.'**
+  String get focusGuideBody;
+
+  /// No description provided for @focusGuideOpenHeading.
+  ///
+  /// In es, this message translates to:
+  /// **'Al abrir Liora'**
+  String get focusGuideOpenHeading;
+
+  /// No description provided for @focusGuideOpenSteps.
+  ///
+  /// In es, this message translates to:
+  /// **'1. En Atajos, entra en Automatización y pulsa +.\n2. Elige App, luego Liora, y deja marcada la opción de al abrirla.\n3. Añade Definir concentración, elige No molestar y ponlo en Activado.\n4. Desactiva Preguntar antes de ejecutar.'**
+  String get focusGuideOpenSteps;
+
+  /// No description provided for @focusGuideCloseHeading.
+  ///
+  /// In es, this message translates to:
+  /// **'Al cerrar Liora'**
+  String get focusGuideCloseHeading;
+
+  /// No description provided for @focusGuideCloseSteps.
+  ///
+  /// In es, this message translates to:
+  /// **'Repite los pasos con la opción de al cerrarla y No molestar en Desactivado.'**
+  String get focusGuideCloseSteps;
+
+  /// No description provided for @focusGuideOpenShortcuts.
+  ///
+  /// In es, this message translates to:
+  /// **'Abrir Atajos'**
+  String get focusGuideOpenShortcuts;
+
+  /// No description provided for @focusGuideDone.
+  ///
+  /// In es, this message translates to:
+  /// **'Listo'**
+  String get focusGuideDone;
+
+  /// No description provided for @focusGuideNotNow.
+  ///
+  /// In es, this message translates to:
+  /// **'Ahora no'**
+  String get focusGuideNotNow;
+
+  /// No description provided for @focusGuideOpenFailed.
+  ///
+  /// In es, this message translates to:
+  /// **'No se pudo abrir Atajos.'**
+  String get focusGuideOpenFailed;
 }
 
 class _AppLocalizationsDelegate

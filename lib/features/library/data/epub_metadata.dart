@@ -162,19 +162,22 @@ bool _isImage(Uint8List bytes) {
   if (bytes.length >= 3 &&
       bytes[0] == 0xFF &&
       bytes[1] == 0xD8 &&
-      bytes[2] == 0xFF)
+      bytes[2] == 0xFF) {
     return true;
+  }
   if (bytes.length >= 8 &&
       bytes[0] == 0x89 &&
       bytes[1] == 0x50 &&
       bytes[2] == 0x4E &&
-      bytes[3] == 0x47)
+      bytes[3] == 0x47) {
     return true;
+  }
   if (bytes.length >= 6 &&
       bytes[0] == 0x47 &&
       bytes[1] == 0x49 &&
-      bytes[2] == 0x46)
+      bytes[2] == 0x46) {
     return true;
+  }
   return bytes.length >= 12 &&
       String.fromCharCodes(bytes.sublist(0, 4)) == 'RIFF' &&
       String.fromCharCodes(bytes.sublist(8, 12)) == 'WEBP';

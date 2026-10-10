@@ -10,23 +10,6 @@ bool readerClaimsTap({required bool textSelected}) => !textSelected;
 
 const shortTapDeadline = Duration(milliseconds: 200);
 
-/// A page turn is a flick: the finger moves and lifts in one motion.
-const pageTurnSwipeDeadline = Duration(milliseconds: 400);
-const pageTurnMinDistance = 56.0;
-
-/// `true` turns forward. A slow release, a short move, or a vertical drag does not.
-bool? pageTurnSwipe({
-  required double dx,
-  required double dy,
-  required Duration elapsed,
-  required bool rtl,
-}) {
-  if (elapsed > pageTurnSwipeDeadline) return null;
-  if (dx.abs() < pageTurnMinDistance || dx.abs() <= dy.abs()) return null;
-  final forward = rtl ? dx > 0 : dx < 0;
-  return forward;
-}
-
 /// Index of the spine resource a side tap opens while scrolling.
 ///
 /// Scroll mode lays out one reading-order resource at a time. Fragments are
@@ -65,7 +48,7 @@ class ReaderGestureLayer extends StatelessWidget {
     required this.scroll,
     required this.textSelected,
     required this.onZone,
-    required this.onSwipe,
+    required this.onPageDrag,
     required this.onSelectionTap,
     super.key,
   });
@@ -74,38 +57,35 @@ class ReaderGestureLayer extends StatelessWidget {
   final bool scroll;
   final bool textSelected;
   final ValueChanged<ReaderZone> onZone;
-  final ValueChanged<bool> onSwipe;
+
+  /// A horizontal drag in page mode. The layer does not claim it: Readium
+  /// moves the page with the finger.
+  final VoidCallback onPageDrag;
   final VoidCallback onSelectionTap;
 
   @override
   Widget build(BuildContext context) {
-    final gestures = <Type, GestureRecognizerFactory>{
-      _ShortTapRecognizer:
-          GestureRecognizerFactoryWithHandlers<_ShortTapRecognizer>(
-            () => _ShortTapRecognizer(),
-            (recognizer) {
-              recognizer.shouldClaim = (position) => _claims(context, position);
-              recognizer.onShortTap = (position) =>
-                  _dispatch(context, position);
-            },
-          ),
-    };
-    if (!scroll && !textSelected) {
-      gestures[_PageTurnSwipeRecognizer] =
-          GestureRecognizerFactoryWithHandlers<_PageTurnSwipeRecognizer>(
-            () => _PageTurnSwipeRecognizer(),
-            (recognizer) {
-              recognizer.rtl = rtl;
-              recognizer.onTurn = onSwipe;
-            },
-          );
-    }
     return RawGestureDetector(
       behavior: HitTestBehavior.translucent,
-      gestures: gestures,
-      child: _SelectionTapObserver(
-        enabled: textSelected,
-        onShortTap: onSelectionTap,
+      gestures: <Type, GestureRecognizerFactory>{
+        _ShortTapRecognizer:
+            GestureRecognizerFactoryWithHandlers<_ShortTapRecognizer>(
+              () => _ShortTapRecognizer(),
+              (recognizer) {
+                recognizer.shouldClaim = (position) =>
+                    _claims(context, position);
+                recognizer.onShortTap = (position) =>
+                    _dispatch(context, position);
+              },
+            ),
+      },
+      child: _PageDragObserver(
+        enabled: !scroll && !textSelected,
+        onDrag: onPageDrag,
+        child: _SelectionTapObserver(
+          enabled: textSelected,
+          onShortTap: onSelectionTap,
+        ),
       ),
     );
   }
@@ -125,8 +105,13 @@ class ReaderGestureLayer extends StatelessWidget {
   }
 }
 
+/// A press that lifts inside [shortTapDeadline] without leaving the touch slop.
+///
+/// Moving past the slop rejects the press, so the native navigator receives
+/// the drag and the page follows the finger.
 class _ShortTapRecognizer extends PrimaryPointerGestureRecognizer {
-  _ShortTapRecognizer() : super(deadline: shortTapDeadline);
+  _ShortTapRecognizer()
+    : super(deadline: shortTapDeadline, preAcceptSlopTolerance: kTouchSlop);
 
   bool Function(Offset globalPosition)? shouldClaim;
   void Function(Offset globalPosition)? onShortTap;
@@ -162,68 +147,54 @@ class _ShortTapRecognizer extends PrimaryPointerGestureRecognizer {
   String get debugDescription => 'short tap';
 }
 
-/// Claims a horizontal flick in book mode so Readium does not turn the page,
-/// then turns only if the finger lifts before [pageTurnSwipeDeadline].
-class _PageTurnSwipeRecognizer extends PrimaryPointerGestureRecognizer {
-  _PageTurnSwipeRecognizer()
-    : super(
-        deadline: shortTapDeadline,
-        preAcceptSlopTolerance: null,
-        postAcceptSlopTolerance: null,
-      );
+/// Sees a horizontal drag without claiming it.
+class _PageDragObserver extends StatefulWidget {
+  const _PageDragObserver({
+    required this.enabled,
+    required this.onDrag,
+    required this.child,
+  });
 
-  bool rtl = false;
-  ValueChanged<bool>? onTurn;
+  final bool enabled;
+  final VoidCallback onDrag;
+  final Widget child;
+
+  @override
+  State<_PageDragObserver> createState() => _PageDragObserverState();
+}
+
+class _PageDragObserverState extends State<_PageDragObserver> {
   Offset? _origin;
-  Duration? _started;
-  var _claimed = false;
+  var _reported = false;
 
   @override
-  void handlePrimaryPointer(PointerEvent event) {
-    if (event is PointerDownEvent) {
-      _origin = event.position;
-      _started = event.timeStamp;
-      _claimed = false;
-      return;
-    }
-    final origin = _origin;
-    final started = _started;
-    if (origin == null || started == null) return;
-    final dx = event.position.dx - origin.dx;
-    final dy = event.position.dy - origin.dy;
-    if (event is PointerMoveEvent && !_claimed) {
-      if (dy.abs() > kTouchSlop && dy.abs() > dx.abs()) {
-        resolve(GestureDisposition.rejected);
-        return;
-      }
-      if (dx.abs() > kTouchSlop && dx.abs() > dy.abs()) {
-        _claimed = true;
-        resolve(GestureDisposition.accepted);
-      }
-      return;
-    }
-    if (event is! PointerUpEvent || !_claimed) {
-      if (event is PointerUpEvent) resolve(GestureDisposition.rejected);
-      return;
-    }
-    final forward = pageTurnSwipe(
-      dx: dx,
-      dy: dy,
-      elapsed: event.timeStamp - started,
-      rtl: rtl,
+  Widget build(BuildContext context) {
+    return Listener(
+      behavior: HitTestBehavior.translucent,
+      onPointerDown: (event) {
+        _origin = event.position;
+        _reported = false;
+      },
+      onPointerMove: (event) {
+        final origin = _origin;
+        if (!widget.enabled || _reported || origin == null) return;
+        final delta = event.position - origin;
+        if (delta.dx.abs() <= kTouchSlop || delta.dx.abs() <= delta.dy.abs()) {
+          return;
+        }
+        _reported = true;
+        widget.onDrag();
+      },
+      onPointerUp: (_) => _clear(),
+      onPointerCancel: (_) => _clear(),
+      child: widget.child,
     );
-    if (forward != null && onTurn != null) {
-      invokeCallback<void>('onTurn', () => onTurn!(forward));
-    }
   }
 
-  @override
-  void didExceedDeadlineWithEvent(PointerDownEvent event) {
-    if (!_claimed) resolve(GestureDisposition.rejected);
+  void _clear() {
+    _origin = null;
+    _reported = false;
   }
-
-  @override
-  String get debugDescription => 'page turn swipe';
 }
 
 /// Sees the tap that was given to Readium and clears the selection flag only

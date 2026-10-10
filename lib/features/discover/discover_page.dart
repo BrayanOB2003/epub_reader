@@ -1,9 +1,14 @@
 import 'dart:typed_data';
 
 import 'package:epub_reader/app/providers.dart';
+import 'package:epub_reader/features/analytics/analytics_events.dart';
+import 'package:epub_reader/features/analytics/app_analytics.dart';
+import 'package:epub_reader/features/library/data/epub_importer.dart';
+import 'package:epub_reader/features/library/data/epub_metadata.dart';
 import 'package:epub_reader/app/schedule_theme.dart';
 import 'package:epub_reader/app/schedule_widgets.dart';
 import 'package:epub_reader/core/database/app_database.dart';
+import 'package:epub_reader/features/discover/catalog_cover.dart';
 import 'package:epub_reader/features/discover/data/catalog.dart';
 import 'package:epub_reader/l10n/app_localizations.dart';
 import 'package:flutter/material.dart';
@@ -31,12 +36,13 @@ class _DiscoverPageState extends ConsumerState<DiscoverPage> {
           .findByBookUid(identifier);
       if (!mounted) return;
       if (saved != null) {
-        context.push('/read/${saved.id}');
+        context.push(readingRoute(saved.id, readingSourceCatalog));
         return;
       }
     }
 
     setState(() => _downloadingId = book.id);
+    final analytics = ref.read(appAnalyticsProvider);
     try {
       var catalog = await ref.read(catalogProvider.future);
       if (catalog.urlsExpired) {
@@ -49,12 +55,28 @@ class _DiscoverPageState extends ConsumerState<DiscoverPage> {
       final imported = await ref
           .read(epubImporterProvider)
           .importBytes(bytes, fallbackTitle: _shownTitle(source.title, l10n));
+      await analytics.logBookAdded(
+        source: bookSourceCatalog,
+        result: imported.outcome == ImportOutcome.alreadyInLibrary
+            ? bookResultAlreadyInLibrary
+            : bookResultImported,
+        catalogBookId: book.id,
+      );
       if (!mounted) return;
-      context.push('/read/${imported.bookId}');
+      context.push(readingRoute(imported.bookId, readingSourceCatalog));
     } on CatalogException catch (error) {
       if (!mounted) return;
       _showMessage(_catalogMessage(l10n, error));
-    } catch (_) {
+    } on EpubFormatException {
+      await analytics.logBookAdded(
+        source: bookSourceCatalog,
+        result: bookResultInvalid,
+        catalogBookId: book.id,
+      );
+      if (!mounted) return;
+      _showMessage(l10n.addFailed);
+    } catch (_, stack) {
+      await analytics.recordUnexpected('catalog_add_failed', stack);
       if (!mounted) return;
       _showMessage(l10n.addFailed);
     } finally {
@@ -167,7 +189,7 @@ class _DiscoverPageState extends ConsumerState<DiscoverPage> {
               subtitle: book.authors,
               caption: catalogGenreLabel(book.genres),
               cover: stored,
-              coverUrl: stored == null ? book.coverUrl : null,
+              artwork: stored == null ? _catalogCover(book, l10n) : null,
               trailing: downloading ? '…' : l10n.read,
               onTap: downloading ? null : () => _open(book),
             );
@@ -197,7 +219,9 @@ class _DiscoverPageState extends ConsumerState<DiscoverPage> {
               subtitle: book.authors,
               caption: catalogGenreLabel(book.genres),
               cover: stored,
-              coverUrl: stored == null ? book.coverUrl : null,
+              artwork: stored == null
+                  ? _catalogCover(book, l10n, width: 72, height: 108)
+                  : null,
               coverWidth: 72,
               coverHeight: 108,
               trailing: downloading ? '…' : l10n.add,
@@ -421,6 +445,21 @@ String _catalogMessage(AppLocalizations l10n, CatalogException error) {
     CatalogFailure.download => l10n.downloadFailed(error.statusCode ?? 0),
     CatalogFailure.missingKey => l10n.missingApiKey,
   };
+}
+
+CatalogCover _catalogCover(
+  CatalogBook book,
+  AppLocalizations l10n, {
+  double width = 36,
+  double height = 52,
+}) {
+  return CatalogCover(
+    bookId: book.id,
+    url: book.coverUrl,
+    width: width,
+    height: height,
+    title: _shownTitle(book.title, l10n),
+  );
 }
 
 Uint8List? _storedCover(List<Book> library, String? identifier) {

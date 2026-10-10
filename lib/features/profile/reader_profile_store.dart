@@ -1,12 +1,16 @@
 import 'package:drift/drift.dart';
 import 'package:epub_reader/app/providers.dart';
 import 'package:epub_reader/core/database/app_database.dart';
+import 'package:epub_reader/features/analytics/app_analytics.dart';
 import 'package:epub_reader/features/profile/reading_goal.dart';
 import 'package:epub_reader/features/profile/reading_routine.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 
 final readerProfileStoreProvider = Provider<ReaderProfileStore>((ref) {
-  return ReaderProfileStore(ref.watch(databaseProvider));
+  return ReaderProfileStore(
+    ref.watch(databaseProvider),
+    analytics: ref.watch(appAnalyticsProvider),
+  );
 });
 
 final readerProfileProvider = StreamProvider<ReaderProfile?>((ref) {
@@ -14,9 +18,13 @@ final readerProfileProvider = StreamProvider<ReaderProfile?>((ref) {
 });
 
 class ReaderProfileStore {
-  ReaderProfileStore(this._database);
+  ReaderProfileStore(
+    this._database, {
+    this.analytics = const NoopAppAnalytics(),
+  });
 
   final AppDatabase _database;
+  final AppAnalytics analytics;
 
   Stream<ReaderProfile?> watch() {
     final query = _database.select(_database.readerProfiles);
@@ -26,6 +34,11 @@ class ReaderProfileStore {
   Future<bool> exists() async {
     final existing = await _database.select(_database.readerProfiles).get();
     return existing.isNotEmpty;
+  }
+
+  Future<ReaderProfile?> current() async {
+    final existing = await _database.select(_database.readerProfiles).get();
+    return existing.isEmpty ? null : existing.first;
   }
 
   Future<void> save({
@@ -57,6 +70,14 @@ class ReaderProfileStore {
         'La hora no corresponde a ese momento del día.',
       );
     }
+    final existing = await _database.select(_database.readerProfiles).get();
+    final prompted = existing.isEmpty
+        ? false
+        : existing.first.notificationsPrompted;
+    final skippedOn = existing.isEmpty
+        ? null
+        : existing.first.notificationPromptSkippedOn;
+    final focusMode = existing.isEmpty ? false : existing.first.focusMode;
     await _database.transaction(() async {
       await _database.delete(_database.readerProfiles).go();
       await _database
@@ -69,9 +90,35 @@ class ReaderProfileStore {
               routineHour: Value(routineHour),
               routineDays: Value(routineDays),
               completedAt: DateTime.now().toUtc(),
+              notificationsPrompted: Value(prompted),
+              notificationPromptSkippedOn: Value(skippedOn),
+              focusMode: Value(focusMode),
             ),
           );
     });
+  }
+
+  Future<void> markNotificationsPrompted() {
+    return _database
+        .update(_database.readerProfiles)
+        .write(
+          const ReaderProfilesCompanion(notificationsPrompted: Value(true)),
+        );
+  }
+
+  Future<void> rememberNotificationPromptShown(String today) {
+    return _database
+        .update(_database.readerProfiles)
+        .write(
+          ReaderProfilesCompanion(notificationPromptSkippedOn: Value(today)),
+        );
+  }
+
+  Future<void> setFocusMode(bool enabled) async {
+    await _database
+        .update(_database.readerProfiles)
+        .write(ReaderProfilesCompanion(focusMode: Value(enabled)));
+    await analytics.logFocusModeSet(enabled: enabled);
   }
 
   Future<void> clear() {

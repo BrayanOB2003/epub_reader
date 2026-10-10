@@ -51,6 +51,29 @@ class ReaderProfiles extends Table {
   TextColumn get routineDays => text().nullable()();
 
   DateTimeColumn get completedAt => dateTime()();
+
+  /// True after the reader turns notifications on, or for a profile saved
+  /// before this prompt existed. A skip leaves this false.
+  BoolColumn get notificationsPrompted =>
+      boolean().withDefault(const Constant(true))();
+
+  /// Local calendar day (yyyy-MM-dd) of the last "not now".
+  TextColumn get notificationPromptSkippedOn => text().nullable()();
+
+  /// Reader asked Liora to silence the phone while the app is open.
+  BoolColumn get focusMode => boolean().withDefault(const Constant(false))();
+}
+
+class SavedQuotes extends Table {
+  IntColumn get id => integer().autoIncrement()();
+
+  IntColumn get bookId => integer().references(Books, #id)();
+
+  TextColumn get passage => text()();
+
+  TextColumn get locatorJson => text()();
+
+  DateTimeColumn get savedAt => dateTime()();
 }
 
 class ReadingSessions extends Table {
@@ -65,12 +88,12 @@ class ReadingSessions extends Table {
   IntColumn get engagedSeconds => integer()();
 }
 
-@DriftDatabase(tables: [Books, ReadingSessions, ReaderProfiles])
+@DriftDatabase(tables: [Books, ReadingSessions, ReaderProfiles, SavedQuotes])
 class AppDatabase extends _$AppDatabase {
   AppDatabase(super.e);
 
   @override
-  int get schemaVersion => 7;
+  int get schemaVersion => 11;
 
   @override
   MigrationStrategy get migration {
@@ -97,6 +120,24 @@ class AppDatabase extends _$AppDatabase {
         }
         if (from < 7) {
           await migrator.addColumn(readerProfiles, readerProfiles.routineDays);
+        }
+        if (from < 8) {
+          await migrator.addColumn(
+            readerProfiles,
+            readerProfiles.notificationsPrompted,
+          );
+        }
+        if (from < 9) {
+          await migrator.addColumn(
+            readerProfiles,
+            readerProfiles.notificationPromptSkippedOn,
+          );
+        }
+        if (from < 10) {
+          await migrator.addColumn(readerProfiles, readerProfiles.focusMode);
+        }
+        if (from < 11) {
+          await migrator.createTable(savedQuotes);
         }
       },
     );

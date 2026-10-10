@@ -75,6 +75,8 @@ class ReadingEngagement {
 
   int get engagedSeconds => engaged.inSeconds;
 
+  bool get advanced => _hasAdvanced;
+
   void onSpot(ReadingSpot spot) {
     if (finished || _paused) return;
     if (_anchor == null) {

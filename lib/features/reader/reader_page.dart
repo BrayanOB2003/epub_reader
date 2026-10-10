@@ -4,23 +4,31 @@ import 'dart:convert';
 import 'package:epub_reader/app/providers.dart';
 import 'package:epub_reader/core/database/app_database.dart';
 import 'package:epub_reader/core/reading/readium_reading_engine.dart';
+import 'package:epub_reader/features/analytics/analytics_events.dart';
+import 'package:epub_reader/features/analytics/app_analytics.dart';
 import 'package:epub_reader/features/library/data/book_repository.dart';
 import 'package:epub_reader/features/habits/reading_engagement.dart';
+import 'package:epub_reader/features/notifications/reading_notifications.dart';
+import 'package:epub_reader/features/profile/reader_profile_store.dart';
 import 'package:epub_reader/features/reader/reader_gestures.dart';
 import 'package:epub_reader/features/reader/reader_preferences.dart';
 import 'package:epub_reader/l10n/app_localizations.dart';
-import 'package:flutter/foundation.dart';
 import 'package:flutter/material.dart';
-import 'package:flutter/services.dart';
 import 'package:flutter_readium/flutter_readium.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:go_router/go_router.dart';
-import 'package:share_plus/share_plus.dart';
 
 class ReaderPage extends ConsumerStatefulWidget {
-  const ReaderPage({required this.bookId, super.key});
+  const ReaderPage({
+    required this.bookId,
+    this.source = readingSourceLibrary,
+    this.quoteId,
+    super.key,
+  });
 
   final int bookId;
+  final String source;
+  final int? quoteId;
 
   @override
   ConsumerState<ReaderPage> createState() => _ReaderPageState();
@@ -30,9 +38,12 @@ class _ReaderPageState extends ConsumerState<ReaderPage>
     with WidgetsBindingObserver {
   late final BookRepository _repository;
   late final ReadiumReadingEngine _engine;
+  late final AppAnalytics _analytics;
+  late final ReaderProfileStore _profiles;
 
   Book? _book;
   Publication? _publication;
+  Locator? _initialLocator;
   Locator? _latestLocator;
   StreamSubscription<Locator>? _locatorSubscription;
   Timer? _saveTimer;
@@ -49,6 +60,7 @@ class _ReaderPageState extends ConsumerState<ReaderPage>
   ReadingEngagement? _engagement;
   int? _readingSessionId;
   Future<void> _sessionWrite = Future<void>.value();
+  var _sessionReported = false;
 
   @override
   void initState() {
@@ -56,6 +68,8 @@ class _ReaderPageState extends ConsumerState<ReaderPage>
     WidgetsBinding.instance.addObserver(this);
     _repository = ref.read(bookRepositoryProvider);
     _engine = ref.read(readingEngineProvider);
+    _analytics = ref.read(appAnalyticsProvider);
+    _profiles = ref.read(readerProfileStoreProvider);
     _open();
   }
 
@@ -75,9 +89,9 @@ class _ReaderPageState extends ConsumerState<ReaderPage>
   }
 
   Future<void> _open() async {
-    final l10n = AppLocalizations.of(context);
     final book = await _repository.getBook(widget.bookId);
     if (!mounted) return;
+    final l10n = AppLocalizations.of(context);
     if (book == null) {
       setState(() {
         _loading = false;
@@ -87,6 +101,7 @@ class _ReaderPageState extends ConsumerState<ReaderPage>
     }
 
     try {
+      _initialLocator = await _locatorForOpening(book);
       final publication = await _engine.open(book.filePath);
       final fixedLayout = publicationIsFixed(publication);
       _dark = book.darkMode;
@@ -111,10 +126,12 @@ class _ReaderPageState extends ConsumerState<ReaderPage>
         _book = book;
         _publication = publication;
         _fixedLayout = fixedLayout;
-        _progress = book.progress;
+        _progress =
+            _initialLocator?.locations?.totalProgression ?? book.progress;
         _loading = false;
       });
-    } catch (error) {
+    } catch (error, stack) {
+      unawaited(_analytics.recordUnexpected('reader_open_failed', stack));
       if (!mounted) return;
       setState(() {
         _loading = false;
@@ -244,7 +261,13 @@ class _ReaderPageState extends ConsumerState<ReaderPage>
     }
   }
 
+  void _hideChrome() {
+    if (!_chromeVisible || !mounted) return;
+    setState(() => _chromeVisible = false);
+  }
+
   void _onZone(ReaderZone zone) {
+    if (_textSelected) return;
     switch (zone) {
       case ReaderZone.previous:
         _turnPage(forward: false);
@@ -256,25 +279,36 @@ class _ReaderPageState extends ConsumerState<ReaderPage>
   }
 
   void _onTextSelected(TextSelectionEvent event) {
-    if (_textSelected || !mounted) return;
+    final text = event.selectedText?.trim();
+    if (text == null || text.isEmpty || !mounted || _textSelected) return;
     setState(() => _textSelected = true);
   }
 
-  void _onSelectionTap() {
+  void _onSelectionTap() => _clearSelection();
+
+  void _clearSelection() {
     if (!_textSelected || !mounted) return;
     setState(() => _textSelected = false);
   }
 
   Future<void> _onSelectionAction(SelectionActionEvent event) async {
-    if (mounted) setState(() => _textSelected = false);
+    if (event.actionId != 'save') return;
     final text = event.selectedText?.trim();
     if (text == null || text.isEmpty) return;
-    switch (event.actionId) {
-      case 'copy':
-        await Clipboard.setData(ClipboardData(text: text));
-      case 'share':
-        await SharePlus.instance.share(ShareParams(text: text));
+    final l10n = AppLocalizations.of(context);
+    try {
+      await _repository.saveQuote(
+        bookId: widget.bookId,
+        text: text,
+        locatorJson: jsonEncode(event.locator.toJson()),
+      );
+    } catch (_) {
+      if (!mounted) return;
+      _showMessage(l10n.quoteSaveFailed);
+      return;
     }
+    if (!mounted) return;
+    _showMessage(l10n.quoteSaved);
   }
 
   Future<void> _persist() async {
@@ -288,12 +322,29 @@ class _ReaderPageState extends ConsumerState<ReaderPage>
     );
   }
 
-  Locator? _savedLocator(Book book) {
-    final raw = book.locatorJson;
+  Future<Locator?> _locatorForOpening(Book book) async {
+    final quoteId = widget.quoteId;
+    if (quoteId != null) {
+      final quote = await _repository.quoteById(quoteId);
+      if (quote != null && quote.bookId == book.id) {
+        final locator = _locatorFromJson(quote.locatorJson);
+        if (locator != null) return locator;
+      }
+    }
+    return _savedLocator(book);
+  }
+
+  Locator? _savedLocator(Book book) => _locatorFromJson(book.locatorJson);
+
+  Locator? _locatorFromJson(String? raw) {
     if (raw == null || raw.isEmpty) return null;
-    final decoded = jsonDecode(raw);
-    if (decoded is! Map) return null;
-    return Locator.fromJson(Map<String, dynamic>.from(decoded));
+    try {
+      final decoded = jsonDecode(raw);
+      if (decoded is! Map) return null;
+      return Locator.fromJson(Map<String, dynamic>.from(decoded));
+    } catch (_) {
+      return null;
+    }
   }
 
   void _close() {
@@ -331,6 +382,43 @@ class _ReaderPageState extends ConsumerState<ReaderPage>
         }
       } catch (_) {}
     });
+  }
+
+  Future<void> _reportSession() async {
+    if (_sessionReported) return;
+    _sessionReported = true;
+    await _sessionWrite;
+    final engagement = _engagement;
+    if (engagement == null ||
+        !engagement.shouldPersist ||
+        _readingSessionId == null) {
+      return;
+    }
+    await _analytics.logReadingSession(
+      engagedSeconds: engagement.engagedSeconds,
+      advanced: engagement.advanced,
+      source: widget.source,
+    );
+    final goalMinutes = (await _profiles.current())?.dailyGoalMinutes;
+    if (goalMinutes == null) return;
+    final rows = await _repository.loadReadingSessions();
+    final crossed = sessionCrossedReadingGoal(
+      sessions: [
+        for (final row in rows)
+          NotificationSession(
+            bookId: row.bookId,
+            startedAt: row.startedAt,
+            endedAt: row.endedAt,
+            engagedSeconds: row.engagedSeconds,
+          ),
+      ],
+      sessionStartedAt: engagement.startedAt,
+      sessionSeconds: engagement.engagedSeconds,
+      goalMinutes: goalMinutes,
+      now: DateTime.now(),
+    );
+    if (!crossed) return;
+    await _analytics.logDailyGoalReached();
   }
 
   Future<void> _turnPage({required bool forward}) async {
@@ -383,6 +471,7 @@ class _ReaderPageState extends ConsumerState<ReaderPage>
     WidgetsBinding.instance.removeObserver(this);
     _engagement?.close();
     _syncEngagement();
+    unawaited(_reportSession());
     _saveTimer?.cancel();
     final locator = _latestLocator;
     if (locator != null) {
@@ -430,6 +519,7 @@ class _ReaderPageState extends ConsumerState<ReaderPage>
 
     final rtl =
         publication.metadata.readingProgression == ReadingProgression.rtl;
+    final l10n = AppLocalizations.of(context);
 
     return Stack(
       children: [
@@ -440,14 +530,14 @@ class _ReaderPageState extends ConsumerState<ReaderPage>
           bottom: 0,
           child: ReadiumReaderWidget(
             publication: publication,
-            initialLocator: _savedLocator(book),
+            initialLocator: _initialLocator,
             allowedDefaultActions: const {
               DefaultSelectionAction.copy,
               DefaultSelectionAction.share,
             },
-            selectionActions: defaultTargetPlatform == TargetPlatform.android
-                ? _androidSelectionActions(AppLocalizations.of(context))
-                : const [],
+            selectionActions: [
+              SelectionAction(id: 'save', title: l10n.saveQuote),
+            ],
             onTextSelected: _onTextSelected,
             onSelectionAction: _onSelectionAction,
           ),
@@ -462,7 +552,7 @@ class _ReaderPageState extends ConsumerState<ReaderPage>
             scroll: _scroll,
             textSelected: _textSelected,
             onZone: _onZone,
-            onSwipe: (forward) => _turnPage(forward: forward),
+            onPageDrag: _hideChrome,
             onSelectionTap: _onSelectionTap,
           ),
         ),
@@ -591,13 +681,6 @@ class _OriginalFontMark extends StatelessWidget {
     );
   }
 }
-
-/// Android ignores [DefaultSelectionAction] and only reports a selection when
-/// custom actions replace its system menu.
-List<SelectionAction> _androidSelectionActions(AppLocalizations l10n) => [
-  SelectionAction(id: 'copy', title: l10n.copy),
-  SelectionAction(id: 'share', title: l10n.share),
-];
 
 class _TocEntry {
   const _TocEntry({required this.link, required this.depth});

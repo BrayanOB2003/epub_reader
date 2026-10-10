@@ -149,6 +149,32 @@ class AppLocalizationsEs extends AppLocalizations {
   String get share => 'Compartir';
 
   @override
+  String get copied => 'Copiado';
+
+  @override
+  String get saveQuote => 'Guardar cita';
+
+  @override
+  String get quoteSaved => 'Cita guardada';
+
+  @override
+  String get quoteSaveFailed => 'No se pudo guardar la cita.';
+
+  @override
+  String get savedQuotes => 'Citas';
+
+  @override
+  String get noQuotes => 'Todavía no hay citas';
+
+  @override
+  String get noQuotesBody => 'Selecciona un pasaje en la lectura y guárdalo.';
+
+  @override
+  String quotesLoadFailed(String error) {
+    return 'No se pudieron cargar las citas.\n$error';
+  }
+
+  @override
   String get bookGone => 'Este libro ya no está en la biblioteca.';
 
   @override
@@ -223,6 +249,22 @@ class AppLocalizationsEs extends AppLocalizations {
   @override
   String get welcomeAccount =>
       'Sin cuenta. Tus libros y tu progreso se guardan en este dispositivo.';
+
+  @override
+  String get notificationPermissionTitle => 'Te aviso a tu hora';
+
+  @override
+  String get notificationPermissionBody =>
+      'Cuando llega el momento que elegiste, Liora puede recordarte que leas.';
+
+  @override
+  String get notificationPermissionAllow => 'Activar avisos';
+
+  @override
+  String get notificationPermissionSkip => 'Ahora no';
+
+  @override
+  String get notificationPermissionFailed => 'No se pudo pedir el permiso.';
 
   @override
   String stepOf(int step, int total) {
@@ -395,6 +437,19 @@ class AppLocalizationsEs extends AppLocalizations {
   String get today => 'Hoy';
 
   @override
+  String get goalLabel => 'Meta';
+
+  @override
+  String minutesShort(int count) {
+    return '$count min';
+  }
+
+  @override
+  String minutesOfGoal(int done, int goal) {
+    return '$done / $goal min';
+  }
+
+  @override
   String get yesterday => 'Ayer';
 
   @override
@@ -407,8 +462,18 @@ class AppLocalizationsEs extends AppLocalizations {
   String get noReading => 'sin lectura';
 
   @override
-  String calendarDay(int day, String month, String state) {
-    return '$day de $month, $state';
+  String calendarDate(int day, String month) {
+    return '$day de $month';
+  }
+
+  @override
+  String dayReading(String day, String duration) {
+    return '$day · $duration';
+  }
+
+  @override
+  String calendarDay(int day, String month, String duration, String state) {
+    return '$day de $month, $duration, $state';
   }
 
   @override
@@ -418,4 +483,116 @@ class AppLocalizationsEs extends AppLocalizations {
 
   @override
   String get sampleBookTitle => 'Lectura de ejemplo';
+
+  @override
+  String get notificationChannelName => 'Avisos';
+
+  @override
+  String get notificationChannelDescription => 'Avisos de Liora';
+
+  @override
+  String get notificationRoutineTitle => 'Hora de leer';
+
+  @override
+  String notificationRoutineBody(String hour, int minutes) {
+    return 'Son las $hour. Hoy tu meta es $minutes min.';
+  }
+
+  @override
+  String get notificationGoalTitle => 'La meta de hoy';
+
+  @override
+  String notificationGoalRemainingBody(int minutes) {
+    return 'Te faltan $minutes min para cerrar el día.';
+  }
+
+  @override
+  String get notificationGoalMetTitle => 'Meta cumplida';
+
+  @override
+  String notificationGoalMetBody(int minutes) {
+    return 'Cerraste el día. $minutes min.';
+  }
+
+  @override
+  String notificationResumeChapterBody(int chapter, String title) {
+    return 'Sigues en el capítulo $chapter de $title.';
+  }
+
+  @override
+  String notificationResumeSectionBody(String section, String title) {
+    return 'Sigues en $section de $title.';
+  }
+
+  @override
+  String notificationResumeBookBody(String title) {
+    return 'Sigues con $title.';
+  }
+
+  @override
+  String get notificationStreakTitle => 'Tu racha';
+
+  @override
+  String notificationStreakBody(int days) {
+    return 'Llevas $days días. Hoy también cuenta.';
+  }
+
+  @override
+  String get focusMode => 'Modo concentración';
+
+  @override
+  String get focusModeAndroidBody =>
+      'Silencia notificaciones y llamadas mientras Liora está abierta. Las alarmas siguen sonando.';
+
+  @override
+  String get focusModeIosBody =>
+      'Al abrir Liora, el iPhone entra en No molestar si preparas Atajos una vez.';
+
+  @override
+  String get focusModeIosOnBody =>
+      'Activo. Para quitarlo del todo, borra la automatización en Atajos.';
+
+  @override
+  String get focusModePermissionNeeded =>
+      'Para silenciar el teléfono, permite a Liora el acceso a No molestar.';
+
+  @override
+  String get focusModeChangeFailed => 'No se pudo cambiar No molestar.';
+
+  @override
+  String get focusModeIosRemains =>
+      'La automatización de Atajos sigue hasta que la borres.';
+
+  @override
+  String get focusGuideTitle => 'No molestar al leer';
+
+  @override
+  String get focusGuideBody =>
+      'iOS no deja que una app encienda No molestar. Atajos sí, si lo dejas preparado una vez.';
+
+  @override
+  String get focusGuideOpenHeading => 'Al abrir Liora';
+
+  @override
+  String get focusGuideOpenSteps =>
+      '1. En Atajos, entra en Automatización y pulsa +.\n2. Elige App, luego Liora, y deja marcada la opción de al abrirla.\n3. Añade Definir concentración, elige No molestar y ponlo en Activado.\n4. Desactiva Preguntar antes de ejecutar.';
+
+  @override
+  String get focusGuideCloseHeading => 'Al cerrar Liora';
+
+  @override
+  String get focusGuideCloseSteps =>
+      'Repite los pasos con la opción de al cerrarla y No molestar en Desactivado.';
+
+  @override
+  String get focusGuideOpenShortcuts => 'Abrir Atajos';
+
+  @override
+  String get focusGuideDone => 'Listo';
+
+  @override
+  String get focusGuideNotNow => 'Ahora no';
+
+  @override
+  String get focusGuideOpenFailed => 'No se pudo abrir Atajos.';
 }

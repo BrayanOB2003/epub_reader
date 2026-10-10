@@ -128,13 +128,18 @@ String? onboardingRedirect({
   required bool? completed,
   required String location,
   bool editing = false,
+  bool notificationPromptDue = false,
 }) {
   const boot = '/boot';
   const onboarding = '/onboarding';
   const library = '/library';
+  const notifications = '/notifications';
   if (completed == null) return location == boot ? null : boot;
   if (!completed) return location == onboarding ? null : onboarding;
   if (editing && location == onboarding) return null;
+  if (notificationPromptDue) {
+    return location == notifications ? null : notifications;
+  }
   if (location == boot || location == onboarding) return library;
   return null;
 }

@@ -59,6 +59,19 @@
   "noContents": "Este libro no tiene índice.",
   "copy": "Copiar",
   "share": "Compartir",
+  "copied": "Copiado",
+  "saveQuote": "Guardar cita",
+  "quoteSaved": "Cita guardada",
+  "quoteSaveFailed": "No se pudo guardar la cita.",
+  "savedQuotes": "Citas",
+  "noQuotes": "Todavía no hay citas",
+  "noQuotesBody": "Selecciona un pasaje en la lectura y guárdalo.",
+  "quotesLoadFailed": "No se pudieron cargar las citas.\n{error}",
+  "@quotesLoadFailed": {
+    "placeholders": {
+      "error": {"type": "String"}
+    }
+  },
   "bookGone": "Este libro ya no está en la biblioteca.",
   "chapterFailed": "No se pudo abrir este capítulo.",
   "preferencesFailed": "No se pudieron aplicar los ajustes de lectura.",
@@ -82,6 +95,11 @@
   "welcomeTitle": "Crea el hábito de leer",
   "welcomeBody": "Un lugar para leer un poco cada día y sostener ese hábito.",
   "welcomeAccount": "Sin cuenta. Tus libros y tu progreso se guardan en este dispositivo.",
+  "notificationPermissionTitle": "Te aviso a tu hora",
+  "notificationPermissionBody": "Cuando llega el momento que elegiste, Liora puede recordarte que leas.",
+  "notificationPermissionAllow": "Activar avisos",
+  "notificationPermissionSkip": "Ahora no",
+  "notificationPermissionFailed": "No se pudo pedir el permiso.",
   "stepOf": "{step} de {total}",
   "@stepOf": {
     "placeholders": {
@@ -169,15 +187,44 @@
   "previousMonth": "Mes anterior",
   "nextMonth": "Mes siguiente",
   "today": "Hoy",
+  "goalLabel": "Meta",
+  "minutesShort": "{count} min",
+  "@minutesShort": {
+    "placeholders": {
+      "count": {"type": "int"}
+    }
+  },
+  "minutesOfGoal": "{done} / {goal} min",
+  "@minutesOfGoal": {
+    "placeholders": {
+      "done": {"type": "int"},
+      "goal": {"type": "int"}
+    }
+  },
   "yesterday": "Ayer",
   "goalMet": "meta cumplida",
   "partialReading": "leído sin cumplir la meta",
   "noReading": "sin lectura",
-  "calendarDay": "{day} de {month}, {state}",
+  "calendarDate": "{day} de {month}",
+  "@calendarDate": {
+    "placeholders": {
+      "day": {"type": "int"},
+      "month": {"type": "String"}
+    }
+  },
+  "dayReading": "{day} · {duration}",
+  "@dayReading": {
+    "placeholders": {
+      "day": {"type": "String"},
+      "duration": {"type": "String"}
+    }
+  },
+  "calendarDay": "{day} de {month}, {duration}, {state}",
   "@calendarDay": {
     "placeholders": {
       "day": {"type": "int"},
       "month": {"type": "String"},
+      "duration": {"type": "String"},
       "state": {"type": "String"}
     }
   },
@@ -187,5 +234,73 @@
       "error": {"type": "String"}
     }
   },
-  "sampleBookTitle": "Lectura de ejemplo"
+  "sampleBookTitle": "Lectura de ejemplo",
+  "notificationChannelName": "Avisos",
+  "notificationChannelDescription": "Avisos de Liora",
+  "notificationRoutineTitle": "Hora de leer",
+  "notificationRoutineBody": "Son las {hour}. Hoy tu meta es {minutes} min.",
+  "@notificationRoutineBody": {
+    "placeholders": {
+      "hour": {"type": "String"},
+      "minutes": {"type": "int"}
+    }
+  },
+  "notificationGoalTitle": "La meta de hoy",
+  "notificationGoalRemainingBody": "Te faltan {minutes} min para cerrar el día.",
+  "@notificationGoalRemainingBody": {
+    "placeholders": {
+      "minutes": {"type": "int"}
+    }
+  },
+  "notificationGoalMetTitle": "Meta cumplida",
+  "notificationGoalMetBody": "Cerraste el día. {minutes} min.",
+  "@notificationGoalMetBody": {
+    "placeholders": {
+      "minutes": {"type": "int"}
+    }
+  },
+  "notificationResumeChapterBody": "Sigues en el capítulo {chapter} de {title}.",
+  "@notificationResumeChapterBody": {
+    "placeholders": {
+      "chapter": {"type": "int"},
+      "title": {"type": "String"}
+    }
+  },
+  "notificationResumeSectionBody": "Sigues en {section} de {title}.",
+  "@notificationResumeSectionBody": {
+    "placeholders": {
+      "section": {"type": "String"},
+      "title": {"type": "String"}
+    }
+  },
+  "notificationResumeBookBody": "Sigues con {title}.",
+  "@notificationResumeBookBody": {
+    "placeholders": {
+      "title": {"type": "String"}
+    }
+  },
+  "notificationStreakTitle": "Tu racha",
+  "notificationStreakBody": "Llevas {days} días. Hoy también cuenta.",
+  "@notificationStreakBody": {
+    "placeholders": {
+      "days": {"type": "int"}
+    }
+  },
+  "focusMode": "Modo concentración",
+  "focusModeAndroidBody": "Silencia notificaciones y llamadas mientras Liora está abierta. Las alarmas siguen sonando.",
+  "focusModeIosBody": "Al abrir Liora, el iPhone entra en No molestar si preparas Atajos una vez.",
+  "focusModeIosOnBody": "Activo. Para quitarlo del todo, borra la automatización en Atajos.",
+  "focusModePermissionNeeded": "Para silenciar el teléfono, permite a Liora el acceso a No molestar.",
+  "focusModeChangeFailed": "No se pudo cambiar No molestar.",
+  "focusModeIosRemains": "La automatización de Atajos sigue hasta que la borres.",
+  "focusGuideTitle": "No molestar al leer",
+  "focusGuideBody": "iOS no deja que una app encienda No molestar. Atajos sí, si lo dejas preparado una vez.",
+  "focusGuideOpenHeading": "Al abrir Liora",
+  "focusGuideOpenSteps": "1. En Atajos, entra en Automatización y pulsa +.\n2. Elige App, luego Liora, y deja marcada la opción de al abrirla.\n3. Añade Definir concentración, elige No molestar y ponlo en Activado.\n4. Desactiva Preguntar antes de ejecutar.",
+  "focusGuideCloseHeading": "Al cerrar Liora",
+  "focusGuideCloseSteps": "Repite los pasos con la opción de al cerrarla y No molestar en Desactivado.",
+  "focusGuideOpenShortcuts": "Abrir Atajos",
+  "focusGuideDone": "Listo",
+  "focusGuideNotNow": "Ahora no",
+  "focusGuideOpenFailed": "No se pudo abrir Atajos."
 }

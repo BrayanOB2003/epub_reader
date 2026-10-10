@@ -22,6 +22,7 @@ class ReadingCalendar extends StatefulWidget {
 
 class _ReadingCalendarState extends State<ReadingCalendar> {
   late DateTime _month;
+  DateTime? _selectedDate;
 
   @override
   void initState() {
@@ -59,6 +60,7 @@ class _ReadingCalendarState extends State<ReadingCalendar> {
     final l10n = AppLocalizations.of(context);
     final languageCode = Localizations.localeOf(context).languageCode;
     final labels = weekdayLabels(languageCode);
+    final selected = _selectedDay(month, _selectedDate);
     return Padding(
       padding: const EdgeInsets.fromLTRB(8, 8, 8, 12),
       child: Column(
@@ -84,6 +86,17 @@ class _ReadingCalendarState extends State<ReadingCalendar> {
               ),
             ],
           ),
+          DayReadingReadout(
+            text: selected == null
+                ? null
+                : l10n.dayReading(
+                    l10n.calendarDate(
+                      selected.day.day,
+                      readingMonthName(selected.day, languageCode),
+                    ),
+                    formatReadingDuration(selected.engagedSeconds),
+                  ),
+          ),
           const SizedBox(height: 4),
           Row(
             children: [
@@ -106,11 +119,16 @@ class _ReadingCalendarState extends State<ReadingCalendar> {
                 for (final day in cells.sublist(index, index + 7))
                   Expanded(
                     child: day == null
-                        ? const SizedBox(height: 40)
+                        ? const SizedBox(height: 48)
                         : _DayCell(
                             day: day,
                             isToday: _sameDay(day.day, widget.today),
+                            selected:
+                                _selectedDate != null &&
+                                _sameDay(day.day, _selectedDate!),
                             label: _dayLabel(day, l10n, languageCode),
+                            onTap: () =>
+                                setState(() => _selectedDate = day.day),
                           ),
                   ),
               ],
@@ -127,12 +145,16 @@ class _DayCell extends StatelessWidget {
   const _DayCell({
     required this.day,
     required this.isToday,
+    required this.selected,
     required this.label,
+    required this.onTap,
   });
 
   final ReadingCalendarDay day;
   final bool isToday;
+  final bool selected;
   final String label;
+  final VoidCallback onTap;
 
   @override
   Widget build(BuildContext context) {
@@ -145,34 +167,40 @@ class _DayCell extends StatelessWidget {
     final foreground = day.mark == ReadingDayMark.met
         ? color.onPrimary
         : color.onSurface;
-    final borderColor = day.mark == ReadingDayMark.met
+    final borderColor = selected
+        ? (day.mark == ReadingDayMark.met ? color.onPrimary : color.primary)
+        : day.mark == ReadingDayMark.met
         ? color.onPrimary
+        : day.mark == ReadingDayMark.none
+        ? color.outline
         : color.primary;
 
     return Semantics(
+      button: true,
+      selected: selected,
       container: true,
       label: label,
       excludeSemantics: true,
-      child: SizedBox(
-        height: 40,
-        child: Center(
-          child: Container(
-            width: 32,
-            height: 32,
-            alignment: Alignment.center,
-            decoration: BoxDecoration(
-              color: background,
-              border: Border.all(
-                color: day.mark == ReadingDayMark.none
-                    ? color.outline
-                    : borderColor,
+      child: GestureDetector(
+        behavior: HitTestBehavior.opaque,
+        onTap: onTap,
+        child: SizedBox(
+          height: 48,
+          child: Center(
+            child: Container(
+              width: 32,
+              height: 32,
+              alignment: Alignment.center,
+              decoration: BoxDecoration(
+                color: background,
+                border: Border.all(color: borderColor, width: selected ? 2 : 1),
               ),
-            ),
-            child: Text(
-              '${day.day.day}',
-              style: Theme.of(context).textTheme.bodyMedium?.copyWith(
-                color: foreground,
-                fontWeight: isToday ? FontWeight.w700 : FontWeight.w500,
+              child: Text(
+                '${day.day.day}',
+                style: Theme.of(context).textTheme.bodyMedium?.copyWith(
+                  color: foreground,
+                  fontWeight: isToday ? FontWeight.w700 : FontWeight.w500,
+                ),
               ),
             ),
           ),
@@ -195,8 +223,17 @@ String _dayLabel(
   return l10n.calendarDay(
     day.day.day,
     readingMonthName(day.day, languageCode),
+    formatReadingDuration(day.engagedSeconds),
     state,
   );
+}
+
+ReadingCalendarDay? _selectedDay(ReadingMonth month, DateTime? selected) {
+  if (selected == null) return null;
+  for (final day in month.days) {
+    if (_sameDay(day.day, selected)) return day;
+  }
+  return null;
 }
 
 bool _sameDay(DateTime day, DateTime today) {

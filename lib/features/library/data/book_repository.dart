@@ -7,6 +7,24 @@ import 'package:epub_reader/features/habits/sample_reading.dart';
 import 'package:epub_reader/features/library/data/book_paths.dart';
 import 'package:path_provider/path_provider.dart';
 
+class ReadingQuote {
+  const ReadingQuote({
+    required this.id,
+    required this.bookId,
+    required this.text,
+    required this.locatorJson,
+    required this.savedAt,
+    required this.bookTitle,
+  });
+
+  final int id;
+  final int bookId;
+  final String text;
+  final String locatorJson;
+  final DateTime savedAt;
+  final String bookTitle;
+}
+
 class BookRepository {
   BookRepository(
     this._database, {
@@ -17,6 +35,10 @@ class BookRepository {
   final AppDatabase _database;
   final Future<Directory> Function() _documentsDirectory;
   Directory? _documents;
+
+  Future<List<ReadingSession>> loadReadingSessions() {
+    return _database.select(_database.readingSessions).get();
+  }
 
   Stream<List<ReadingSession>> watchReadingSessions() {
     final query = _database.select(_database.readingSessions)
@@ -232,7 +254,62 @@ class BookRepository {
     );
   }
 
+  Future<int> saveQuote({
+    required int bookId,
+    required String text,
+    required String locatorJson,
+    DateTime? savedAt,
+  }) {
+    return _database
+        .into(_database.savedQuotes)
+        .insert(
+          SavedQuotesCompanion.insert(
+            bookId: bookId,
+            passage: text,
+            locatorJson: locatorJson,
+            savedAt: savedAt ?? DateTime.now(),
+          ),
+        );
+  }
+
+  Future<SavedQuote?> quoteById(int id) {
+    final query = _database.select(_database.savedQuotes)
+      ..where((table) => table.id.equals(id));
+    return query.getSingleOrNull();
+  }
+
+  Stream<List<ReadingQuote>> watchQuotes() {
+    final query =
+        _database.select(_database.savedQuotes).join([
+          innerJoin(
+            _database.books,
+            _database.books.id.equalsExp(_database.savedQuotes.bookId),
+          ),
+        ])..orderBy([
+          OrderingTerm(
+            expression: _database.savedQuotes.savedAt,
+            mode: OrderingMode.desc,
+          ),
+        ]);
+    return query.watch().map((rows) {
+      return [
+        for (final row in rows)
+          ReadingQuote(
+            id: row.readTable(_database.savedQuotes).id,
+            bookId: row.readTable(_database.savedQuotes).bookId,
+            text: row.readTable(_database.savedQuotes).passage,
+            locatorJson: row.readTable(_database.savedQuotes).locatorJson,
+            savedAt: row.readTable(_database.savedQuotes).savedAt,
+            bookTitle: row.readTable(_database.books).title,
+          ),
+      ];
+    });
+  }
+
   Future<void> delete(Book book) async {
+    await (_database.delete(
+      _database.savedQuotes,
+    )..where((table) => table.bookId.equals(book.id))).go();
     await (_database.delete(
       _database.readingSessions,
     )..where((table) => table.bookId.equals(book.id))).go();

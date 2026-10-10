@@ -1,5 +1,7 @@
 import 'package:epub_reader/app/providers.dart';
 import 'package:epub_reader/app/schedule_widgets.dart';
+import 'package:epub_reader/features/focus/focus_mode.dart';
+import 'package:epub_reader/features/focus/focus_mode_tile.dart';
 import 'package:epub_reader/features/profile/reader_profile_store.dart';
 import 'package:epub_reader/l10n/app_localizations.dart';
 import 'package:flutter/material.dart';
@@ -44,6 +46,14 @@ class ProfilePage extends ConsumerWidget {
                       : () => context.push('/onboarding?editar=1'),
                 ),
                 const Divider(height: 1),
+                ListTile(
+                  title: Text(l10n.savedQuotes),
+                  onTap: () => context.push('/quotes'),
+                ),
+                const Divider(height: 1),
+                if (saved != null &&
+                    ref.watch(focusModeControllerProvider).offered)
+                  const FocusModeTile(),
                 ListTile(
                   title: Text(l10n.sampleReadings),
                   subtitle: Text(l10n.sampleReadingsSubtitle),

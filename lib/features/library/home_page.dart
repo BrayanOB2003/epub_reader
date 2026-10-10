@@ -1,4 +1,6 @@
 import 'package:epub_reader/app/providers.dart';
+import 'package:epub_reader/features/analytics/analytics_events.dart';
+import 'package:epub_reader/features/analytics/app_analytics.dart';
 import 'package:epub_reader/app/schedule_theme.dart';
 import 'package:epub_reader/app/schedule_widgets.dart';
 import 'package:epub_reader/core/database/app_database.dart';
@@ -24,19 +26,36 @@ class _HomePageState extends ConsumerState<HomePage> {
   Future<void> _import() async {
     if (_importing) return;
     final l10n = AppLocalizations.of(context);
+    final analytics = ref.read(appAnalyticsProvider);
     setState(() => _importing = true);
     try {
       final outcome = await ref
           .read(epubImporterProvider)
           .pickAndImport(dialogTitle: l10n.importEpub, untitled: l10n.untitled);
+      if (outcome == ImportOutcome.imported) {
+        await analytics.logBookAdded(
+          source: bookSourceImport,
+          result: bookResultImported,
+        );
+      } else if (outcome == ImportOutcome.alreadyInLibrary) {
+        await analytics.logBookAdded(
+          source: bookSourceImport,
+          result: bookResultAlreadyInLibrary,
+        );
+      }
       if (!mounted) return;
       if (outcome == ImportOutcome.alreadyInLibrary) {
         _showMessage(l10n.alreadyInLibrary);
       }
     } on EpubFormatException catch (error) {
+      await analytics.logBookAdded(
+        source: bookSourceImport,
+        result: bookResultInvalid,
+      );
       if (!mounted) return;
       _showMessage(_epubMessage(l10n, error));
-    } catch (_) {
+    } catch (_, stack) {
+      await analytics.recordUnexpected('import_failed', stack);
       if (!mounted) return;
       _showMessage(l10n.importFailed);
     } finally {
@@ -80,7 +99,7 @@ class _HomePageState extends ConsumerState<HomePage> {
 
   Future<void> _read(int bookId) async {
     if (!mounted) return;
-    await context.push('/read/$bookId');
+    await context.push(readingRoute(bookId, readingSourceLibrary));
   }
 
   @override
@@ -184,9 +203,8 @@ class _Schedule extends StatelessWidget {
                       title: _shownTitle(book.title, l10n),
                       subtitle: book.author,
                       cover: book.coverBytes,
-                      trailing: (book.progress * 100).round() == 0
-                          ? l10n.notStarted
-                          : '${(book.progress * 100).round()} %',
+                      progress: book.progress,
+                      trailing: _progressLabel(l10n, book.progress),
                       onTap: () => onRead(book.id),
                       onDelete: () => onDelete(book),
                     ),
@@ -254,7 +272,10 @@ class _ImportLine extends StatelessWidget {
               alignment: Alignment.centerLeft,
               child: Text(
                 importing ? l10n.importing : l10n.import,
-                style: programTitle(colors.station, size: 22),
+                style: _controlLabel(
+                  context,
+                  importing ? colors.muted : colors.station,
+                ),
               ),
             ),
           ),
@@ -300,8 +321,8 @@ class _LiveBand extends StatelessWidget {
         todaySeconds >= goalMinutes! * 60 &&
         todaySeconds > 0;
     final minuteLabel = goalMinutes == null
-        ? '$minutes min'
-        : '$minutes / $goalMinutes';
+        ? l10n.minutesShort(minutes)
+        : l10n.minutesOfGoal(minutes, goalMinutes!);
 
     return ColoredBox(
       color: colors.station,
@@ -360,9 +381,9 @@ class _LiveBand extends StatelessWidget {
                         title,
                         style: programTitle(
                           colors.onStation,
-                          size: book == null ? 36 : 44,
+                          size: book == null ? 36 : 28,
                         ),
-                        maxLines: 3,
+                        maxLines: book == null ? 3 : 2,
                         overflow: TextOverflow.ellipsis,
                       ),
                       const SizedBox(height: 8),
@@ -372,31 +393,57 @@ class _LiveBand extends StatelessWidget {
                           style: Theme.of(context).textTheme.bodyLarge
                               ?.copyWith(color: colors.onStationMuted),
                         )
-                      else if (book!.author != null)
-                        Text(
-                          book!.author!,
-                          style: Theme.of(context).textTheme.bodyLarge
-                              ?.copyWith(color: colors.onStationMuted),
-                          maxLines: 1,
-                          overflow: TextOverflow.ellipsis,
+                      else ...[
+                        if (book!.author != null) ...[
+                          Text(
+                            book!.author!,
+                            style: Theme.of(context).textTheme.bodyLarge
+                                ?.copyWith(color: colors.onStationMuted),
+                            maxLines: 1,
+                            overflow: TextOverflow.ellipsis,
+                          ),
+                          const SizedBox(height: 8),
+                        ],
+                        Row(
+                          children: [
+                            Expanded(
+                              child: ScheduleProgress(
+                                value: book!.progress,
+                                onAir: true,
+                              ),
+                            ),
+                            const SizedBox(width: 12),
+                            Text(
+                              _progressLabel(l10n, book!.progress),
+                              style: Theme.of(context).textTheme.labelLarge
+                                  ?.copyWith(color: colors.onStationMuted),
+                            ),
+                          ],
                         ),
+                        if (onDelete != null)
+                          TextButton(
+                            onPressed: onDelete,
+                            style: TextButton.styleFrom(
+                              foregroundColor: colors.onStationMuted,
+                              minimumSize: const Size(44, 44),
+                              tapTargetSize: MaterialTapTargetSize.shrinkWrap,
+                              padding: EdgeInsets.zero,
+                              alignment: Alignment.centerLeft,
+                            ),
+                            child: Text(l10n.delete),
+                          ),
+                      ],
                     ],
                   ),
                 ),
-                if (onDelete != null)
-                  TextButton(
-                    onPressed: onDelete,
-                    style: TextButton.styleFrom(
-                      foregroundColor: colors.onStationMuted,
-                      minimumSize: const Size(44, 44),
-                      tapTargetSize: MaterialTapTargetSize.shrinkWrap,
-                    ),
-                    child: Text(l10n.delete),
-                  ),
               ],
             ),
             const SizedBox(height: 16),
-            _MinuteField(label: minuteLabel, met: met),
+            _MinuteField(
+              caption: met ? l10n.goalLabel : l10n.today,
+              label: minuteLabel,
+              met: met,
+            ),
             const SizedBox(height: 16),
             if (book == null)
               ScheduleAction(
@@ -414,8 +461,13 @@ class _LiveBand extends StatelessWidget {
 }
 
 class _MinuteField extends StatelessWidget {
-  const _MinuteField({required this.label, required this.met});
+  const _MinuteField({
+    required this.caption,
+    required this.label,
+    required this.met,
+  });
 
+  final String caption;
   final String label;
   final bool met;
 
@@ -424,14 +476,31 @@ class _MinuteField extends StatelessWidget {
     final colors = ScheduleColors.of(context);
     final background = met ? colors.onStation : Colors.transparent;
     final foreground = met ? colors.station : colors.onStation;
-    return DecoratedBox(
-      decoration: BoxDecoration(
-        color: background,
-        border: Border.all(color: colors.onStationMuted),
-      ),
-      child: Padding(
-        padding: const EdgeInsets.symmetric(horizontal: 12, vertical: 8),
-        child: Text(label, style: programTitle(foreground, size: 28)),
+    final captionColor = met ? colors.station : colors.onStationMuted;
+    return Semantics(
+      excludeSemantics: true,
+      label: caption,
+      value: label,
+      child: DecoratedBox(
+        decoration: BoxDecoration(
+          color: background,
+          border: Border.all(color: colors.onStationMuted),
+        ),
+        child: Padding(
+          padding: const EdgeInsets.symmetric(horizontal: 12, vertical: 8),
+          child: Column(
+            crossAxisAlignment: CrossAxisAlignment.start,
+            children: [
+              Text(
+                caption,
+                style: Theme.of(context).textTheme.labelLarge
+                    ?.copyWith(color: captionColor),
+              ),
+              const SizedBox(height: 4),
+              Text(label, style: programTitle(foreground, size: 28)),
+            ],
+          ),
+        ),
       ),
     );
   }
@@ -467,6 +536,22 @@ int _secondsToday(List<ReadingSession> sessions, DateTime now) {
 String _shownTitle(String title, AppLocalizations l10n) {
   final trimmed = title.trim();
   return trimmed.isEmpty ? l10n.untitled : trimmed;
+}
+
+String _progressLabel(AppLocalizations l10n, double progress) {
+  final percent = (progress * 100).round();
+  if (percent <= 0) return l10n.notStarted;
+  return '$percent %';
+}
+
+TextStyle _controlLabel(BuildContext context, Color color) {
+  final ios = Theme.of(context).platform == TargetPlatform.iOS;
+  return TextStyle(
+    color: color,
+    fontWeight: FontWeight.w600,
+    fontSize: ios ? 17 : 14,
+    letterSpacing: ios ? -0.41 : 0.1,
+  );
 }
 
 String _epubMessage(AppLocalizations l10n, EpubFormatException error) {

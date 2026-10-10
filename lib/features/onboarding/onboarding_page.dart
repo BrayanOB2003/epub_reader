@@ -1,4 +1,10 @@
+import 'dart:async';
+
 import 'package:epub_reader/app/schedule_theme.dart';
+import 'package:epub_reader/features/analytics/app_analytics.dart';
+import 'package:epub_reader/features/analytics/analytics_events.dart';
+import 'package:epub_reader/features/notifications/local_notifications.dart';
+import 'package:epub_reader/features/notifications/notification_destination.dart';
 import 'package:epub_reader/features/onboarding/onboarding_answers.dart';
 import 'package:epub_reader/features/profile/reader_profile_store.dart';
 import 'package:epub_reader/features/profile/reading_goal.dart';
@@ -71,6 +77,9 @@ class _OnboardingPageState extends ConsumerState<OnboardingPage> {
     super.initState();
     _step = widget.editing ? 1 : 0;
     _answers = widget.initial ?? const OnboardingAnswers();
+    if (!widget.editing) {
+      unawaited(ref.read(appAnalyticsProvider).logTutorialBegin());
+    }
   }
 
   bool get _canContinue {
@@ -93,6 +102,14 @@ class _OnboardingPageState extends ConsumerState<OnboardingPage> {
     setState(() => _step -= 1);
   }
 
+  Future<bool> _notificationsGranted() async {
+    try {
+      return await ref.read(localNotificationsProvider).hasPermission();
+    } catch (_) {
+      return false;
+    }
+  }
+
   Future<void> _forward() async {
     final l10n = AppLocalizations.of(context);
     if (!_canContinue || _saving) return;
@@ -104,7 +121,29 @@ class _OnboardingPageState extends ConsumerState<OnboardingPage> {
     try {
       await ref.read(onboardingControllerProvider.notifier).complete(_answers);
       if (!mounted) return;
-      context.go(widget.editing ? '/profile' : '/library');
+      if (widget.editing) {
+        final pending = ref.read(pendingNotificationLocationProvider);
+        ref.read(pendingNotificationLocationProvider.notifier).clear();
+        context.go(
+          routeOpenedFromNotification(
+            notificationLanding(editing: true, pendingLocation: pending),
+          ),
+        );
+        return;
+      }
+      final granted = await _notificationsGranted();
+      if (!mounted) return;
+      if (!granted) {
+        context.go('/notifications');
+        return;
+      }
+      final pending = ref.read(pendingNotificationLocationProvider);
+      ref.read(pendingNotificationLocationProvider.notifier).clear();
+      context.go(
+        routeOpenedFromNotification(
+          notificationLanding(editing: false, pendingLocation: pending),
+        ),
+      );
     } catch (_) {
       if (!mounted) return;
       setState(() => _saving = false);
