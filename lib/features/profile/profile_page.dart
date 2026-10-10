@@ -1,4 +1,5 @@
 import 'package:epub_reader/app/providers.dart';
+import 'package:epub_reader/app/schedule_theme.dart';
 import 'package:epub_reader/app/schedule_widgets.dart';
 import 'package:epub_reader/features/focus/focus_mode.dart';
 import 'package:epub_reader/features/focus/focus_mode_tile.dart';
@@ -32,9 +33,15 @@ class ProfilePage extends ConsumerWidget {
           ),
           data: (saved) {
             final l10n = AppLocalizations.of(context);
+            final colors = ScheduleColors.of(context);
             final goal = saved == null
                 ? l10n.notSet
                 : l10n.minutes(saved.dailyGoalMinutes);
+            final quoteCount = ref
+                .watch(savedQuotesProvider)
+                .asData
+                ?.value
+                .length;
             return ListView(
               children: [
                 ScheduleHeader(title: l10n.profile),
@@ -49,9 +56,16 @@ class ProfilePage extends ConsumerWidget {
                 const Divider(height: 1),
                 ListTile(
                   title: Text(l10n.savedQuotes),
+                  trailing: quoteCount == null
+                      ? null
+                      : Text(
+                          '$quoteCount',
+                          style: Theme.of(context).textTheme.bodyLarge
+                              ?.copyWith(color: colors.muted),
+                        ),
                   onTap: () => context.push('/quotes'),
                 ),
-                const Divider(height: 1),
+                const ScheduleRule(),
                 const QuoteHighlightDefaultTile(),
                 const Divider(height: 1),
                 if (saved != null &&

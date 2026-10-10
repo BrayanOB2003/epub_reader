@@ -48,12 +48,12 @@ void main() {
       savedAt: DateTime.utc(2026, 10, 10, 2),
     );
 
-    expect((await repository.quoteById(blue))?.highlightColor, 'blue');
-    expect((await repository.quoteById(unmarked))?.highlightColor, isNull);
+    expect((await repository.quoteById(blue.id))?.highlightColor, 'blue');
+    expect((await repository.quoteById(unmarked.id))?.highlightColor, isNull);
 
-    await repository.setQuoteHighlightColor(id: blue, colorId: 'rose');
-    expect((await repository.quoteById(blue))?.highlightColor, 'rose');
-    expect((await repository.quoteById(unmarked))?.highlightColor, isNull);
+    await repository.setQuoteHighlightColor(id: blue.id, colorId: 'rose');
+    expect((await repository.quoteById(blue.id))?.highlightColor, 'rose');
+    expect((await repository.quoteById(unmarked.id))?.highlightColor, isNull);
 
     final marks = await repository.quotesForBook(bookId);
     expect(marks.map((quote) => quote.highlightColor), ['rose', null]);
@@ -66,16 +66,16 @@ void main() {
     await recolorQuoteHighlight(
       repository: repository,
       store: store,
-      quoteId: unmarked,
+      quoteId: unmarked.id,
       currentColorId: null,
       colorId: 'green',
     );
-    expect((await repository.quoteById(unmarked))?.highlightColor, 'green');
+    expect((await repository.quoteById(unmarked.id))?.highlightColor, 'green');
     expect(await store.read(), 'green');
 
-    await repository.deleteQuote(blue);
-    expect(await repository.quoteById(blue), isNull);
-    expect(await repository.quoteById(unmarked), isNotNull);
+    await repository.deleteQuote(blue.id);
+    expect(await repository.quoteById(blue.id), isNull);
+    expect(await repository.quoteById(unmarked.id), isNotNull);
   });
 
   test('missing color stays amber and a broken locator is skipped', () {

@@ -65,7 +65,10 @@
   "quoteSaveFailed": "No se pudo guardar la cita.",
   "savedQuotes": "Citas",
   "noQuotes": "Todavía no hay citas",
-  "noQuotesBody": "Selecciona un pasaje en la lectura y guárdalo.",
+  "noQuotesBody": "Selecciona un pasaje y pulsa Guardar cita.",
+  "quoteAlreadySaved": "Esa cita ya está guardada.",
+  "shareQuoteText": "Compartir texto",
+  "quoteShareFailed": "No se pudo compartir la cita.",
   "quotesLoadFailed": "No se pudieron cargar las citas.\n{error}",
   "@quotesLoadFailed": {
     "placeholders": {

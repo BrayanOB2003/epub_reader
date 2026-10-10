@@ -317,20 +317,20 @@ class _ReaderPageState extends ConsumerState<ReaderPage>
     final l10n = AppLocalizations.of(context);
     try {
       final colorId = await _highlightColors.read();
-      await _repository.saveQuote(
+      final saved = await _repository.saveQuote(
         bookId: widget.bookId,
         text: text,
         locatorJson: jsonEncode(event.locator.toJson()),
         highlightColor: colorId,
       );
-      unawaited(_applyQuoteHighlights());
+      if (saved.created) unawaited(_applyQuoteHighlights());
+      if (!mounted) return;
+      _showMessage(saved.created ? l10n.quoteSaved : l10n.quoteAlreadySaved);
     } catch (_) {
       if (!mounted) return;
       _showMessage(l10n.quoteSaveFailed);
       return;
     }
-    if (!mounted) return;
-    _showMessage(l10n.quoteSaved);
   }
 
   /// Paints run one after another so a slow read cannot overwrite a newer list.

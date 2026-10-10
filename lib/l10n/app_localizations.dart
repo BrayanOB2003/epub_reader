@@ -401,8 +401,26 @@ abstract class AppLocalizations {
   /// No description provided for @noQuotesBody.
   ///
   /// In es, this message translates to:
-  /// **'Selecciona un pasaje en la lectura y guárdalo.'**
+  /// **'Selecciona un pasaje y pulsa Guardar cita.'**
   String get noQuotesBody;
+
+  /// No description provided for @quoteAlreadySaved.
+  ///
+  /// In es, this message translates to:
+  /// **'Esa cita ya está guardada.'**
+  String get quoteAlreadySaved;
+
+  /// No description provided for @shareQuoteText.
+  ///
+  /// In es, this message translates to:
+  /// **'Compartir texto'**
+  String get shareQuoteText;
+
+  /// No description provided for @quoteShareFailed.
+  ///
+  /// In es, this message translates to:
+  /// **'No se pudo compartir la cita.'**
+  String get quoteShareFailed;
 
   /// No description provided for @quotesLoadFailed.
   ///

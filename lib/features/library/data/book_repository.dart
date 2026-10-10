@@ -29,6 +29,13 @@ class ReadingQuote {
   final String? highlightColor;
 }
 
+class QuoteSave {
+  const QuoteSave({required this.id, required this.created});
+
+  final int id;
+  final bool created;
+}
+
 class BookRepository {
   BookRepository(
     this._database, {
@@ -258,14 +265,29 @@ class BookRepository {
     );
   }
 
-  Future<int> saveQuote({
+  Future<QuoteSave> saveQuote({
     required int bookId,
     required String text,
     required String locatorJson,
     DateTime? savedAt,
     String? highlightColor,
-  }) {
-    return _database
+  }) async {
+    final existing =
+        await (_database.select(_database.savedQuotes)
+              ..where(
+                (table) =>
+                    table.bookId.equals(bookId) & table.passage.equals(text),
+              )
+              ..orderBy([
+                (table) => OrderingTerm(
+                  expression: table.savedAt,
+                  mode: OrderingMode.desc,
+                ),
+              ])
+              ..limit(1))
+            .getSingleOrNull();
+    if (existing != null) return QuoteSave(id: existing.id, created: false);
+    final id = await _database
         .into(_database.savedQuotes)
         .insert(
           SavedQuotesCompanion.insert(
@@ -276,6 +298,7 @@ class BookRepository {
             highlightColor: Value(highlightColor),
           ),
         );
+    return QuoteSave(id: id, created: true);
   }
 
   Future<void> setQuoteHighlightColor({

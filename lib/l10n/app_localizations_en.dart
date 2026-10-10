@@ -167,7 +167,16 @@ class AppLocalizationsEn extends AppLocalizations {
   String get noQuotes => 'No quotes yet';
 
   @override
-  String get noQuotesBody => 'Select a passage while reading and save it.';
+  String get noQuotesBody => 'Select a passage and tap Save quote.';
+
+  @override
+  String get quoteAlreadySaved => 'That quote is already saved.';
+
+  @override
+  String get shareQuoteText => 'Share text';
+
+  @override
+  String get quoteShareFailed => 'The quote could not be shared.';
 
   @override
   String quotesLoadFailed(String error) {
