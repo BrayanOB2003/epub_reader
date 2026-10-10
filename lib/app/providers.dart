@@ -31,6 +31,10 @@ final readingSessionsProvider = StreamProvider<List<ReadingSession>>((ref) {
   return ref.watch(bookRepositoryProvider).watchReadingSessions();
 });
 
+final savedQuotesProvider = StreamProvider<List<ReadingQuote>>((ref) {
+  return ref.watch(bookRepositoryProvider).watchQuotes();
+});
+
 final epubImporterProvider = Provider<EpubImporter>((ref) {
   return EpubImporter(ref.watch(bookRepositoryProvider));
 });

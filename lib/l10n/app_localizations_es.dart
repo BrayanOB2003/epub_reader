@@ -149,6 +149,32 @@ class AppLocalizationsEs extends AppLocalizations {
   String get share => 'Compartir';
 
   @override
+  String get copied => 'Copiado';
+
+  @override
+  String get saveQuote => 'Guardar cita';
+
+  @override
+  String get quoteSaved => 'Cita guardada';
+
+  @override
+  String get quoteSaveFailed => 'No se pudo guardar la cita.';
+
+  @override
+  String get savedQuotes => 'Citas';
+
+  @override
+  String get noQuotes => 'Todavía no hay citas';
+
+  @override
+  String get noQuotesBody => 'Selecciona un pasaje en la lectura y guárdalo.';
+
+  @override
+  String quotesLoadFailed(String error) {
+    return 'No se pudieron cargar las citas.\n$error';
+  }
+
+  @override
   String get bookGone => 'Este libro ya no está en la biblioteca.';
 
   @override

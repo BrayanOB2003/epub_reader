@@ -64,6 +64,18 @@ class ReaderProfiles extends Table {
   BoolColumn get focusMode => boolean().withDefault(const Constant(false))();
 }
 
+class SavedQuotes extends Table {
+  IntColumn get id => integer().autoIncrement()();
+
+  IntColumn get bookId => integer().references(Books, #id)();
+
+  TextColumn get passage => text()();
+
+  TextColumn get locatorJson => text()();
+
+  DateTimeColumn get savedAt => dateTime()();
+}
+
 class ReadingSessions extends Table {
   IntColumn get id => integer().autoIncrement()();
 
@@ -76,12 +88,12 @@ class ReadingSessions extends Table {
   IntColumn get engagedSeconds => integer()();
 }
 
-@DriftDatabase(tables: [Books, ReadingSessions, ReaderProfiles])
+@DriftDatabase(tables: [Books, ReadingSessions, ReaderProfiles, SavedQuotes])
 class AppDatabase extends _$AppDatabase {
   AppDatabase(super.e);
 
   @override
-  int get schemaVersion => 10;
+  int get schemaVersion => 11;
 
   @override
   MigrationStrategy get migration {
@@ -123,6 +135,9 @@ class AppDatabase extends _$AppDatabase {
         }
         if (from < 10) {
           await migrator.addColumn(readerProfiles, readerProfiles.focusMode);
+        }
+        if (from < 11) {
+          await migrator.createTable(savedQuotes);
         }
       },
     );

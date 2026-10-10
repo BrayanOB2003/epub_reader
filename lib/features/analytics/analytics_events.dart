@@ -18,6 +18,7 @@ const bookResultInvalid = 'invalid';
 const readingSourceLibrary = 'library';
 const readingSourceCatalog = 'catalog';
 const readingSourceNotification = 'notification';
+const readingSourceQuote = 'quote';
 
 const notificationResultGranted = 'granted';
 const notificationResultDenied = 'denied';
@@ -27,6 +28,7 @@ const _readingSources = {
   readingSourceLibrary,
   readingSourceCatalog,
   readingSourceNotification,
+  readingSourceQuote,
 };
 
 String readingSessionSource(String? value) {
@@ -36,6 +38,10 @@ String readingSessionSource(String? value) {
 
 String readingRoute(int bookId, String source) {
   return '/read/$bookId?origen=${readingSessionSource(source)}';
+}
+
+String quoteReadingRoute(int bookId, int quoteId) {
+  return '${readingRoute(bookId, readingSourceQuote)}&cita=$quoteId';
 }
 
 /// A notification path that opens the reader, marked so the session is not

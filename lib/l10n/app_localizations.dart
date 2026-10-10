@@ -362,6 +362,54 @@ abstract class AppLocalizations {
   /// **'Compartir'**
   String get share;
 
+  /// No description provided for @copied.
+  ///
+  /// In es, this message translates to:
+  /// **'Copiado'**
+  String get copied;
+
+  /// No description provided for @saveQuote.
+  ///
+  /// In es, this message translates to:
+  /// **'Guardar cita'**
+  String get saveQuote;
+
+  /// No description provided for @quoteSaved.
+  ///
+  /// In es, this message translates to:
+  /// **'Cita guardada'**
+  String get quoteSaved;
+
+  /// No description provided for @quoteSaveFailed.
+  ///
+  /// In es, this message translates to:
+  /// **'No se pudo guardar la cita.'**
+  String get quoteSaveFailed;
+
+  /// No description provided for @savedQuotes.
+  ///
+  /// In es, this message translates to:
+  /// **'Citas'**
+  String get savedQuotes;
+
+  /// No description provided for @noQuotes.
+  ///
+  /// In es, this message translates to:
+  /// **'Todavía no hay citas'**
+  String get noQuotes;
+
+  /// No description provided for @noQuotesBody.
+  ///
+  /// In es, this message translates to:
+  /// **'Selecciona un pasaje en la lectura y guárdalo.'**
+  String get noQuotesBody;
+
+  /// No description provided for @quotesLoadFailed.
+  ///
+  /// In es, this message translates to:
+  /// **'No se pudieron cargar las citas.\n{error}'**
+  String quotesLoadFailed(String error);
+
   /// No description provided for @bookGone.
   ///
   /// In es, this message translates to:

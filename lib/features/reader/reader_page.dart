@@ -12,8 +12,8 @@ import 'package:epub_reader/features/notifications/reading_notifications.dart';
 import 'package:epub_reader/features/profile/reader_profile_store.dart';
 import 'package:epub_reader/features/reader/reader_gestures.dart';
 import 'package:epub_reader/features/reader/reader_preferences.dart';
+import 'package:epub_reader/features/reader/reader_selection_bar.dart';
 import 'package:epub_reader/l10n/app_localizations.dart';
-import 'package:flutter/foundation.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter/services.dart';
 import 'package:flutter_readium/flutter_readium.dart';
@@ -25,11 +25,13 @@ class ReaderPage extends ConsumerStatefulWidget {
   const ReaderPage({
     required this.bookId,
     this.source = readingSourceLibrary,
+    this.quoteId,
     super.key,
   });
 
   final int bookId;
   final String source;
+  final int? quoteId;
 
   @override
   ConsumerState<ReaderPage> createState() => _ReaderPageState();
@@ -44,7 +46,9 @@ class _ReaderPageState extends ConsumerState<ReaderPage>
 
   Book? _book;
   Publication? _publication;
+  Locator? _initialLocator;
   Locator? _latestLocator;
+  TextSelectionEvent? _selection;
   StreamSubscription<Locator>? _locatorSubscription;
   Timer? _saveTimer;
   var _progress = 0.0;
@@ -55,6 +59,8 @@ class _ReaderPageState extends ConsumerState<ReaderPage>
   var _fontSize = readerFontSizeDefault;
   var _fixedLayout = false;
   var _textSelected = false;
+  var _sharing = false;
+  final _shareButtonKey = GlobalKey();
   DateTime? _lastPageTurn;
   String? _error;
   ReadingEngagement? _engagement;
@@ -101,6 +107,7 @@ class _ReaderPageState extends ConsumerState<ReaderPage>
     }
 
     try {
+      _initialLocator = await _locatorForOpening(book);
       final publication = await _engine.open(book.filePath);
       final fixedLayout = publicationIsFixed(publication);
       _dark = book.darkMode;
@@ -125,7 +132,8 @@ class _ReaderPageState extends ConsumerState<ReaderPage>
         _book = book;
         _publication = publication;
         _fixedLayout = fixedLayout;
-        _progress = book.progress;
+        _progress =
+            _initialLocator?.locations?.totalProgression ?? book.progress;
         _loading = false;
       });
     } catch (error, stack) {
@@ -143,7 +151,10 @@ class _ReaderPageState extends ConsumerState<ReaderPage>
     _latestLocator = locator;
     final leftChapter =
         _textSelected && previous != null && previous.href != locator.href;
-    if (leftChapter) _textSelected = false;
+    if (leftChapter) {
+      _textSelected = false;
+      _selection = null;
+    }
     final progression = locator.locations?.totalProgression;
     final progressChanged = progression != null && progression != _progress;
     if (mounted && (leftChapter || progressChanged)) {
@@ -260,6 +271,7 @@ class _ReaderPageState extends ConsumerState<ReaderPage>
   }
 
   void _onZone(ReaderZone zone) {
+    if (_textSelected || _sharing) return;
     switch (zone) {
       case ReaderZone.previous:
         _turnPage(forward: false);
@@ -271,25 +283,91 @@ class _ReaderPageState extends ConsumerState<ReaderPage>
   }
 
   void _onTextSelected(TextSelectionEvent event) {
-    if (_textSelected || !mounted) return;
-    setState(() => _textSelected = true);
+    final text = event.selectedText?.trim();
+    if (text == null || text.isEmpty || !mounted) return;
+    if (_textSelected && _selection?.selectedText?.trim() == text) return;
+    setState(() {
+      _textSelected = true;
+      _selection = event;
+    });
   }
 
   void _onSelectionTap() {
-    if (!_textSelected || !mounted) return;
-    setState(() => _textSelected = false);
+    if (_sharing) return;
+    _clearSelection();
   }
 
-  Future<void> _onSelectionAction(SelectionActionEvent event) async {
-    if (mounted) setState(() => _textSelected = false);
-    final text = event.selectedText?.trim();
-    if (text == null || text.isEmpty) return;
-    switch (event.actionId) {
-      case 'copy':
-        await Clipboard.setData(ClipboardData(text: text));
-      case 'share':
-        await SharePlus.instance.share(ShareParams(text: text));
+  String? get _selectedText {
+    final text = _selection?.selectedText?.trim();
+    if (text == null || text.isEmpty) return null;
+    return text;
+  }
+
+  void _clearSelection() {
+    if (!_textSelected || !mounted) return;
+    setState(() {
+      _textSelected = false;
+      _selection = null;
+    });
+  }
+
+  /// Hides copy, share and save. The marked text stays selected, so the next
+  /// tap on the page clears it instead of opening the reader menu.
+  void _hideSelectionBar() {
+    if (_selection == null || !mounted) return;
+    setState(() => _selection = null);
+  }
+
+  Rect? _shareOrigin() {
+    final box =
+        _shareButtonKey.currentContext?.findRenderObject() as RenderBox?;
+    if (box == null || !box.hasSize) return null;
+    return box.localToGlobal(Offset.zero) & box.size;
+  }
+
+  Future<void> _copySelection() async {
+    final text = _selectedText;
+    if (text == null) return;
+    await Clipboard.setData(ClipboardData(text: text));
+    if (!mounted) return;
+    _hideSelectionBar();
+    _showMessage(AppLocalizations.of(context).copied);
+  }
+
+  Future<void> _shareSelection() async {
+    final text = _selectedText;
+    if (text == null || _sharing) return;
+    final origin = _shareOrigin();
+    setState(() => _sharing = true);
+    _hideSelectionBar();
+    try {
+      await SharePlus.instance.share(
+        ShareParams(text: text, sharePositionOrigin: origin),
+      );
+    } finally {
+      if (mounted) setState(() => _sharing = false);
     }
+  }
+
+  Future<void> _saveQuote() async {
+    final event = _selection;
+    final text = _selectedText;
+    if (event == null || text == null) return;
+    final l10n = AppLocalizations.of(context);
+    try {
+      await _repository.saveQuote(
+        bookId: widget.bookId,
+        text: text,
+        locatorJson: jsonEncode(event.locator.toJson()),
+      );
+    } catch (_) {
+      if (!mounted) return;
+      _showMessage(l10n.quoteSaveFailed);
+      return;
+    }
+    if (!mounted) return;
+    _hideSelectionBar();
+    _showMessage(l10n.quoteSaved);
   }
 
   Future<void> _persist() async {
@@ -303,12 +381,29 @@ class _ReaderPageState extends ConsumerState<ReaderPage>
     );
   }
 
-  Locator? _savedLocator(Book book) {
-    final raw = book.locatorJson;
+  Future<Locator?> _locatorForOpening(Book book) async {
+    final quoteId = widget.quoteId;
+    if (quoteId != null) {
+      final quote = await _repository.quoteById(quoteId);
+      if (quote != null && quote.bookId == book.id) {
+        final locator = _locatorFromJson(quote.locatorJson);
+        if (locator != null) return locator;
+      }
+    }
+    return _savedLocator(book);
+  }
+
+  Locator? _savedLocator(Book book) => _locatorFromJson(book.locatorJson);
+
+  Locator? _locatorFromJson(String? raw) {
     if (raw == null || raw.isEmpty) return null;
-    final decoded = jsonDecode(raw);
-    if (decoded is! Map) return null;
-    return Locator.fromJson(Map<String, dynamic>.from(decoded));
+    try {
+      final decoded = jsonDecode(raw);
+      if (decoded is! Map) return null;
+      return Locator.fromJson(Map<String, dynamic>.from(decoded));
+    } catch (_) {
+      return null;
+    }
   }
 
   void _close() {
@@ -493,16 +588,9 @@ class _ReaderPageState extends ConsumerState<ReaderPage>
           bottom: 0,
           child: ReadiumReaderWidget(
             publication: publication,
-            initialLocator: _savedLocator(book),
-            allowedDefaultActions: const {
-              DefaultSelectionAction.copy,
-              DefaultSelectionAction.share,
-            },
-            selectionActions: defaultTargetPlatform == TargetPlatform.android
-                ? _androidSelectionActions(AppLocalizations.of(context))
-                : const [],
+            initialLocator: _initialLocator,
+            allowedDefaultActions: const <DefaultSelectionAction>{},
             onTextSelected: _onTextSelected,
-            onSelectionAction: _onSelectionAction,
           ),
         ),
         Positioned(
@@ -513,13 +601,25 @@ class _ReaderPageState extends ConsumerState<ReaderPage>
           child: ReaderGestureLayer(
             rtl: rtl,
             scroll: _scroll,
-            textSelected: _textSelected,
+            textSelected: _textSelected || _sharing,
             onZone: _onZone,
             onSwipe: (forward) => _turnPage(forward: forward),
             onSelectionTap: _onSelectionTap,
           ),
         ),
         Positioned(top: 0, left: 0, right: 0, child: _readerChrome()),
+        if (_selectedText != null)
+          Positioned(
+            left: 0,
+            right: 0,
+            bottom: 0,
+            child: ReaderSelectionBar(
+              shareButtonKey: _shareButtonKey,
+              onCopy: () => unawaited(_copySelection()),
+              onShare: () => unawaited(_shareSelection()),
+              onSave: () => unawaited(_saveQuote()),
+            ),
+          ),
       ],
     );
   }
@@ -644,13 +744,6 @@ class _OriginalFontMark extends StatelessWidget {
     );
   }
 }
-
-/// Android ignores [DefaultSelectionAction] and only reports a selection when
-/// custom actions replace its system menu.
-List<SelectionAction> _androidSelectionActions(AppLocalizations l10n) => [
-  SelectionAction(id: 'copy', title: l10n.copy),
-  SelectionAction(id: 'share', title: l10n.share),
-];
 
 class _TocEntry {
   const _TocEntry({required this.link, required this.depth});

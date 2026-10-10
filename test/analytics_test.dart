@@ -31,6 +31,8 @@ void main() {
     expect(notificationOpenDestination('/time'), 'time');
     expect(readingRoute(3, readingSourceCatalog), '/read/3?origen=catalog');
     expect(readingSessionSource('nope'), readingSourceLibrary);
+    expect(quoteReadingRoute(7, 3), '/read/7?origen=quote&cita=3');
+    expect(readingSessionSource(readingSourceQuote), readingSourceQuote);
   });
 
   test('the first saved habit logs tutorial_complete once', () async {

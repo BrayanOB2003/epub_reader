@@ -12,6 +12,7 @@ import 'package:epub_reader/features/onboarding/onboarding_answers.dart';
 import 'package:epub_reader/features/onboarding/onboarding_controller.dart';
 import 'package:epub_reader/features/onboarding/onboarding_page.dart';
 import 'package:epub_reader/features/profile/profile_page.dart';
+import 'package:epub_reader/features/profile/quotes_page.dart';
 import 'package:epub_reader/features/profile/reader_profile_store.dart';
 import 'package:epub_reader/features/reader/reader_page.dart';
 import 'package:epub_reader/l10n/app_localizations.dart';
@@ -141,6 +142,11 @@ final appRouterProvider = Provider<GoRouter>((ref) {
         ],
       ),
       GoRoute(
+        path: '/quotes',
+        name: 'quotes',
+        builder: (context, state) => const QuotesPage(),
+      ),
+      GoRoute(
         path: '/read/:bookId',
         name: 'read',
         builder: (context, state) {
@@ -155,6 +161,7 @@ final appRouterProvider = Provider<GoRouter>((ref) {
           return ReaderPage(
             bookId: bookId,
             source: readingSessionSource(state.uri.queryParameters['origen']),
+            quoteId: int.tryParse(state.uri.queryParameters['cita'] ?? ''),
           );
         },
       ),

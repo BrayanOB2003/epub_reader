@@ -46,6 +46,11 @@ class ProfilePage extends ConsumerWidget {
                       : () => context.push('/onboarding?editar=1'),
                 ),
                 const Divider(height: 1),
+                ListTile(
+                  title: Text(l10n.savedQuotes),
+                  onTap: () => context.push('/quotes'),
+                ),
+                const Divider(height: 1),
                 if (saved != null &&
                     ref.watch(focusModeControllerProvider).offered)
                   const FocusModeTile(),

@@ -149,6 +149,32 @@ class AppLocalizationsEn extends AppLocalizations {
   String get share => 'Share';
 
   @override
+  String get copied => 'Copied';
+
+  @override
+  String get saveQuote => 'Save quote';
+
+  @override
+  String get quoteSaved => 'Quote saved';
+
+  @override
+  String get quoteSaveFailed => 'The quote could not be saved.';
+
+  @override
+  String get savedQuotes => 'Quotes';
+
+  @override
+  String get noQuotes => 'No quotes yet';
+
+  @override
+  String get noQuotesBody => 'Select a passage while reading and save it.';
+
+  @override
+  String quotesLoadFailed(String error) {
+    return 'Quotes could not be loaded.\n$error';
+  }
+
+  @override
   String get bookGone => 'This book is no longer in the library.';
 
   @override
