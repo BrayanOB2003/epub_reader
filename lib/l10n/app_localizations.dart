@@ -865,6 +865,18 @@ abstract class AppLocalizations {
   /// In es, this message translates to:
   /// **'Lectura de ejemplo'**
   String get sampleBookTitle;
+
+  /// No description provided for @notificationChannelName.
+  ///
+  /// In es, this message translates to:
+  /// **'Avisos'**
+  String get notificationChannelName;
+
+  /// No description provided for @notificationChannelDescription.
+  ///
+  /// In es, this message translates to:
+  /// **'Avisos de Liora'**
+  String get notificationChannelDescription;
 }
 
 class _AppLocalizationsDelegate

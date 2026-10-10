@@ -201,5 +201,7 @@
       "error": {"type": "String"}
     }
   },
-  "sampleBookTitle": "Lectura de ejemplo"
+  "sampleBookTitle": "Lectura de ejemplo",
+  "notificationChannelName": "Avisos",
+  "notificationChannelDescription": "Avisos de Liora"
 }

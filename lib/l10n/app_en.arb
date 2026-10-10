@@ -138,5 +138,7 @@
   "noReading": "no reading",
   "calendarDay": "{month} {day}, {state}",
   "libraryLoadFailed": "The library could not be loaded.\n{error}",
-  "sampleBookTitle": "Sample reading"
+  "sampleBookTitle": "Sample reading",
+  "notificationChannelName": "Notices",
+  "notificationChannelDescription": "Notices from Liora"
 }

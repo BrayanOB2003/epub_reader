@@ -1,4 +1,6 @@
 import 'package:epub_reader/app/schedule_theme.dart';
+import 'package:epub_reader/features/notifications/local_notifications.dart';
+import 'package:epub_reader/features/notifications/notification_destination.dart';
 import 'package:epub_reader/features/onboarding/onboarding_answers.dart';
 import 'package:epub_reader/features/profile/reader_profile_store.dart';
 import 'package:epub_reader/features/profile/reading_goal.dart';
@@ -104,7 +106,11 @@ class _OnboardingPageState extends ConsumerState<OnboardingPage> {
     try {
       await ref.read(onboardingControllerProvider.notifier).complete(_answers);
       if (!mounted) return;
-      context.go(widget.editing ? '/profile' : '/library');
+      final pending = ref.read(pendingNotificationLocationProvider);
+      ref.read(pendingNotificationLocationProvider.notifier).clear();
+      context.go(
+        notificationLanding(editing: widget.editing, pendingLocation: pending),
+      );
     } catch (_) {
       if (!mounted) return;
       setState(() => _saving = false);

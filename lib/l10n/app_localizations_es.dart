@@ -431,4 +431,10 @@ class AppLocalizationsEs extends AppLocalizations {
 
   @override
   String get sampleBookTitle => 'Lectura de ejemplo';
+
+  @override
+  String get notificationChannelName => 'Avisos';
+
+  @override
+  String get notificationChannelDescription => 'Avisos de Liora';
 }
