@@ -1,16 +1,21 @@
+import 'dart:async';
+
 import 'package:epub_reader/app/schedule_theme.dart';
 import 'package:epub_reader/app/schedule_widgets.dart';
 import 'package:epub_reader/features/notifications/local_notifications.dart';
 import 'package:epub_reader/features/notifications/notification_destination.dart';
+import 'package:epub_reader/features/notifications/notification_prompt.dart';
 import 'package:epub_reader/features/profile/reader_profile_store.dart';
 import 'package:epub_reader/l10n/app_localizations.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:go_router/go_router.dart';
 
-/// Asks for notification permission once, after the first onboarding.
+/// Asks for notification permission when the system has not granted it.
 class NotificationPermissionPage extends ConsumerStatefulWidget {
-  const NotificationPermissionPage({super.key});
+  const NotificationPermissionPage({this.returnLocation, super.key});
+
+  final String? returnLocation;
 
   @override
   ConsumerState<NotificationPermissionPage> createState() =>
@@ -20,6 +25,21 @@ class NotificationPermissionPage extends ConsumerStatefulWidget {
 class _NotificationPermissionPageState
     extends ConsumerState<NotificationPermissionPage> {
   var _busy = false;
+
+  @override
+  void initState() {
+    super.initState();
+    WidgetsBinding.instance.addPostFrameCallback((_) {
+      if (!mounted) return;
+      final today = notificationPromptDay(DateTime.now());
+      ref.read(notificationPromptShownProvider.notifier).mark(today);
+      unawaited(
+        ref
+            .read(readerProfileStoreProvider)
+            .rememberNotificationPromptShown(today),
+      );
+    });
+  }
 
   Future<void> _allow() async {
     if (_busy) return;
@@ -39,21 +59,24 @@ class _NotificationPermissionPageState
       return;
     }
     if (!mounted) return;
-    await _continue();
+    await _leave();
   }
 
   Future<void> _skip() async {
     if (_busy) return;
     setState(() => _busy = true);
-    await _continue();
+    await _leave();
   }
 
-  Future<void> _continue() async {
+  Future<void> _leave() async {
     final pending = ref.read(pendingNotificationLocationProvider);
     ref.read(pendingNotificationLocationProvider.notifier).clear();
-    await ref.read(readerProfileStoreProvider).markNotificationsPrompted();
     if (!mounted) return;
-    context.go(notificationLanding(editing: false, pendingLocation: pending));
+    context.go(
+      notificationLocation(pending) ??
+          notificationLocation(widget.returnLocation) ??
+          '/library',
+    );
   }
 
   @override

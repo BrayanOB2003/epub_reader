@@ -1266,6 +1266,17 @@ class $ReaderProfilesTable extends ReaderProfiles
         ),
         defaultValue: const Constant(true),
       );
+  static const VerificationMeta _notificationPromptSkippedOnMeta =
+      const VerificationMeta('notificationPromptSkippedOn');
+  @override
+  late final GeneratedColumn<String> notificationPromptSkippedOn =
+      GeneratedColumn<String>(
+        'notification_prompt_skipped_on',
+        aliasedName,
+        true,
+        type: DriftSqlType.string,
+        requiredDuringInsert: false,
+      );
   @override
   List<GeneratedColumn> get $columns => [
     id,
@@ -1276,6 +1287,7 @@ class $ReaderProfilesTable extends ReaderProfiles
     routineDays,
     completedAt,
     notificationsPrompted,
+    notificationPromptSkippedOn,
   ];
   @override
   String get aliasedName => _alias ?? actualTableName;
@@ -1360,6 +1372,15 @@ class $ReaderProfilesTable extends ReaderProfiles
         ),
       );
     }
+    if (data.containsKey('notification_prompt_skipped_on')) {
+      context.handle(
+        _notificationPromptSkippedOnMeta,
+        notificationPromptSkippedOn.isAcceptableOrUnknown(
+          data['notification_prompt_skipped_on']!,
+          _notificationPromptSkippedOnMeta,
+        ),
+      );
+    }
     return context;
   }
 
@@ -1401,6 +1422,10 @@ class $ReaderProfilesTable extends ReaderProfiles
         DriftSqlType.bool,
         data['${effectivePrefix}notifications_prompted'],
       )!,
+      notificationPromptSkippedOn: attachedDatabase.typeMapping.read(
+        DriftSqlType.string,
+        data['${effectivePrefix}notification_prompt_skipped_on'],
+      ),
     );
   }
 
@@ -1419,9 +1444,12 @@ class ReaderProfile extends DataClass implements Insertable<ReaderProfile> {
   final String? routineDays;
   final DateTime completedAt;
 
-  /// False only for a profile saved before the notification prompt is answered.
-  /// Existing rows default to true so the prompt stays tied to first onboarding.
+  /// True after the reader turns notifications on, or for a profile saved
+  /// before this prompt existed. A skip leaves this false.
   final bool notificationsPrompted;
+
+  /// Local calendar day (yyyy-MM-dd) of the last "not now".
+  final String? notificationPromptSkippedOn;
   const ReaderProfile({
     required this.id,
     required this.motivations,
@@ -1431,6 +1459,7 @@ class ReaderProfile extends DataClass implements Insertable<ReaderProfile> {
     this.routineDays,
     required this.completedAt,
     required this.notificationsPrompted,
+    this.notificationPromptSkippedOn,
   });
   @override
   Map<String, Expression> toColumns(bool nullToAbsent) {
@@ -1447,6 +1476,11 @@ class ReaderProfile extends DataClass implements Insertable<ReaderProfile> {
     }
     map['completed_at'] = Variable<DateTime>(completedAt);
     map['notifications_prompted'] = Variable<bool>(notificationsPrompted);
+    if (!nullToAbsent || notificationPromptSkippedOn != null) {
+      map['notification_prompt_skipped_on'] = Variable<String>(
+        notificationPromptSkippedOn,
+      );
+    }
     return map;
   }
 
@@ -1464,6 +1498,10 @@ class ReaderProfile extends DataClass implements Insertable<ReaderProfile> {
           : Value(routineDays),
       completedAt: Value(completedAt),
       notificationsPrompted: Value(notificationsPrompted),
+      notificationPromptSkippedOn:
+          notificationPromptSkippedOn == null && nullToAbsent
+          ? const Value.absent()
+          : Value(notificationPromptSkippedOn),
     );
   }
 
@@ -1483,6 +1521,9 @@ class ReaderProfile extends DataClass implements Insertable<ReaderProfile> {
       notificationsPrompted: serializer.fromJson<bool>(
         json['notificationsPrompted'],
       ),
+      notificationPromptSkippedOn: serializer.fromJson<String?>(
+        json['notificationPromptSkippedOn'],
+      ),
     );
   }
   @override
@@ -1497,6 +1538,9 @@ class ReaderProfile extends DataClass implements Insertable<ReaderProfile> {
       'routineDays': serializer.toJson<String?>(routineDays),
       'completedAt': serializer.toJson<DateTime>(completedAt),
       'notificationsPrompted': serializer.toJson<bool>(notificationsPrompted),
+      'notificationPromptSkippedOn': serializer.toJson<String?>(
+        notificationPromptSkippedOn,
+      ),
     };
   }
 
@@ -1509,6 +1553,7 @@ class ReaderProfile extends DataClass implements Insertable<ReaderProfile> {
     Value<String?> routineDays = const Value.absent(),
     DateTime? completedAt,
     bool? notificationsPrompted,
+    Value<String?> notificationPromptSkippedOn = const Value.absent(),
   }) => ReaderProfile(
     id: id ?? this.id,
     motivations: motivations ?? this.motivations,
@@ -1518,6 +1563,9 @@ class ReaderProfile extends DataClass implements Insertable<ReaderProfile> {
     routineDays: routineDays.present ? routineDays.value : this.routineDays,
     completedAt: completedAt ?? this.completedAt,
     notificationsPrompted: notificationsPrompted ?? this.notificationsPrompted,
+    notificationPromptSkippedOn: notificationPromptSkippedOn.present
+        ? notificationPromptSkippedOn.value
+        : this.notificationPromptSkippedOn,
   );
   ReaderProfile copyWithCompanion(ReaderProfilesCompanion data) {
     return ReaderProfile(
@@ -1541,6 +1589,9 @@ class ReaderProfile extends DataClass implements Insertable<ReaderProfile> {
       notificationsPrompted: data.notificationsPrompted.present
           ? data.notificationsPrompted.value
           : this.notificationsPrompted,
+      notificationPromptSkippedOn: data.notificationPromptSkippedOn.present
+          ? data.notificationPromptSkippedOn.value
+          : this.notificationPromptSkippedOn,
     );
   }
 
@@ -1554,7 +1605,8 @@ class ReaderProfile extends DataClass implements Insertable<ReaderProfile> {
           ..write('routineHour: $routineHour, ')
           ..write('routineDays: $routineDays, ')
           ..write('completedAt: $completedAt, ')
-          ..write('notificationsPrompted: $notificationsPrompted')
+          ..write('notificationsPrompted: $notificationsPrompted, ')
+          ..write('notificationPromptSkippedOn: $notificationPromptSkippedOn')
           ..write(')'))
         .toString();
   }
@@ -1569,6 +1621,7 @@ class ReaderProfile extends DataClass implements Insertable<ReaderProfile> {
     routineDays,
     completedAt,
     notificationsPrompted,
+    notificationPromptSkippedOn,
   );
   @override
   bool operator ==(Object other) =>
@@ -1581,7 +1634,9 @@ class ReaderProfile extends DataClass implements Insertable<ReaderProfile> {
           other.routineHour == this.routineHour &&
           other.routineDays == this.routineDays &&
           other.completedAt == this.completedAt &&
-          other.notificationsPrompted == this.notificationsPrompted);
+          other.notificationsPrompted == this.notificationsPrompted &&
+          other.notificationPromptSkippedOn ==
+              this.notificationPromptSkippedOn);
 }
 
 class ReaderProfilesCompanion extends UpdateCompanion<ReaderProfile> {
@@ -1593,6 +1648,7 @@ class ReaderProfilesCompanion extends UpdateCompanion<ReaderProfile> {
   final Value<String?> routineDays;
   final Value<DateTime> completedAt;
   final Value<bool> notificationsPrompted;
+  final Value<String?> notificationPromptSkippedOn;
   const ReaderProfilesCompanion({
     this.id = const Value.absent(),
     this.motivations = const Value.absent(),
@@ -1602,6 +1658,7 @@ class ReaderProfilesCompanion extends UpdateCompanion<ReaderProfile> {
     this.routineDays = const Value.absent(),
     this.completedAt = const Value.absent(),
     this.notificationsPrompted = const Value.absent(),
+    this.notificationPromptSkippedOn = const Value.absent(),
   });
   ReaderProfilesCompanion.insert({
     this.id = const Value.absent(),
@@ -1612,6 +1669,7 @@ class ReaderProfilesCompanion extends UpdateCompanion<ReaderProfile> {
     this.routineDays = const Value.absent(),
     required DateTime completedAt,
     this.notificationsPrompted = const Value.absent(),
+    this.notificationPromptSkippedOn = const Value.absent(),
   }) : motivations = Value(motivations),
        dailyGoalMinutes = Value(dailyGoalMinutes),
        routine = Value(routine),
@@ -1625,6 +1683,7 @@ class ReaderProfilesCompanion extends UpdateCompanion<ReaderProfile> {
     Expression<String>? routineDays,
     Expression<DateTime>? completedAt,
     Expression<bool>? notificationsPrompted,
+    Expression<String>? notificationPromptSkippedOn,
   }) {
     return RawValuesInsertable({
       if (id != null) 'id': id,
@@ -1636,6 +1695,8 @@ class ReaderProfilesCompanion extends UpdateCompanion<ReaderProfile> {
       if (completedAt != null) 'completed_at': completedAt,
       if (notificationsPrompted != null)
         'notifications_prompted': notificationsPrompted,
+      if (notificationPromptSkippedOn != null)
+        'notification_prompt_skipped_on': notificationPromptSkippedOn,
     });
   }
 
@@ -1648,6 +1709,7 @@ class ReaderProfilesCompanion extends UpdateCompanion<ReaderProfile> {
     Value<String?>? routineDays,
     Value<DateTime>? completedAt,
     Value<bool>? notificationsPrompted,
+    Value<String?>? notificationPromptSkippedOn,
   }) {
     return ReaderProfilesCompanion(
       id: id ?? this.id,
@@ -1659,6 +1721,8 @@ class ReaderProfilesCompanion extends UpdateCompanion<ReaderProfile> {
       completedAt: completedAt ?? this.completedAt,
       notificationsPrompted:
           notificationsPrompted ?? this.notificationsPrompted,
+      notificationPromptSkippedOn:
+          notificationPromptSkippedOn ?? this.notificationPromptSkippedOn,
     );
   }
 
@@ -1691,6 +1755,11 @@ class ReaderProfilesCompanion extends UpdateCompanion<ReaderProfile> {
         notificationsPrompted.value,
       );
     }
+    if (notificationPromptSkippedOn.present) {
+      map['notification_prompt_skipped_on'] = Variable<String>(
+        notificationPromptSkippedOn.value,
+      );
+    }
     return map;
   }
 
@@ -1704,7 +1773,8 @@ class ReaderProfilesCompanion extends UpdateCompanion<ReaderProfile> {
           ..write('routineHour: $routineHour, ')
           ..write('routineDays: $routineDays, ')
           ..write('completedAt: $completedAt, ')
-          ..write('notificationsPrompted: $notificationsPrompted')
+          ..write('notificationsPrompted: $notificationsPrompted, ')
+          ..write('notificationPromptSkippedOn: $notificationPromptSkippedOn')
           ..write(')'))
         .toString();
   }
@@ -2531,6 +2601,7 @@ typedef $$ReaderProfilesTableCreateCompanionBuilder =
       Value<String?> routineDays,
       required DateTime completedAt,
       Value<bool> notificationsPrompted,
+      Value<String?> notificationPromptSkippedOn,
     });
 typedef $$ReaderProfilesTableUpdateCompanionBuilder =
     ReaderProfilesCompanion Function({
@@ -2542,6 +2613,7 @@ typedef $$ReaderProfilesTableUpdateCompanionBuilder =
       Value<String?> routineDays,
       Value<DateTime> completedAt,
       Value<bool> notificationsPrompted,
+      Value<String?> notificationPromptSkippedOn,
     });
 
 class $$ReaderProfilesTableFilterComposer
@@ -2590,6 +2662,11 @@ class $$ReaderProfilesTableFilterComposer
 
   ColumnFilters<bool> get notificationsPrompted => $composableBuilder(
     column: $table.notificationsPrompted,
+    builder: (column) => ColumnFilters(column),
+  );
+
+  ColumnFilters<String> get notificationPromptSkippedOn => $composableBuilder(
+    column: $table.notificationPromptSkippedOn,
     builder: (column) => ColumnFilters(column),
   );
 }
@@ -2642,6 +2719,11 @@ class $$ReaderProfilesTableOrderingComposer
     column: $table.notificationsPrompted,
     builder: (column) => ColumnOrderings(column),
   );
+
+  ColumnOrderings<String> get notificationPromptSkippedOn => $composableBuilder(
+    column: $table.notificationPromptSkippedOn,
+    builder: (column) => ColumnOrderings(column),
+  );
 }
 
 class $$ReaderProfilesTableAnnotationComposer
@@ -2688,6 +2770,11 @@ class $$ReaderProfilesTableAnnotationComposer
     column: $table.notificationsPrompted,
     builder: (column) => column,
   );
+
+  GeneratedColumn<String> get notificationPromptSkippedOn => $composableBuilder(
+    column: $table.notificationPromptSkippedOn,
+    builder: (column) => column,
+  );
 }
 
 class $$ReaderProfilesTableTableManager
@@ -2731,6 +2818,8 @@ class $$ReaderProfilesTableTableManager
                 Value<String?> routineDays = const Value.absent(),
                 Value<DateTime> completedAt = const Value.absent(),
                 Value<bool> notificationsPrompted = const Value.absent(),
+                Value<String?> notificationPromptSkippedOn =
+                    const Value.absent(),
               }) => ReaderProfilesCompanion(
                 id: id,
                 motivations: motivations,
@@ -2740,6 +2829,7 @@ class $$ReaderProfilesTableTableManager
                 routineDays: routineDays,
                 completedAt: completedAt,
                 notificationsPrompted: notificationsPrompted,
+                notificationPromptSkippedOn: notificationPromptSkippedOn,
               ),
           createCompanionCallback:
               ({
@@ -2751,6 +2841,8 @@ class $$ReaderProfilesTableTableManager
                 Value<String?> routineDays = const Value.absent(),
                 required DateTime completedAt,
                 Value<bool> notificationsPrompted = const Value.absent(),
+                Value<String?> notificationPromptSkippedOn =
+                    const Value.absent(),
               }) => ReaderProfilesCompanion.insert(
                 id: id,
                 motivations: motivations,
@@ -2760,6 +2852,7 @@ class $$ReaderProfilesTableTableManager
                 routineDays: routineDays,
                 completedAt: completedAt,
                 notificationsPrompted: notificationsPrompted,
+                notificationPromptSkippedOn: notificationPromptSkippedOn,
               ),
           withReferenceMapper: (p0) => p0
               .map(

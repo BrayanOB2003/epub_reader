@@ -30,6 +30,10 @@ abstract class LocalNotifications {
 
   Future<bool> requestPermission();
 
+  /// Whether the system currently allows notifications.
+  /// Desktop and tests report true so the prompt is not shown there.
+  Future<bool> hasPermission();
+
   /// Shows [message] and asks for permission the first time.
   /// Returns false when the platform cannot show it or permission is denied.
   Future<bool> show(LocalNotificationMessage message);
@@ -99,6 +103,9 @@ class SilentLocalNotifications implements LocalNotifications {
   Future<bool> requestPermission() async => false;
 
   @override
+  Future<bool> hasPermission() async => true;
+
+  @override
   Future<bool> show(LocalNotificationMessage message) async => false;
 
   @override
@@ -161,6 +168,24 @@ class PluginLocalNotifications implements LocalNotifications {
           IOSFlutterLocalNotificationsPlugin
         >();
     return await ios?.requestPermissions(alert: true, sound: true) ?? false;
+  }
+
+  @override
+  Future<bool> hasPermission() async {
+    _ensureStarted();
+    if (defaultTargetPlatform == TargetPlatform.android) {
+      final android = _plugin
+          .resolvePlatformSpecificImplementation<
+            AndroidFlutterLocalNotificationsPlugin
+          >();
+      return await android?.areNotificationsEnabled() ?? false;
+    }
+    final ios = _plugin
+        .resolvePlatformSpecificImplementation<
+          IOSFlutterLocalNotificationsPlugin
+        >();
+    final status = await ios?.checkPermissions();
+    return status?.isEnabled ?? false;
   }
 
   @override

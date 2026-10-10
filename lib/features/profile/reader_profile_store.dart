@@ -61,6 +61,9 @@ class ReaderProfileStore {
     final prompted = existing.isEmpty
         ? false
         : existing.first.notificationsPrompted;
+    final skippedOn = existing.isEmpty
+        ? null
+        : existing.first.notificationPromptSkippedOn;
     await _database.transaction(() async {
       await _database.delete(_database.readerProfiles).go();
       await _database
@@ -74,6 +77,7 @@ class ReaderProfileStore {
               routineDays: Value(routineDays),
               completedAt: DateTime.now().toUtc(),
               notificationsPrompted: Value(prompted),
+              notificationPromptSkippedOn: Value(skippedOn),
             ),
           );
     });
@@ -84,6 +88,14 @@ class ReaderProfileStore {
         .update(_database.readerProfiles)
         .write(
           const ReaderProfilesCompanion(notificationsPrompted: Value(true)),
+        );
+  }
+
+  Future<void> rememberNotificationPromptShown(String today) {
+    return _database
+        .update(_database.readerProfiles)
+        .write(
+          ReaderProfilesCompanion(notificationPromptSkippedOn: Value(today)),
         );
   }
 

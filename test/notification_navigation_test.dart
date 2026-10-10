@@ -6,6 +6,7 @@ import 'package:epub_reader/core/database/app_database.dart';
 import 'package:epub_reader/features/discover/data/catalog.dart';
 import 'package:epub_reader/features/notifications/local_notifications.dart';
 import 'package:epub_reader/features/notifications/notification_destination.dart';
+import 'package:epub_reader/features/notifications/notification_prompt.dart';
 import 'package:epub_reader/features/onboarding/onboarding_answers.dart';
 import 'package:epub_reader/features/onboarding/onboarding_controller.dart';
 import 'package:epub_reader/features/profile/reading_routine.dart';
@@ -97,6 +98,44 @@ void main() {
     );
   });
 
+  test('a missing permission shows the prompt once a day', () {
+    final today = DateTime(2026, 10, 9, 20);
+    final tomorrow = DateTime(2026, 10, 10, 8);
+    expect(notificationPromptDay(today), '2026-10-09');
+    expect(
+      notificationPromptDue(
+        permissionGranted: false,
+        shownOn: null,
+        now: today,
+      ),
+      isTrue,
+    );
+    expect(
+      notificationPromptDue(permissionGranted: true, shownOn: null, now: today),
+      isFalse,
+    );
+    expect(
+      notificationPromptDue(permissionGranted: null, shownOn: null, now: today),
+      isFalse,
+    );
+    expect(
+      notificationPromptDue(
+        permissionGranted: false,
+        shownOn: '2026-10-09',
+        now: today,
+      ),
+      isFalse,
+    );
+    expect(
+      notificationPromptDue(
+        permissionGranted: false,
+        shownOn: '2026-10-09',
+        now: tomorrow,
+      ),
+      isTrue,
+    );
+  });
+
   testWidgets('a tap opens its screen once onboarding is done', (tester) async {
     final database = AppDatabase(NativeDatabase.memory());
     final container = ProviderContainer(
@@ -112,6 +151,9 @@ void main() {
             books: [],
           );
         }),
+        localNotificationsProvider.overrideWithValue(
+          const _DeniedNotifications(),
+        ),
       ],
     );
     addTearDown(container.dispose);
@@ -201,4 +243,11 @@ void main() {
 
     expect(container.read(appRouterProvider).state.uri.path, '/time');
   });
+}
+
+class _DeniedNotifications extends SilentLocalNotifications {
+  const _DeniedNotifications();
+
+  @override
+  Future<bool> hasPermission() async => false;
 }

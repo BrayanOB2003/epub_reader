@@ -3,6 +3,7 @@ import 'package:epub_reader/features/discover/discover_page.dart';
 import 'package:epub_reader/features/habits/reading_time_page.dart';
 import 'package:epub_reader/features/library/home_page.dart';
 import 'package:epub_reader/features/notifications/notification_permission_page.dart';
+import 'package:epub_reader/features/notifications/notification_prompt.dart';
 import 'package:epub_reader/features/onboarding/onboarding_answers.dart';
 import 'package:epub_reader/features/onboarding/onboarding_controller.dart';
 import 'package:epub_reader/features/onboarding/onboarding_page.dart';
@@ -19,6 +20,8 @@ final appRouterProvider = Provider<GoRouter>((ref) {
   ref.onDispose(refresh.dispose);
   ref.listen(onboardingControllerProvider, (_, _) => refresh.bump());
   ref.listen(readerProfileProvider, (_, _) => refresh.bump());
+  ref.listen(notificationPermissionGrantedProvider, (_, _) => refresh.bump());
+  ref.listen(notificationPromptShownProvider, (_, _) => refresh.bump());
 
   final router = GoRouter(
     initialLocation: '/library',
@@ -38,14 +41,24 @@ final appRouterProvider = Provider<GoRouter>((ref) {
         if (location == '/boot' || location == '/notifications') return null;
         return '/boot';
       }
-      final prompted = !profile.hasValue || profile.hasError
-          ? true
-          : profile.requireValue?.notificationsPrompted ?? false;
+      final granted = ref.read(notificationPermissionGrantedProvider);
+      if (completed == true && granted == null) {
+        if (location == '/boot' || location == '/notifications') return null;
+        return '/boot';
+      }
+      final shown =
+          ref.read(notificationPromptShownProvider) ??
+          profile.asData?.value?.notificationPromptSkippedOn;
+      final due = notificationPromptDue(
+        permissionGranted: granted,
+        shownOn: shown,
+        now: DateTime.now(),
+      );
       return onboardingRedirect(
         completed: completed,
         location: location,
         editing: state.uri.queryParameters['editar'] == '1',
-        notificationsPrompted: prompted,
+        notificationPromptDue: due,
       );
     },
     routes: [
@@ -59,7 +72,9 @@ final appRouterProvider = Provider<GoRouter>((ref) {
       ),
       GoRoute(
         path: '/notifications',
-        builder: (context, state) => const NotificationPermissionPage(),
+        builder: (context, state) => NotificationPermissionPage(
+          returnLocation: state.uri.queryParameters['volver'],
+        ),
       ),
       StatefulShellRoute.indexedStack(
         builder: (context, state, navigationShell) =>

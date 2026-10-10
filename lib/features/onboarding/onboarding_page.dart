@@ -95,6 +95,14 @@ class _OnboardingPageState extends ConsumerState<OnboardingPage> {
     setState(() => _step -= 1);
   }
 
+  Future<bool> _notificationsGranted() async {
+    try {
+      return await ref.read(localNotificationsProvider).hasPermission();
+    } catch (_) {
+      return false;
+    }
+  }
+
   Future<void> _forward() async {
     final l10n = AppLocalizations.of(context);
     if (!_canContinue || _saving) return;
@@ -114,7 +122,15 @@ class _OnboardingPageState extends ConsumerState<OnboardingPage> {
         );
         return;
       }
-      context.go('/notifications');
+      final granted = await _notificationsGranted();
+      if (!mounted) return;
+      if (!granted) {
+        context.go('/notifications');
+        return;
+      }
+      final pending = ref.read(pendingNotificationLocationProvider);
+      ref.read(pendingNotificationLocationProvider.notifier).clear();
+      context.go(notificationLanding(editing: false, pendingLocation: pending));
     } catch (_) {
       if (!mounted) return;
       setState(() => _saving = false);

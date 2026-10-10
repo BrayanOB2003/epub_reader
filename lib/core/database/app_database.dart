@@ -52,10 +52,13 @@ class ReaderProfiles extends Table {
 
   DateTimeColumn get completedAt => dateTime()();
 
-  /// False only for a profile saved before the notification prompt is answered.
-  /// Existing rows default to true so the prompt stays tied to first onboarding.
+  /// True after the reader turns notifications on, or for a profile saved
+  /// before this prompt existed. A skip leaves this false.
   BoolColumn get notificationsPrompted =>
       boolean().withDefault(const Constant(true))();
+
+  /// Local calendar day (yyyy-MM-dd) of the last "not now".
+  TextColumn get notificationPromptSkippedOn => text().nullable()();
 }
 
 class ReadingSessions extends Table {
@@ -75,7 +78,7 @@ class AppDatabase extends _$AppDatabase {
   AppDatabase(super.e);
 
   @override
-  int get schemaVersion => 8;
+  int get schemaVersion => 9;
 
   @override
   MigrationStrategy get migration {
@@ -107,6 +110,12 @@ class AppDatabase extends _$AppDatabase {
           await migrator.addColumn(
             readerProfiles,
             readerProfiles.notificationsPrompted,
+          );
+        }
+        if (from < 9) {
+          await migrator.addColumn(
+            readerProfiles,
+            readerProfiles.notificationPromptSkippedOn,
           );
         }
       },
