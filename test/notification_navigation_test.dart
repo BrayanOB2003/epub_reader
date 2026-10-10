@@ -86,6 +86,15 @@ void main() {
       notificationLanding(editing: true, pendingLocation: null),
       '/profile',
     );
+    expect(
+      resolveNotificationTap(
+        onboardingCompleted: true,
+        pendingLocation: '/read/4',
+        currentPath: '/library',
+        notificationsPrompted: false,
+      ).waiting,
+      isTrue,
+    );
   });
 
   testWidgets('a tap opens its screen once onboarding is done', (tester) async {
@@ -134,6 +143,10 @@ void main() {
             routineHour: 21,
           ),
         );
+    await tester.pumpAndSettle();
+
+    expect(find.text('Te aviso a tu hora'), findsOneWidget);
+    await tester.tap(find.text('Ahora no'));
     await tester.pumpAndSettle();
 
     expect(container.read(appRouterProvider).state.uri.path, '/read/4');

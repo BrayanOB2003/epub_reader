@@ -225,6 +225,22 @@ class AppLocalizationsEs extends AppLocalizations {
       'Sin cuenta. Tus libros y tu progreso se guardan en este dispositivo.';
 
   @override
+  String get notificationPermissionTitle => 'Te aviso a tu hora';
+
+  @override
+  String get notificationPermissionBody =>
+      'Cuando llega el momento que elegiste, Liora puede recordarte que leas.';
+
+  @override
+  String get notificationPermissionAllow => 'Activar avisos';
+
+  @override
+  String get notificationPermissionSkip => 'Ahora no';
+
+  @override
+  String get notificationPermissionFailed => 'No se pudo pedir el permiso.';
+
+  @override
   String stepOf(int step, int total) {
     return '$step de $total';
   }

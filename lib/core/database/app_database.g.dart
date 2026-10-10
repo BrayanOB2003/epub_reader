@@ -1251,6 +1251,21 @@ class $ReaderProfilesTable extends ReaderProfiles
     type: DriftSqlType.dateTime,
     requiredDuringInsert: true,
   );
+  static const VerificationMeta _notificationsPromptedMeta =
+      const VerificationMeta('notificationsPrompted');
+  @override
+  late final GeneratedColumn<bool> notificationsPrompted =
+      GeneratedColumn<bool>(
+        'notifications_prompted',
+        aliasedName,
+        false,
+        type: DriftSqlType.bool,
+        requiredDuringInsert: false,
+        defaultConstraints: GeneratedColumn.constraintIsAlways(
+          'CHECK ("notifications_prompted" IN (0, 1))',
+        ),
+        defaultValue: const Constant(true),
+      );
   @override
   List<GeneratedColumn> get $columns => [
     id,
@@ -1260,6 +1275,7 @@ class $ReaderProfilesTable extends ReaderProfiles
     routineHour,
     routineDays,
     completedAt,
+    notificationsPrompted,
   ];
   @override
   String get aliasedName => _alias ?? actualTableName;
@@ -1335,6 +1351,15 @@ class $ReaderProfilesTable extends ReaderProfiles
     } else if (isInserting) {
       context.missing(_completedAtMeta);
     }
+    if (data.containsKey('notifications_prompted')) {
+      context.handle(
+        _notificationsPromptedMeta,
+        notificationsPrompted.isAcceptableOrUnknown(
+          data['notifications_prompted']!,
+          _notificationsPromptedMeta,
+        ),
+      );
+    }
     return context;
   }
 
@@ -1372,6 +1397,10 @@ class $ReaderProfilesTable extends ReaderProfiles
         DriftSqlType.dateTime,
         data['${effectivePrefix}completed_at'],
       )!,
+      notificationsPrompted: attachedDatabase.typeMapping.read(
+        DriftSqlType.bool,
+        data['${effectivePrefix}notifications_prompted'],
+      )!,
     );
   }
 
@@ -1389,6 +1418,10 @@ class ReaderProfile extends DataClass implements Insertable<ReaderProfile> {
   final int? routineHour;
   final String? routineDays;
   final DateTime completedAt;
+
+  /// False only for a profile saved before the notification prompt is answered.
+  /// Existing rows default to true so the prompt stays tied to first onboarding.
+  final bool notificationsPrompted;
   const ReaderProfile({
     required this.id,
     required this.motivations,
@@ -1397,6 +1430,7 @@ class ReaderProfile extends DataClass implements Insertable<ReaderProfile> {
     this.routineHour,
     this.routineDays,
     required this.completedAt,
+    required this.notificationsPrompted,
   });
   @override
   Map<String, Expression> toColumns(bool nullToAbsent) {
@@ -1412,6 +1446,7 @@ class ReaderProfile extends DataClass implements Insertable<ReaderProfile> {
       map['routine_days'] = Variable<String>(routineDays);
     }
     map['completed_at'] = Variable<DateTime>(completedAt);
+    map['notifications_prompted'] = Variable<bool>(notificationsPrompted);
     return map;
   }
 
@@ -1428,6 +1463,7 @@ class ReaderProfile extends DataClass implements Insertable<ReaderProfile> {
           ? const Value.absent()
           : Value(routineDays),
       completedAt: Value(completedAt),
+      notificationsPrompted: Value(notificationsPrompted),
     );
   }
 
@@ -1444,6 +1480,9 @@ class ReaderProfile extends DataClass implements Insertable<ReaderProfile> {
       routineHour: serializer.fromJson<int?>(json['routineHour']),
       routineDays: serializer.fromJson<String?>(json['routineDays']),
       completedAt: serializer.fromJson<DateTime>(json['completedAt']),
+      notificationsPrompted: serializer.fromJson<bool>(
+        json['notificationsPrompted'],
+      ),
     );
   }
   @override
@@ -1457,6 +1496,7 @@ class ReaderProfile extends DataClass implements Insertable<ReaderProfile> {
       'routineHour': serializer.toJson<int?>(routineHour),
       'routineDays': serializer.toJson<String?>(routineDays),
       'completedAt': serializer.toJson<DateTime>(completedAt),
+      'notificationsPrompted': serializer.toJson<bool>(notificationsPrompted),
     };
   }
 
@@ -1468,6 +1508,7 @@ class ReaderProfile extends DataClass implements Insertable<ReaderProfile> {
     Value<int?> routineHour = const Value.absent(),
     Value<String?> routineDays = const Value.absent(),
     DateTime? completedAt,
+    bool? notificationsPrompted,
   }) => ReaderProfile(
     id: id ?? this.id,
     motivations: motivations ?? this.motivations,
@@ -1476,6 +1517,7 @@ class ReaderProfile extends DataClass implements Insertable<ReaderProfile> {
     routineHour: routineHour.present ? routineHour.value : this.routineHour,
     routineDays: routineDays.present ? routineDays.value : this.routineDays,
     completedAt: completedAt ?? this.completedAt,
+    notificationsPrompted: notificationsPrompted ?? this.notificationsPrompted,
   );
   ReaderProfile copyWithCompanion(ReaderProfilesCompanion data) {
     return ReaderProfile(
@@ -1496,6 +1538,9 @@ class ReaderProfile extends DataClass implements Insertable<ReaderProfile> {
       completedAt: data.completedAt.present
           ? data.completedAt.value
           : this.completedAt,
+      notificationsPrompted: data.notificationsPrompted.present
+          ? data.notificationsPrompted.value
+          : this.notificationsPrompted,
     );
   }
 
@@ -1508,7 +1553,8 @@ class ReaderProfile extends DataClass implements Insertable<ReaderProfile> {
           ..write('routine: $routine, ')
           ..write('routineHour: $routineHour, ')
           ..write('routineDays: $routineDays, ')
-          ..write('completedAt: $completedAt')
+          ..write('completedAt: $completedAt, ')
+          ..write('notificationsPrompted: $notificationsPrompted')
           ..write(')'))
         .toString();
   }
@@ -1522,6 +1568,7 @@ class ReaderProfile extends DataClass implements Insertable<ReaderProfile> {
     routineHour,
     routineDays,
     completedAt,
+    notificationsPrompted,
   );
   @override
   bool operator ==(Object other) =>
@@ -1533,7 +1580,8 @@ class ReaderProfile extends DataClass implements Insertable<ReaderProfile> {
           other.routine == this.routine &&
           other.routineHour == this.routineHour &&
           other.routineDays == this.routineDays &&
-          other.completedAt == this.completedAt);
+          other.completedAt == this.completedAt &&
+          other.notificationsPrompted == this.notificationsPrompted);
 }
 
 class ReaderProfilesCompanion extends UpdateCompanion<ReaderProfile> {
@@ -1544,6 +1592,7 @@ class ReaderProfilesCompanion extends UpdateCompanion<ReaderProfile> {
   final Value<int?> routineHour;
   final Value<String?> routineDays;
   final Value<DateTime> completedAt;
+  final Value<bool> notificationsPrompted;
   const ReaderProfilesCompanion({
     this.id = const Value.absent(),
     this.motivations = const Value.absent(),
@@ -1552,6 +1601,7 @@ class ReaderProfilesCompanion extends UpdateCompanion<ReaderProfile> {
     this.routineHour = const Value.absent(),
     this.routineDays = const Value.absent(),
     this.completedAt = const Value.absent(),
+    this.notificationsPrompted = const Value.absent(),
   });
   ReaderProfilesCompanion.insert({
     this.id = const Value.absent(),
@@ -1561,6 +1611,7 @@ class ReaderProfilesCompanion extends UpdateCompanion<ReaderProfile> {
     this.routineHour = const Value.absent(),
     this.routineDays = const Value.absent(),
     required DateTime completedAt,
+    this.notificationsPrompted = const Value.absent(),
   }) : motivations = Value(motivations),
        dailyGoalMinutes = Value(dailyGoalMinutes),
        routine = Value(routine),
@@ -1573,6 +1624,7 @@ class ReaderProfilesCompanion extends UpdateCompanion<ReaderProfile> {
     Expression<int>? routineHour,
     Expression<String>? routineDays,
     Expression<DateTime>? completedAt,
+    Expression<bool>? notificationsPrompted,
   }) {
     return RawValuesInsertable({
       if (id != null) 'id': id,
@@ -1582,6 +1634,8 @@ class ReaderProfilesCompanion extends UpdateCompanion<ReaderProfile> {
       if (routineHour != null) 'routine_hour': routineHour,
       if (routineDays != null) 'routine_days': routineDays,
       if (completedAt != null) 'completed_at': completedAt,
+      if (notificationsPrompted != null)
+        'notifications_prompted': notificationsPrompted,
     });
   }
 
@@ -1593,6 +1647,7 @@ class ReaderProfilesCompanion extends UpdateCompanion<ReaderProfile> {
     Value<int?>? routineHour,
     Value<String?>? routineDays,
     Value<DateTime>? completedAt,
+    Value<bool>? notificationsPrompted,
   }) {
     return ReaderProfilesCompanion(
       id: id ?? this.id,
@@ -1602,6 +1657,8 @@ class ReaderProfilesCompanion extends UpdateCompanion<ReaderProfile> {
       routineHour: routineHour ?? this.routineHour,
       routineDays: routineDays ?? this.routineDays,
       completedAt: completedAt ?? this.completedAt,
+      notificationsPrompted:
+          notificationsPrompted ?? this.notificationsPrompted,
     );
   }
 
@@ -1629,6 +1686,11 @@ class ReaderProfilesCompanion extends UpdateCompanion<ReaderProfile> {
     if (completedAt.present) {
       map['completed_at'] = Variable<DateTime>(completedAt.value);
     }
+    if (notificationsPrompted.present) {
+      map['notifications_prompted'] = Variable<bool>(
+        notificationsPrompted.value,
+      );
+    }
     return map;
   }
 
@@ -1641,7 +1703,8 @@ class ReaderProfilesCompanion extends UpdateCompanion<ReaderProfile> {
           ..write('routine: $routine, ')
           ..write('routineHour: $routineHour, ')
           ..write('routineDays: $routineDays, ')
-          ..write('completedAt: $completedAt')
+          ..write('completedAt: $completedAt, ')
+          ..write('notificationsPrompted: $notificationsPrompted')
           ..write(')'))
         .toString();
   }
@@ -2467,6 +2530,7 @@ typedef $$ReaderProfilesTableCreateCompanionBuilder =
       Value<int?> routineHour,
       Value<String?> routineDays,
       required DateTime completedAt,
+      Value<bool> notificationsPrompted,
     });
 typedef $$ReaderProfilesTableUpdateCompanionBuilder =
     ReaderProfilesCompanion Function({
@@ -2477,6 +2541,7 @@ typedef $$ReaderProfilesTableUpdateCompanionBuilder =
       Value<int?> routineHour,
       Value<String?> routineDays,
       Value<DateTime> completedAt,
+      Value<bool> notificationsPrompted,
     });
 
 class $$ReaderProfilesTableFilterComposer
@@ -2520,6 +2585,11 @@ class $$ReaderProfilesTableFilterComposer
 
   ColumnFilters<DateTime> get completedAt => $composableBuilder(
     column: $table.completedAt,
+    builder: (column) => ColumnFilters(column),
+  );
+
+  ColumnFilters<bool> get notificationsPrompted => $composableBuilder(
+    column: $table.notificationsPrompted,
     builder: (column) => ColumnFilters(column),
   );
 }
@@ -2567,6 +2637,11 @@ class $$ReaderProfilesTableOrderingComposer
     column: $table.completedAt,
     builder: (column) => ColumnOrderings(column),
   );
+
+  ColumnOrderings<bool> get notificationsPrompted => $composableBuilder(
+    column: $table.notificationsPrompted,
+    builder: (column) => ColumnOrderings(column),
+  );
 }
 
 class $$ReaderProfilesTableAnnotationComposer
@@ -2606,6 +2681,11 @@ class $$ReaderProfilesTableAnnotationComposer
 
   GeneratedColumn<DateTime> get completedAt => $composableBuilder(
     column: $table.completedAt,
+    builder: (column) => column,
+  );
+
+  GeneratedColumn<bool> get notificationsPrompted => $composableBuilder(
+    column: $table.notificationsPrompted,
     builder: (column) => column,
   );
 }
@@ -2650,6 +2730,7 @@ class $$ReaderProfilesTableTableManager
                 Value<int?> routineHour = const Value.absent(),
                 Value<String?> routineDays = const Value.absent(),
                 Value<DateTime> completedAt = const Value.absent(),
+                Value<bool> notificationsPrompted = const Value.absent(),
               }) => ReaderProfilesCompanion(
                 id: id,
                 motivations: motivations,
@@ -2658,6 +2739,7 @@ class $$ReaderProfilesTableTableManager
                 routineHour: routineHour,
                 routineDays: routineDays,
                 completedAt: completedAt,
+                notificationsPrompted: notificationsPrompted,
               ),
           createCompanionCallback:
               ({
@@ -2668,6 +2750,7 @@ class $$ReaderProfilesTableTableManager
                 Value<int?> routineHour = const Value.absent(),
                 Value<String?> routineDays = const Value.absent(),
                 required DateTime completedAt,
+                Value<bool> notificationsPrompted = const Value.absent(),
               }) => ReaderProfilesCompanion.insert(
                 id: id,
                 motivations: motivations,
@@ -2676,6 +2759,7 @@ class $$ReaderProfilesTableTableManager
                 routineHour: routineHour,
                 routineDays: routineDays,
                 completedAt: completedAt,
+                notificationsPrompted: notificationsPrompted,
               ),
           withReferenceMapper: (p0) => p0
               .map(

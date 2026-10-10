@@ -2,10 +2,12 @@ import 'package:epub_reader/app/app_shell.dart';
 import 'package:epub_reader/features/discover/discover_page.dart';
 import 'package:epub_reader/features/habits/reading_time_page.dart';
 import 'package:epub_reader/features/library/home_page.dart';
+import 'package:epub_reader/features/notifications/notification_permission_page.dart';
 import 'package:epub_reader/features/onboarding/onboarding_answers.dart';
 import 'package:epub_reader/features/onboarding/onboarding_controller.dart';
 import 'package:epub_reader/features/onboarding/onboarding_page.dart';
 import 'package:epub_reader/features/profile/profile_page.dart';
+import 'package:epub_reader/features/profile/reader_profile_store.dart';
 import 'package:epub_reader/features/reader/reader_page.dart';
 import 'package:epub_reader/l10n/app_localizations.dart';
 import 'package:flutter/material.dart';
@@ -16,6 +18,7 @@ final appRouterProvider = Provider<GoRouter>((ref) {
   final refresh = _OnboardingRefresh();
   ref.onDispose(refresh.dispose);
   ref.listen(onboardingControllerProvider, (_, _) => refresh.bump());
+  ref.listen(readerProfileProvider, (_, _) => refresh.bump());
 
   final router = GoRouter(
     initialLocation: '/library',
@@ -27,10 +30,22 @@ final appRouterProvider = Provider<GoRouter>((ref) {
           : status.hasError
           ? false
           : status.value ?? false;
+      final location = state.matchedLocation;
+      final profile = ref.read(readerProfileProvider);
+      if (completed == true &&
+          !profile.hasError &&
+          (profile.isLoading || !profile.hasValue)) {
+        if (location == '/boot' || location == '/notifications') return null;
+        return '/boot';
+      }
+      final prompted = !profile.hasValue || profile.hasError
+          ? true
+          : profile.requireValue?.notificationsPrompted ?? false;
       return onboardingRedirect(
         completed: completed,
-        location: state.matchedLocation,
+        location: location,
         editing: state.uri.queryParameters['editar'] == '1',
+        notificationsPrompted: prompted,
       );
     },
     routes: [
@@ -41,6 +56,10 @@ final appRouterProvider = Provider<GoRouter>((ref) {
         builder: (context, state) => OnboardingRoute(
           editing: state.uri.queryParameters['editar'] == '1',
         ),
+      ),
+      GoRoute(
+        path: '/notifications',
+        builder: (context, state) => const NotificationPermissionPage(),
       ),
       StatefulShellRoute.indexedStack(
         builder: (context, state, navigationShell) =>

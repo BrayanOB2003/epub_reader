@@ -82,6 +82,11 @@
   "welcomeTitle": "Crea el hábito de leer",
   "welcomeBody": "Un lugar para leer un poco cada día y sostener ese hábito.",
   "welcomeAccount": "Sin cuenta. Tus libros y tu progreso se guardan en este dispositivo.",
+  "notificationPermissionTitle": "Te aviso a tu hora",
+  "notificationPermissionBody": "Cuando llega el momento que elegiste, Liora puede recordarte que leas.",
+  "notificationPermissionAllow": "Activar avisos",
+  "notificationPermissionSkip": "Ahora no",
+  "notificationPermissionFailed": "No se pudo pedir el permiso.",
   "stepOf": "{step} de {total}",
   "@stepOf": {
     "placeholders": {

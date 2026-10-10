@@ -500,6 +500,36 @@ abstract class AppLocalizations {
   /// **'Sin cuenta. Tus libros y tu progreso se guardan en este dispositivo.'**
   String get welcomeAccount;
 
+  /// No description provided for @notificationPermissionTitle.
+  ///
+  /// In es, this message translates to:
+  /// **'Te aviso a tu hora'**
+  String get notificationPermissionTitle;
+
+  /// No description provided for @notificationPermissionBody.
+  ///
+  /// In es, this message translates to:
+  /// **'Cuando llega el momento que elegiste, Liora puede recordarte que leas.'**
+  String get notificationPermissionBody;
+
+  /// No description provided for @notificationPermissionAllow.
+  ///
+  /// In es, this message translates to:
+  /// **'Activar avisos'**
+  String get notificationPermissionAllow;
+
+  /// No description provided for @notificationPermissionSkip.
+  ///
+  /// In es, this message translates to:
+  /// **'Ahora no'**
+  String get notificationPermissionSkip;
+
+  /// No description provided for @notificationPermissionFailed.
+  ///
+  /// In es, this message translates to:
+  /// **'No se pudo pedir el permiso.'**
+  String get notificationPermissionFailed;
+
   /// No description provided for @stepOf.
   ///
   /// In es, this message translates to:

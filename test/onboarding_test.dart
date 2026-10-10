@@ -35,6 +35,26 @@ void main() {
       isNull,
     );
     expect(onboardingRedirect(completed: true, location: '/library'), isNull);
+    expect(
+      onboardingRedirect(
+        completed: true,
+        location: '/library',
+        notificationsPrompted: false,
+      ),
+      '/notifications',
+    );
+    expect(
+      onboardingRedirect(
+        completed: true,
+        location: '/notifications',
+        notificationsPrompted: false,
+      ),
+      isNull,
+    );
+    expect(
+      onboardingRedirect(completed: true, location: '/notifications'),
+      '/library',
+    );
   });
 
   test(
@@ -93,6 +113,23 @@ void main() {
       expect(saved.routine, 'night');
       expect(saved.routineHour, 21);
       expect(saved.routineDays, '1,2,3,4,5,6,7');
+      expect(saved.notificationsPrompted, isFalse);
+
+      await store.markNotificationsPrompted();
+      final prompted = await database
+          .select(database.readerProfiles)
+          .getSingle();
+      expect(prompted.notificationsPrompted, isTrue);
+
+      await store.save(
+        motivations: answers.motivationsStorage,
+        dailyGoalMinutes: answers.dailyGoalMinutes!,
+        routine: answers.routine!.id,
+        routineHour: answers.routineHour!,
+        routineDays: answers.weekdaysStorage,
+      );
+      final kept = await database.select(database.readerProfiles).getSingle();
+      expect(kept.notificationsPrompted, isTrue);
 
       await store.clear();
       expect(await store.exists(), isFalse);
@@ -111,6 +148,7 @@ void main() {
       expect(updated.motivations, 'habit,read_more');
       expect(updated.routine, 'night');
       expect(updated.routineHour, 21);
+      expect(updated.notificationsPrompted, isFalse);
     },
   );
 
@@ -186,6 +224,16 @@ void main() {
       await tester.tap(find.text('21:00'));
       await tester.pump();
       await tester.tap(find.text('Quiero empezar a leer'));
+      await tester.pumpAndSettle();
+
+      expect(find.text('Te aviso a tu hora'), findsOneWidget);
+      expect(
+        find.text(
+          'Cuando llega el momento que elegiste, Liora puede recordarte que leas.',
+        ),
+        findsOneWidget,
+      );
+      await tester.tap(find.text('Ahora no'));
       await tester.pumpAndSettle();
 
       expect(find.text('Todavía no hay libros'), findsOneWidget);

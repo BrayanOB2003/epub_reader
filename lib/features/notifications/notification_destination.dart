@@ -22,9 +22,11 @@ NotificationTap resolveNotificationTap({
   required bool? onboardingCompleted,
   required String? pendingLocation,
   required String currentPath,
+  bool notificationsPrompted = true,
 }) {
   if (pendingLocation == null) return const NotificationTap.drop();
   if (onboardingCompleted != true) return const NotificationTap.wait();
+  if (!notificationsPrompted) return const NotificationTap.wait();
   final destination = notificationLocation(pendingLocation);
   if (destination == null || destination == currentPath) {
     return const NotificationTap.drop();

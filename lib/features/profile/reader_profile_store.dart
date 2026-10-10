@@ -57,6 +57,10 @@ class ReaderProfileStore {
         'La hora no corresponde a ese momento del día.',
       );
     }
+    final existing = await _database.select(_database.readerProfiles).get();
+    final prompted = existing.isEmpty
+        ? false
+        : existing.first.notificationsPrompted;
     await _database.transaction(() async {
       await _database.delete(_database.readerProfiles).go();
       await _database
@@ -69,9 +73,18 @@ class ReaderProfileStore {
               routineHour: Value(routineHour),
               routineDays: Value(routineDays),
               completedAt: DateTime.now().toUtc(),
+              notificationsPrompted: Value(prompted),
             ),
           );
     });
+  }
+
+  Future<void> markNotificationsPrompted() {
+    return _database
+        .update(_database.readerProfiles)
+        .write(
+          const ReaderProfilesCompanion(notificationsPrompted: Value(true)),
+        );
   }
 
   Future<void> clear() {

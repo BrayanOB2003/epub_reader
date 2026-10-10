@@ -222,6 +222,23 @@ class AppLocalizationsEn extends AppLocalizations {
       'No account. Your books and progress stay on this device.';
 
   @override
+  String get notificationPermissionTitle => 'A reminder at your time';
+
+  @override
+  String get notificationPermissionBody =>
+      'When the time you chose arrives, Liora can remind you to read.';
+
+  @override
+  String get notificationPermissionAllow => 'Turn on reminders';
+
+  @override
+  String get notificationPermissionSkip => 'Not now';
+
+  @override
+  String get notificationPermissionFailed =>
+      'The permission request could not be shown.';
+
+  @override
   String stepOf(int step, int total) {
     return '$step of $total';
   }

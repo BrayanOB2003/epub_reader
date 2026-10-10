@@ -106,11 +106,15 @@ class _OnboardingPageState extends ConsumerState<OnboardingPage> {
     try {
       await ref.read(onboardingControllerProvider.notifier).complete(_answers);
       if (!mounted) return;
-      final pending = ref.read(pendingNotificationLocationProvider);
-      ref.read(pendingNotificationLocationProvider.notifier).clear();
-      context.go(
-        notificationLanding(editing: widget.editing, pendingLocation: pending),
-      );
+      if (widget.editing) {
+        final pending = ref.read(pendingNotificationLocationProvider);
+        ref.read(pendingNotificationLocationProvider.notifier).clear();
+        context.go(
+          notificationLanding(editing: true, pendingLocation: pending),
+        );
+        return;
+      }
+      context.go('/notifications');
     } catch (_) {
       if (!mounted) return;
       setState(() => _saving = false);

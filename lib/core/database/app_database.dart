@@ -51,6 +51,11 @@ class ReaderProfiles extends Table {
   TextColumn get routineDays => text().nullable()();
 
   DateTimeColumn get completedAt => dateTime()();
+
+  /// False only for a profile saved before the notification prompt is answered.
+  /// Existing rows default to true so the prompt stays tied to first onboarding.
+  BoolColumn get notificationsPrompted =>
+      boolean().withDefault(const Constant(true))();
 }
 
 class ReadingSessions extends Table {
@@ -70,7 +75,7 @@ class AppDatabase extends _$AppDatabase {
   AppDatabase(super.e);
 
   @override
-  int get schemaVersion => 7;
+  int get schemaVersion => 8;
 
   @override
   MigrationStrategy get migration {
@@ -97,6 +102,12 @@ class AppDatabase extends _$AppDatabase {
         }
         if (from < 7) {
           await migrator.addColumn(readerProfiles, readerProfiles.routineDays);
+        }
+        if (from < 8) {
+          await migrator.addColumn(
+            readerProfiles,
+            readerProfiles.notificationsPrompted,
+          );
         }
       },
     );

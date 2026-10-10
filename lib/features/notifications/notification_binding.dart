@@ -2,6 +2,7 @@ import 'package:epub_reader/app/router.dart';
 import 'package:epub_reader/features/notifications/local_notifications.dart';
 import 'package:epub_reader/features/notifications/notification_destination.dart';
 import 'package:epub_reader/features/onboarding/onboarding_controller.dart';
+import 'package:epub_reader/features/profile/reader_profile_store.dart';
 import 'package:epub_reader/l10n/app_localizations.dart';
 import 'package:flutter/widgets.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
@@ -60,10 +61,17 @@ class _NotificationBindingState extends ConsumerState<NotificationBinding> {
         : status.value;
     final pending = ref.read(pendingNotificationLocationProvider);
     final current = ref.read(appRouterProvider).state.uri.path;
+    final profile = ref.read(readerProfileProvider);
+    final prompted = profile.hasError
+        ? true
+        : (profile.isLoading || !profile.hasValue)
+        ? false
+        : profile.requireValue?.notificationsPrompted ?? false;
     final tap = resolveNotificationTap(
       onboardingCompleted: completed,
       pendingLocation: pending,
       currentPath: current,
+      notificationsPrompted: prompted,
     );
     if (tap.waiting) return;
     ref.read(pendingNotificationLocationProvider.notifier).clear();
@@ -76,6 +84,7 @@ class _NotificationBindingState extends ConsumerState<NotificationBinding> {
   Widget build(BuildContext context) {
     ref.listen(pendingNotificationLocationProvider, (_, _) => _scheduleApply());
     ref.listen(onboardingControllerProvider, (_, _) => _scheduleApply());
+    ref.listen(readerProfileProvider, (_, _) => _scheduleApply());
     return widget.child;
   }
 }
