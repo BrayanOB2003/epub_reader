@@ -10,6 +10,7 @@ import 'package:epub_reader/features/library/data/book_repository.dart';
 import 'package:epub_reader/features/habits/reading_engagement.dart';
 import 'package:epub_reader/features/notifications/reading_notifications.dart';
 import 'package:epub_reader/features/profile/reader_profile_store.dart';
+import 'package:epub_reader/features/reader/quote_highlight.dart';
 import 'package:epub_reader/features/reader/reader_gestures.dart';
 import 'package:epub_reader/features/reader/reader_preferences.dart';
 import 'package:epub_reader/l10n/app_localizations.dart';
@@ -40,6 +41,7 @@ class _ReaderPageState extends ConsumerState<ReaderPage>
   late final ReadiumReadingEngine _engine;
   late final AppAnalytics _analytics;
   late final ReaderProfileStore _profiles;
+  late final QuoteHighlightColorStore _highlightColors;
 
   Book? _book;
   Publication? _publication;
@@ -61,6 +63,9 @@ class _ReaderPageState extends ConsumerState<ReaderPage>
   int? _readingSessionId;
   Future<void> _sessionWrite = Future<void>.value();
   var _sessionReported = false;
+  var _pickingHighlight = false;
+  var _highlightsPainted = false;
+  Future<void> _highlightWrite = Future<void>.value();
 
   @override
   void initState() {
@@ -70,6 +75,7 @@ class _ReaderPageState extends ConsumerState<ReaderPage>
     _engine = ref.read(readingEngineProvider);
     _analytics = ref.read(appAnalyticsProvider);
     _profiles = ref.read(readerProfileStoreProvider);
+    _highlightColors = ref.read(quoteHighlightColorStoreProvider);
     _open();
   }
 
@@ -129,6 +135,7 @@ class _ReaderPageState extends ConsumerState<ReaderPage>
         _progress = _bookProgress(_initialLocator) ?? book.progress;
         _loading = false;
       });
+      unawaited(_applyQuoteHighlights());
     } catch (error, stack) {
       unawaited(_analytics.recordUnexpected('reader_open_failed', stack));
       if (!mounted) return;
@@ -148,6 +155,10 @@ class _ReaderPageState extends ConsumerState<ReaderPage>
   }
 
   void _onLocator(Locator locator) {
+    if (!_highlightsPainted) {
+      _highlightsPainted = true;
+      unawaited(_applyQuoteHighlights());
+    }
     final previous = _latestLocator;
     _latestLocator = locator;
     final leftChapter =
@@ -219,6 +230,7 @@ class _ReaderPageState extends ConsumerState<ReaderPage>
       return;
     }
     setState(() => _dark = !_dark);
+    unawaited(_applyQuoteHighlights());
     await _commitPreferences();
   }
 
@@ -304,11 +316,14 @@ class _ReaderPageState extends ConsumerState<ReaderPage>
     if (text == null || text.isEmpty) return;
     final l10n = AppLocalizations.of(context);
     try {
+      final colorId = await _highlightColors.read();
       await _repository.saveQuote(
         bookId: widget.bookId,
         text: text,
         locatorJson: jsonEncode(event.locator.toJson()),
+        highlightColor: colorId,
       );
+      unawaited(_applyQuoteHighlights());
     } catch (_) {
       if (!mounted) return;
       _showMessage(l10n.quoteSaveFailed);
@@ -316,6 +331,73 @@ class _ReaderPageState extends ConsumerState<ReaderPage>
     }
     if (!mounted) return;
     _showMessage(l10n.quoteSaved);
+  }
+
+  /// Paints run one after another so a slow read cannot overwrite a newer list.
+  Future<void> _applyQuoteHighlights() {
+    final next = _highlightWrite.then((_) => _paintQuoteHighlights());
+    _highlightWrite = next;
+    return next;
+  }
+
+  Future<void> _paintQuoteHighlights() async {
+    if (_fixedLayout || !mounted) return;
+    try {
+      final quotes = await _repository.quotesForBook(widget.bookId);
+      if (!mounted) return;
+      final marks = [
+        for (final quote in quotes)
+          QuoteHighlightMark(
+            id: quote.id,
+            locatorJson: quote.locatorJson,
+            colorId: quote.highlightColor,
+          ),
+      ];
+      await _engine.applyDecorations(
+        quoteHighlightGroup,
+        quoteHighlightDecorations(
+          quotes: marks,
+          dark: _dark,
+          activeQuoteId: widget.quoteId,
+        ),
+      );
+    } catch (_) {}
+  }
+
+  Future<void> _onHighlightTap(DecorationInteractionEvent event) async {
+    if (event.type != DecorationInteractionType.tap || _pickingHighlight) {
+      return;
+    }
+    final quoteId = int.tryParse(event.decorationId);
+    if (quoteId == null || !mounted) return;
+    _pickingHighlight = true;
+    try {
+      await _pickHighlightColor(quoteId);
+    } finally {
+      _pickingHighlight = false;
+    }
+  }
+
+  Future<void> _pickHighlightColor(int quoteId) async {
+    final quote = await _repository.quoteById(quoteId);
+    if (quote == null || quote.bookId != widget.bookId || !mounted) return;
+    final current = quote.highlightColor ?? quoteHighlightDefaultId;
+    final chosen = await showQuoteHighlightColors(
+      context,
+      selectedId: current,
+      dark: _dark && !_fixedLayout,
+    );
+    if (chosen == null || !mounted) return;
+    final l10n = AppLocalizations.of(context);
+    try {
+      await _highlightColors.write(chosen);
+      if (chosen == quote.highlightColor) return;
+      await _repository.setQuoteHighlightColor(id: quoteId, colorId: chosen);
+      await _applyQuoteHighlights();
+    } catch (_) {
+      if (!mounted) return;
+      _showMessage(l10n.quoteHighlightFailed);
+    }
   }
 
   Future<void> _persist() async {
@@ -547,6 +629,7 @@ class _ReaderPageState extends ConsumerState<ReaderPage>
             ],
             onTextSelected: _onTextSelected,
             onSelectionAction: _onSelectionAction,
+            onDecorationInteraction: _onHighlightTap,
           ),
         ),
         Positioned(

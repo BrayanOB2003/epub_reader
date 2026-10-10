@@ -706,4 +706,25 @@ class AppLocalizationsEn extends AppLocalizations {
 
   @override
   String get quoteInkStation => 'Blue';
+
+  @override
+  String get quoteHighlightColor => 'Highlight color';
+
+  @override
+  String get quoteHighlightAmber => 'Amber';
+
+  @override
+  String get quoteHighlightGreen => 'Green';
+
+  @override
+  String get quoteHighlightBlue => 'Blue';
+
+  @override
+  String get quoteHighlightRose => 'Rose';
+
+  @override
+  String get quoteHighlightViolet => 'Violet';
+
+  @override
+  String get quoteHighlightFailed => 'The color could not be changed.';
 }

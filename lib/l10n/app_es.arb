@@ -338,5 +338,12 @@
   "quoteInkCream": "Crema",
   "quoteInkInk": "Tinta",
   "quoteInkBlack": "Negro",
-  "quoteInkStation": "Azul"
+  "quoteInkStation": "Azul",
+  "quoteHighlightColor": "Color del resaltado",
+  "quoteHighlightAmber": "Ámbar",
+  "quoteHighlightGreen": "Verde",
+  "quoteHighlightBlue": "Azul",
+  "quoteHighlightRose": "Rosa",
+  "quoteHighlightViolet": "Violeta",
+  "quoteHighlightFailed": "No se pudo cambiar el color."
 }

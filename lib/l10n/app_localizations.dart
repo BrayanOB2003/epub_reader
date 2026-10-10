@@ -1351,6 +1351,48 @@ abstract class AppLocalizations {
   /// In es, this message translates to:
   /// **'Azul'**
   String get quoteInkStation;
+
+  /// No description provided for @quoteHighlightColor.
+  ///
+  /// In es, this message translates to:
+  /// **'Color del resaltado'**
+  String get quoteHighlightColor;
+
+  /// No description provided for @quoteHighlightAmber.
+  ///
+  /// In es, this message translates to:
+  /// **'Ámbar'**
+  String get quoteHighlightAmber;
+
+  /// No description provided for @quoteHighlightGreen.
+  ///
+  /// In es, this message translates to:
+  /// **'Verde'**
+  String get quoteHighlightGreen;
+
+  /// No description provided for @quoteHighlightBlue.
+  ///
+  /// In es, this message translates to:
+  /// **'Azul'**
+  String get quoteHighlightBlue;
+
+  /// No description provided for @quoteHighlightRose.
+  ///
+  /// In es, this message translates to:
+  /// **'Rosa'**
+  String get quoteHighlightRose;
+
+  /// No description provided for @quoteHighlightViolet.
+  ///
+  /// In es, this message translates to:
+  /// **'Violeta'**
+  String get quoteHighlightViolet;
+
+  /// No description provided for @quoteHighlightFailed.
+  ///
+  /// In es, this message translates to:
+  /// **'No se pudo cambiar el color.'**
+  String get quoteHighlightFailed;
 }
 
 class _AppLocalizationsDelegate

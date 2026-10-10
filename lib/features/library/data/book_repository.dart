@@ -16,6 +16,7 @@ class ReadingQuote {
     required this.savedAt,
     required this.bookTitle,
     this.author,
+    this.highlightColor,
   });
 
   final int id;
@@ -25,6 +26,7 @@ class ReadingQuote {
   final DateTime savedAt;
   final String bookTitle;
   final String? author;
+  final String? highlightColor;
 }
 
 class BookRepository {
@@ -261,6 +263,7 @@ class BookRepository {
     required String text,
     required String locatorJson,
     DateTime? savedAt,
+    String? highlightColor,
   }) {
     return _database
         .into(_database.savedQuotes)
@@ -270,8 +273,25 @@ class BookRepository {
             passage: text,
             locatorJson: locatorJson,
             savedAt: savedAt ?? DateTime.now(),
+            highlightColor: Value(highlightColor),
           ),
         );
+  }
+
+  Future<void> setQuoteHighlightColor({
+    required int id,
+    required String colorId,
+  }) {
+    return (_database.update(_database.savedQuotes)
+          ..where((table) => table.id.equals(id)))
+        .write(SavedQuotesCompanion(highlightColor: Value(colorId)));
+  }
+
+  Future<List<SavedQuote>> quotesForBook(int bookId) {
+    final query = _database.select(_database.savedQuotes)
+      ..where((table) => table.bookId.equals(bookId))
+      ..orderBy([(table) => OrderingTerm(expression: table.savedAt)]);
+    return query.get();
   }
 
   Future<SavedQuote?> quoteById(int id) {
@@ -304,6 +324,7 @@ class BookRepository {
             savedAt: row.readTable(_database.savedQuotes).savedAt,
             bookTitle: row.readTable(_database.books).title,
             author: row.readTable(_database.books).author,
+            highlightColor: row.readTable(_database.savedQuotes).highlightColor,
           ),
       ];
     });

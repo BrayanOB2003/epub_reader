@@ -257,5 +257,12 @@
   "quoteInkCream": "Cream",
   "quoteInkInk": "Ink",
   "quoteInkBlack": "Black",
-  "quoteInkStation": "Blue"
+  "quoteInkStation": "Blue",
+  "quoteHighlightColor": "Highlight color",
+  "quoteHighlightAmber": "Amber",
+  "quoteHighlightGreen": "Green",
+  "quoteHighlightBlue": "Blue",
+  "quoteHighlightRose": "Rose",
+  "quoteHighlightViolet": "Violet",
+  "quoteHighlightFailed": "The color could not be changed."
 }
