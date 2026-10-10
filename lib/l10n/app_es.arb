@@ -286,6 +286,12 @@
       "days": {"type": "int"}
     }
   },
+  "notificationNudgeTitle": "Todavía hay tiempo",
+  "notificationNudgeBody1": "Dos minutos alcanzan para no soltar el día.",
+  "notificationNudgeBody2": "Si hoy se llenó, quédate con un par de páginas.",
+  "notificationNudgeBody3": "No hace falta cumplir la meta. Abrir el libro ya cuenta.",
+  "notificationNudgeBody4": "Un momento corto también sostiene el hábito.",
+  "notificationNudgeBody5": "El día todavía tiene sitio para unas líneas.",
   "focusMode": "Modo concentración",
   "focusModeAndroidBody": "Silencia notificaciones y llamadas mientras Liora está abierta. Las alarmas siguen sonando.",
   "focusModeIosBody": "Al abrir Liora, el iPhone entra en No molestar si preparas Atajos una vez.",

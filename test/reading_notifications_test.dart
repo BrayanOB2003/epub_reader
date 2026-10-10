@@ -25,7 +25,22 @@ void main() {
       readingNotificationMessage(plan.first, l10n).body,
       'Son las 21:00. Hoy tu meta es 20 min.',
     );
-    expect(plan, hasLength(readingNotificationHorizon));
+    expect(
+      plan.where((item) => item.kind == ReadingNotificationKind.routine),
+      hasLength(readingNotificationHorizon),
+    );
+    final nudges = plan.where(
+      (item) => item.kind == ReadingNotificationKind.nudge,
+    );
+    expect(nudges.map((item) => item.at), [
+      DateTime(2026, 10, 10, 22),
+      DateTime(2026, 10, 10, 23),
+    ]);
+    final messages = [
+      for (final nudge in nudges) readingNotificationMessage(nudge, l10n).body,
+    ];
+    expect(messages.toSet(), hasLength(2));
+    expect(messages, isNot(contains('¿Día ocupado? Lee solo 2 minutos')));
   });
 
   test('a partial day says how many minutes are left', () {
@@ -198,6 +213,58 @@ void main() {
       plan.first.at,
       DateTime(nextWeek.year, nextWeek.month, nextWeek.day, 21),
     );
-    expect(plan, hasLength(2));
+    expect(
+      plan.where((item) => item.kind == ReadingNotificationKind.routine),
+      hasLength(2),
+    );
+    expect(
+      plan
+          .where((item) => item.kind == ReadingNotificationKind.nudge)
+          .single
+          .at,
+      DateTime(2026, 10, 10, 23),
+    );
+  });
+
+  test('an unread day gets a nudge after the hour and before midnight', () {
+    final read = planReadingNotifications(
+      now: now,
+      goalMinutes: 20,
+      hour: 21,
+      weekdays: week,
+      sessions: [
+        NotificationSession(
+          bookId: 1,
+          startedAt: now,
+          endedAt: now,
+          engagedSeconds: 60,
+        ),
+      ],
+      books: const [],
+    );
+    expect(
+      read.where((item) => item.kind == ReadingNotificationKind.nudge),
+      isEmpty,
+    );
+
+    final collapsed = planReadingNotifications(
+      now: now,
+      goalMinutes: 20,
+      hour: 22,
+      weekdays: week,
+      sessions: const [],
+      books: const [],
+    );
+    expect(
+      collapsed.where((item) => item.kind == ReadingNotificationKind.nudge),
+      hasLength(1),
+    );
+    expect(
+      collapsed
+          .where((item) => item.kind == ReadingNotificationKind.nudge)
+          .single
+          .at,
+      DateTime(2026, 10, 10, 23),
+    );
   });
 }

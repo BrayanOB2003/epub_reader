@@ -1034,6 +1034,42 @@ abstract class AppLocalizations {
   /// **'Llevas {days} días. Hoy también cuenta.'**
   String notificationStreakBody(int days);
 
+  /// No description provided for @notificationNudgeTitle.
+  ///
+  /// In es, this message translates to:
+  /// **'Todavía hay tiempo'**
+  String get notificationNudgeTitle;
+
+  /// No description provided for @notificationNudgeBody1.
+  ///
+  /// In es, this message translates to:
+  /// **'Dos minutos alcanzan para no soltar el día.'**
+  String get notificationNudgeBody1;
+
+  /// No description provided for @notificationNudgeBody2.
+  ///
+  /// In es, this message translates to:
+  /// **'Si hoy se llenó, quédate con un par de páginas.'**
+  String get notificationNudgeBody2;
+
+  /// No description provided for @notificationNudgeBody3.
+  ///
+  /// In es, this message translates to:
+  /// **'No hace falta cumplir la meta. Abrir el libro ya cuenta.'**
+  String get notificationNudgeBody3;
+
+  /// No description provided for @notificationNudgeBody4.
+  ///
+  /// In es, this message translates to:
+  /// **'Un momento corto también sostiene el hábito.'**
+  String get notificationNudgeBody4;
+
+  /// No description provided for @notificationNudgeBody5.
+  ///
+  /// In es, this message translates to:
+  /// **'El día todavía tiene sitio para unas líneas.'**
+  String get notificationNudgeBody5;
+
   /// No description provided for @focusMode.
   ///
   /// In es, this message translates to:

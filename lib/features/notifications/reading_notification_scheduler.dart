@@ -71,8 +71,8 @@ class ReadingNotificationScheduler {
     }
 
     if (permissionGranted == null) return;
-    for (var offset = 0; offset < readingNotificationHorizon; offset++) {
-      await _notifications.cancel(readingScheduleIdStart + offset);
+    for (final id in scheduledReadingNotificationIds) {
+      await _notifications.cancel(id);
     }
     final hour = profile?.routineHour;
     if (permissionGranted != true || profile == null || hour == null) return;

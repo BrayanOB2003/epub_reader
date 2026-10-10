@@ -205,6 +205,12 @@
       "days": {"type": "int"}
     }
   },
+  "notificationNudgeTitle": "There's still time",
+  "notificationNudgeBody1": "Two minutes are enough to keep the day.",
+  "notificationNudgeBody2": "If the day filled up, stay for a couple of pages.",
+  "notificationNudgeBody3": "You don't have to hit the goal. Opening the book counts.",
+  "notificationNudgeBody4": "A short moment still holds the habit.",
+  "notificationNudgeBody5": "The day still has room for a few lines.",
   "focusMode": "Focus mode",
   "focusModeAndroidBody": "Silences notifications and calls while Liora is open. Alarms still ring.",
   "focusModeIosBody": "When you open Liora, your iPhone can turn on Do Not Disturb once you set up Shortcuts.",

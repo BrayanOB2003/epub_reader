@@ -538,6 +538,29 @@ class AppLocalizationsEs extends AppLocalizations {
   }
 
   @override
+  String get notificationNudgeTitle => 'Todavía hay tiempo';
+
+  @override
+  String get notificationNudgeBody1 =>
+      'Dos minutos alcanzan para no soltar el día.';
+
+  @override
+  String get notificationNudgeBody2 =>
+      'Si hoy se llenó, quédate con un par de páginas.';
+
+  @override
+  String get notificationNudgeBody3 =>
+      'No hace falta cumplir la meta. Abrir el libro ya cuenta.';
+
+  @override
+  String get notificationNudgeBody4 =>
+      'Un momento corto también sostiene el hábito.';
+
+  @override
+  String get notificationNudgeBody5 =>
+      'El día todavía tiene sitio para unas líneas.';
+
+  @override
   String get focusMode => 'Modo concentración';
 
   @override
