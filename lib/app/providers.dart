@@ -61,6 +61,10 @@ final quoteHighlightColorStoreProvider = Provider<QuoteHighlightColorStore>((
   return QuoteHighlightColorStore();
 });
 
+final quoteHighlightDefaultProvider = FutureProvider<String>((ref) {
+  return ref.watch(quoteHighlightColorStoreProvider).read();
+});
+
 final readingEngineProvider = Provider<ReadiumReadingEngine>((ref) {
   return ReadiumReadingEngine();
 });

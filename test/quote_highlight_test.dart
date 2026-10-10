@@ -5,7 +5,10 @@ import 'package:epub_reader/app/schedule_theme.dart';
 import 'package:epub_reader/core/database/app_database.dart';
 import 'package:epub_reader/features/library/data/book_repository.dart';
 import 'package:epub_reader/features/quotes/quote_contrast.dart';
+import 'package:epub_reader/app/providers.dart';
 import 'package:epub_reader/features/reader/quote_highlight.dart';
+import 'package:epub_reader/features/reader/quote_highlight_default_tile.dart';
+import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:epub_reader/features/reader/reader_preferences.dart';
 import 'package:epub_reader/l10n/app_localizations.dart';
 import 'package:flutter/material.dart';
@@ -54,6 +57,25 @@ void main() {
 
     final marks = await repository.quotesForBook(bookId);
     expect(marks.map((quote) => quote.highlightColor), ['rose', null]);
+
+    final directory = await Directory.systemTemp.createTemp('recolor');
+    addTearDown(() => directory.delete(recursive: true));
+    final store = QuoteHighlightColorStore(
+      documentsDirectory: () async => directory,
+    );
+    await recolorQuoteHighlight(
+      repository: repository,
+      store: store,
+      quoteId: unmarked,
+      currentColorId: null,
+      colorId: 'green',
+    );
+    expect((await repository.quoteById(unmarked))?.highlightColor, 'green');
+    expect(await store.read(), 'green');
+
+    await repository.deleteQuote(blue);
+    expect(await repository.quoteById(blue), isNull);
+    expect(await repository.quoteById(unmarked), isNotNull);
   });
 
   test('missing color stays amber and a broken locator is skipped', () {
@@ -117,28 +139,70 @@ void main() {
   });
 
   testWidgets('tapping a swatch returns that color', (tester) async {
-    await tester.pumpWidget(
-      MaterialApp(
-        locale: const Locale('es'),
-        localizationsDelegates: AppLocalizations.localizationsDelegates,
-        supportedLocales: AppLocalizations.supportedLocales,
-        theme: scheduleTheme(Brightness.light),
-        home: const _ColorPickerHost(),
-      ),
-    );
+    await tester.pumpWidget(_app(const _ColorPickerHost(allowDelete: false)));
 
     await tester.tap(find.text('abrir'));
     await tester.pumpAndSettle();
     expect(find.text('Color del resaltado'), findsOneWidget);
+    expect(find.text('Eliminar cita'), findsNothing);
 
     await tester.tap(find.bySemanticsLabel('Verde'));
     await tester.pumpAndSettle();
     expect(find.text('green'), findsOneWidget);
   });
+
+  testWidgets('the profile changes the default color', (tester) async {
+    final store = _MemoryColorStore();
+    await tester.pumpWidget(
+      ProviderScope(
+        overrides: [quoteHighlightColorStoreProvider.overrideWithValue(store)],
+        child: _app(const Scaffold(body: QuoteHighlightDefaultTile())),
+      ),
+    );
+
+    await tester.tap(find.text('Color de las citas'));
+    await tester.pumpAndSettle();
+    expect(find.text('Eliminar cita'), findsNothing);
+    await tester.tap(find.bySemanticsLabel('Violeta'));
+    await tester.pumpAndSettle();
+    expect(store.colorId, 'violet');
+  });
+
+  testWidgets('the reader picker can delete the quote', (tester) async {
+    await tester.pumpWidget(_app(const _ColorPickerHost(allowDelete: true)));
+
+    await tester.tap(find.text('abrir'));
+    await tester.pumpAndSettle();
+    await tester.tap(find.text('Eliminar cita'));
+    await tester.pumpAndSettle();
+    expect(find.text('eliminar'), findsOneWidget);
+  });
+}
+
+class _MemoryColorStore implements QuoteHighlightColorStore {
+  var colorId = quoteHighlightDefaultId;
+
+  @override
+  Future<String> read() async => colorId;
+
+  @override
+  Future<void> write(String colorId) async => this.colorId = colorId;
+}
+
+Widget _app(Widget home) {
+  return MaterialApp(
+    locale: const Locale('es'),
+    localizationsDelegates: AppLocalizations.localizationsDelegates,
+    supportedLocales: AppLocalizations.supportedLocales,
+    theme: scheduleTheme(Brightness.light),
+    home: home,
+  );
 }
 
 class _ColorPickerHost extends StatefulWidget {
-  const _ColorPickerHost();
+  const _ColorPickerHost({required this.allowDelete});
+
+  final bool allowDelete;
 
   @override
   State<_ColorPickerHost> createState() => _ColorPickerHostState();
@@ -155,13 +219,20 @@ class _ColorPickerHostState extends State<_ColorPickerHost> {
           Text(_chosen),
           TextButton(
             onPressed: () async {
-              final chosen = await showQuoteHighlightColors(
+              final choice = await showQuoteHighlightColors(
                 context,
                 selectedId: 'amber',
                 dark: false,
+                allowDelete: widget.allowDelete,
               );
               if (!mounted) return;
-              setState(() => _chosen = chosen ?? 'nada');
+              setState(() {
+                _chosen = switch (choice) {
+                  QuoteHighlightRecolor(:final colorId) => colorId,
+                  QuoteHighlightDelete() => 'eliminar',
+                  null => 'nada',
+                };
+              });
             },
             child: const Text('abrir'),
           ),

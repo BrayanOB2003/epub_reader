@@ -727,4 +727,27 @@ class AppLocalizationsEn extends AppLocalizations {
 
   @override
   String get quoteHighlightFailed => 'The color could not be changed.';
+
+  @override
+  String get quoteHighlightDefault => 'Quote color';
+
+  @override
+  String get quoteHighlightDefaultSubtitle =>
+      'For the quotes you save from now on.';
+
+  @override
+  String get deleteQuote => 'Delete quote';
+
+  @override
+  String get deleteQuoteTitle => 'Delete this quote?';
+
+  @override
+  String get deleteQuoteBody =>
+      'It leaves your quotes and is no longer highlighted in the book.';
+
+  @override
+  String get quoteDeleted => 'Quote deleted.';
+
+  @override
+  String get quoteDeleteFailed => 'The quote could not be deleted.';
 }

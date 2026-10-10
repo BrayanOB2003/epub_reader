@@ -731,4 +731,27 @@ class AppLocalizationsEs extends AppLocalizations {
 
   @override
   String get quoteHighlightFailed => 'No se pudo cambiar el color.';
+
+  @override
+  String get quoteHighlightDefault => 'Color de las citas';
+
+  @override
+  String get quoteHighlightDefaultSubtitle =>
+      'Para las citas que guardes desde ahora.';
+
+  @override
+  String get deleteQuote => 'Eliminar cita';
+
+  @override
+  String get deleteQuoteTitle => '¿Eliminar esta cita?';
+
+  @override
+  String get deleteQuoteBody =>
+      'Sale de tus citas y deja de estar resaltada en el libro.';
+
+  @override
+  String get quoteDeleted => 'Cita eliminada.';
+
+  @override
+  String get quoteDeleteFailed => 'No se pudo eliminar la cita.';
 }

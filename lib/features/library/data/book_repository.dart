@@ -287,6 +287,12 @@ class BookRepository {
         .write(SavedQuotesCompanion(highlightColor: Value(colorId)));
   }
 
+  Future<void> deleteQuote(int id) {
+    return (_database.delete(
+      _database.savedQuotes,
+    )..where((table) => table.id.equals(id))).go();
+  }
+
   Future<List<SavedQuote>> quotesForBook(int bookId) {
     final query = _database.select(_database.savedQuotes)
       ..where((table) => table.bookId.equals(bookId))

@@ -372,32 +372,80 @@ class _ReaderPageState extends ConsumerState<ReaderPage>
     if (quoteId == null || !mounted) return;
     _pickingHighlight = true;
     try {
-      await _pickHighlightColor(quoteId);
+      await _editHighlight(quoteId);
     } finally {
       _pickingHighlight = false;
     }
   }
 
-  Future<void> _pickHighlightColor(int quoteId) async {
+  Future<void> _editHighlight(int quoteId) async {
     final quote = await _repository.quoteById(quoteId);
     if (quote == null || quote.bookId != widget.bookId || !mounted) return;
-    final current = quote.highlightColor ?? quoteHighlightDefaultId;
-    final chosen = await showQuoteHighlightColors(
+    final choice = await showQuoteHighlightColors(
       context,
-      selectedId: current,
+      selectedId: quote.highlightColor ?? quoteHighlightDefaultId,
       dark: _dark && !_fixedLayout,
+      allowDelete: true,
     );
-    if (chosen == null || !mounted) return;
+    if (!mounted) return;
+    switch (choice) {
+      case null:
+        return;
+      case QuoteHighlightRecolor(:final colorId):
+        await _recolorHighlight(quote, colorId);
+      case QuoteHighlightDelete():
+        await _deleteQuote(quote);
+    }
+  }
+
+  Future<void> _recolorHighlight(SavedQuote quote, String colorId) async {
     final l10n = AppLocalizations.of(context);
     try {
-      await _highlightColors.write(chosen);
-      if (chosen == quote.highlightColor) return;
-      await _repository.setQuoteHighlightColor(id: quoteId, colorId: chosen);
+      await recolorQuoteHighlight(
+        repository: _repository,
+        store: _highlightColors,
+        quoteId: quote.id,
+        currentColorId: quote.highlightColor,
+        colorId: colorId,
+      );
+      ref.invalidate(quoteHighlightDefaultProvider);
       await _applyQuoteHighlights();
     } catch (_) {
       if (!mounted) return;
       _showMessage(l10n.quoteHighlightFailed);
     }
+  }
+
+  Future<void> _deleteQuote(SavedQuote quote) async {
+    final l10n = AppLocalizations.of(context);
+    final confirmed = await showDialog<bool>(
+      context: context,
+      builder: (context) => AlertDialog(
+        title: Text(l10n.deleteQuoteTitle),
+        content: Text(l10n.deleteQuoteBody),
+        actions: [
+          TextButton(
+            onPressed: () => Navigator.pop(context, false),
+            child: Text(l10n.cancel),
+          ),
+          TextButton(
+            onPressed: () => Navigator.pop(context, true),
+            child: Text(l10n.delete),
+          ),
+        ],
+      ),
+    );
+    if (confirmed != true || !mounted) return;
+    try {
+      await _repository.deleteQuote(quote.id);
+      await _applyQuoteHighlights();
+    } catch (_) {
+      if (!mounted) return;
+      _showMessage(l10n.quoteDeleteFailed);
+      return;
+    }
+    if (!mounted) return;
+    _showMessage(l10n.quoteDeleted);
   }
 
   Future<void> _persist() async {
@@ -630,6 +678,8 @@ class _ReaderPageState extends ConsumerState<ReaderPage>
             onTextSelected: _onTextSelected,
             onSelectionAction: _onSelectionAction,
             onDecorationInteraction: _onHighlightTap,
+            onTap: (point) =>
+                _onZone(readerZoneAt(x: point.dx, width: 1, rtl: rtl)),
           ),
         ),
         Positioned(
@@ -638,10 +688,8 @@ class _ReaderPageState extends ConsumerState<ReaderPage>
           right: 0,
           bottom: 0,
           child: ReaderGestureLayer(
-            rtl: rtl,
             scroll: _scroll,
             textSelected: _textSelected,
-            onZone: _onZone,
             onPageDrag: _hideChrome,
             onSelectionTap: _onSelectionTap,
           ),

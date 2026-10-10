@@ -1393,6 +1393,48 @@ abstract class AppLocalizations {
   /// In es, this message translates to:
   /// **'No se pudo cambiar el color.'**
   String get quoteHighlightFailed;
+
+  /// No description provided for @quoteHighlightDefault.
+  ///
+  /// In es, this message translates to:
+  /// **'Color de las citas'**
+  String get quoteHighlightDefault;
+
+  /// No description provided for @quoteHighlightDefaultSubtitle.
+  ///
+  /// In es, this message translates to:
+  /// **'Para las citas que guardes desde ahora.'**
+  String get quoteHighlightDefaultSubtitle;
+
+  /// No description provided for @deleteQuote.
+  ///
+  /// In es, this message translates to:
+  /// **'Eliminar cita'**
+  String get deleteQuote;
+
+  /// No description provided for @deleteQuoteTitle.
+  ///
+  /// In es, this message translates to:
+  /// **'¿Eliminar esta cita?'**
+  String get deleteQuoteTitle;
+
+  /// No description provided for @deleteQuoteBody.
+  ///
+  /// In es, this message translates to:
+  /// **'Sale de tus citas y deja de estar resaltada en el libro.'**
+  String get deleteQuoteBody;
+
+  /// No description provided for @quoteDeleted.
+  ///
+  /// In es, this message translates to:
+  /// **'Cita eliminada.'**
+  String get quoteDeleted;
+
+  /// No description provided for @quoteDeleteFailed.
+  ///
+  /// In es, this message translates to:
+  /// **'No se pudo eliminar la cita.'**
+  String get quoteDeleteFailed;
 }
 
 class _AppLocalizationsDelegate

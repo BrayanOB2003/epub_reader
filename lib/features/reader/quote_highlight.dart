@@ -2,6 +2,7 @@ import 'dart:convert';
 import 'dart:io';
 
 import 'package:epub_reader/app/schedule_theme.dart';
+import 'package:epub_reader/features/library/data/book_repository.dart';
 import 'package:epub_reader/l10n/app_localizations.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter_readium/flutter_readium.dart';
@@ -135,13 +136,28 @@ class QuoteHighlightColorStore {
   }
 }
 
-Future<String?> showQuoteHighlightColors(
+sealed class QuoteHighlightChoice {
+  const QuoteHighlightChoice();
+}
+
+class QuoteHighlightRecolor extends QuoteHighlightChoice {
+  const QuoteHighlightRecolor(this.colorId);
+
+  final String colorId;
+}
+
+class QuoteHighlightDelete extends QuoteHighlightChoice {
+  const QuoteHighlightDelete();
+}
+
+Future<QuoteHighlightChoice?> showQuoteHighlightColors(
   BuildContext context, {
   required String selectedId,
   required bool dark,
+  bool allowDelete = false,
 }) {
   final l10n = AppLocalizations.of(context);
-  return showDialog<String>(
+  return showDialog<QuoteHighlightChoice>(
     context: context,
     builder: (context) {
       return AlertDialog(
@@ -154,12 +170,19 @@ Future<String?> showQuoteHighlightColors(
                   color: color.tint(dark: dark),
                   label: _highlightLabel(l10n, color.id),
                   selected: color.id == selectedId,
-                  onTap: () => Navigator.pop(context, color.id),
+                  onTap: () =>
+                      Navigator.pop(context, QuoteHighlightRecolor(color.id)),
                 ),
               ),
           ],
         ),
         actions: [
+          if (allowDelete)
+            TextButton(
+              onPressed: () =>
+                  Navigator.pop(context, const QuoteHighlightDelete()),
+              child: Text(l10n.deleteQuote),
+            ),
           TextButton(
             onPressed: () => Navigator.pop(context),
             child: Text(l10n.close),
@@ -168,6 +191,20 @@ Future<String?> showQuoteHighlightColors(
       );
     },
   );
+}
+
+/// The color becomes the default for the next saved quote even when the
+/// quote already had it.
+Future<void> recolorQuoteHighlight({
+  required BookRepository repository,
+  required QuoteHighlightColorStore store,
+  required int quoteId,
+  required String? currentColorId,
+  required String colorId,
+}) async {
+  await store.write(colorId);
+  if (colorId == currentColorId) return;
+  await repository.setQuoteHighlightColor(id: quoteId, colorId: colorId);
 }
 
 class _HighlightSwatch extends StatelessWidget {

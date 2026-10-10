@@ -42,42 +42,37 @@ void main() {
     expect(readerZoneAt(x: 90, width: 100, rtl: true), ReaderZone.previous);
   });
 
-  test(
-    'taps go to Readium while text is selected, so the page does not turn',
-    () {
-      expect(readerClaimsTap(textSelected: true), isFalse);
-      expect(readerClaimsTap(textSelected: false), isTrue);
-    },
-  );
-
-  testWidgets('a short tap hits a zone and a drag stays with the reader', (
+  testWidgets('taps pass through to the reader and a drag is reported', (
     tester,
   ) async {
-    final zones = <ReaderZone>[];
+    var readerTaps = 0;
     var drags = 0;
     await tester.pumpWidget(
       MaterialApp(
-        home: ReaderGestureLayer(
-          rtl: false,
-          scroll: false,
-          textSelected: false,
-          onZone: zones.add,
-          onPageDrag: () => drags++,
-          onSelectionTap: () {},
+        home: Stack(
+          children: [
+            Positioned.fill(child: GestureDetector(onTap: () => readerTaps++)),
+            Positioned.fill(
+              child: ReaderGestureLayer(
+                scroll: false,
+                textSelected: false,
+                onPageDrag: () => drags++,
+                onSelectionTap: () {},
+              ),
+            ),
+          ],
         ),
       ),
     );
     final box = tester.getRect(find.byType(ReaderGestureLayer));
     await tester.tapAt(Offset(box.left + 8, box.center.dy));
-    expect(zones, [ReaderZone.previous]);
+    expect(readerTaps, 1);
 
-    zones.clear();
     await tester.timedDragFrom(
       box.center,
       const Offset(-120, 0),
       const Duration(milliseconds: 300),
     );
-    expect(zones, isEmpty);
     expect(drags, 1);
   });
 
@@ -86,10 +81,8 @@ void main() {
     await tester.pumpWidget(
       MaterialApp(
         home: ReaderGestureLayer(
-          rtl: false,
           scroll: true,
           textSelected: false,
-          onZone: (_) {},
           onPageDrag: () => drags++,
           onSelectionTap: () {},
         ),

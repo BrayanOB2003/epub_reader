@@ -264,5 +264,12 @@
   "quoteHighlightBlue": "Blue",
   "quoteHighlightRose": "Rose",
   "quoteHighlightViolet": "Violet",
-  "quoteHighlightFailed": "The color could not be changed."
+  "quoteHighlightFailed": "The color could not be changed.",
+  "quoteHighlightDefault": "Quote color",
+  "quoteHighlightDefaultSubtitle": "For the quotes you save from now on.",
+  "deleteQuote": "Delete quote",
+  "deleteQuoteTitle": "Delete this quote?",
+  "deleteQuoteBody": "It leaves your quotes and is no longer highlighted in the book.",
+  "quoteDeleted": "Quote deleted.",
+  "quoteDeleteFailed": "The quote could not be deleted."
 }

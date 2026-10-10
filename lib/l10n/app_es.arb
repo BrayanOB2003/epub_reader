@@ -345,5 +345,12 @@
   "quoteHighlightBlue": "Azul",
   "quoteHighlightRose": "Rosa",
   "quoteHighlightViolet": "Violeta",
-  "quoteHighlightFailed": "No se pudo cambiar el color."
+  "quoteHighlightFailed": "No se pudo cambiar el color.",
+  "quoteHighlightDefault": "Color de las citas",
+  "quoteHighlightDefaultSubtitle": "Para las citas que guardes desde ahora.",
+  "deleteQuote": "Eliminar cita",
+  "deleteQuoteTitle": "¿Eliminar esta cita?",
+  "deleteQuoteBody": "Sale de tus citas y deja de estar resaltada en el libro.",
+  "quoteDeleted": "Cita eliminada.",
+  "quoteDeleteFailed": "No se pudo eliminar la cita."
 }
