@@ -3,6 +3,9 @@ import 'package:flutter/foundation.dart';
 import 'package:flutter/widgets.dart';
 import 'package:flutter_local_notifications/flutter_local_notifications.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
+import 'package:flutter_timezone/flutter_timezone.dart';
+import 'package:timezone/data/latest.dart' as tz_data;
+import 'package:timezone/timezone.dart' as tz;
 
 const notificationChannelId = 'liora';
 
@@ -37,6 +40,12 @@ abstract class LocalNotifications {
   /// Shows [message] and asks for permission the first time.
   /// Returns false when the platform cannot show it or permission is denied.
   Future<bool> show(LocalNotificationMessage message);
+
+  /// Schedules [message] at [when]. Does not ask for permission.
+  Future<bool> schedule({
+    required LocalNotificationMessage message,
+    required DateTime when,
+  });
 
   Future<void> cancel(int id);
 
@@ -109,6 +118,12 @@ class SilentLocalNotifications implements LocalNotifications {
   Future<bool> show(LocalNotificationMessage message) async => false;
 
   @override
+  Future<bool> schedule({
+    required LocalNotificationMessage message,
+    required DateTime when,
+  }) async => false;
+
+  @override
   Future<void> cancel(int id) async {}
 
   @override
@@ -125,6 +140,7 @@ class PluginLocalNotifications implements LocalNotifications {
   final FlutterLocalNotificationsPlugin _plugin;
 
   var _started = false;
+  var _timeZoneReady = false;
   var _channelName = 'Liora';
   var _channelDescription = 'Liora';
 
@@ -136,6 +152,7 @@ class PluginLocalNotifications implements LocalNotifications {
     _channelName = channelName;
     _channelDescription = channelDescription;
     if (_started) return;
+    await _ensureTimeZone();
     const android = AndroidInitializationSettings('ic_notification');
     const ios = DarwinInitializationSettings(
       requestAlertPermission: false,
@@ -196,22 +213,59 @@ class PluginLocalNotifications implements LocalNotifications {
       id: message.id,
       title: message.title,
       body: message.body,
-      notificationDetails: NotificationDetails(
-        android: AndroidNotificationDetails(
-          notificationChannelId,
-          _channelName,
-          channelDescription: _channelDescription,
-        ),
-        iOS: const DarwinNotificationDetails(
-          presentAlert: true,
-          presentBanner: true,
-          presentList: true,
-          presentSound: true,
-        ),
-      ),
+      notificationDetails: _details(),
       payload: location,
     );
     return true;
+  }
+
+  @override
+  Future<bool> schedule({
+    required LocalNotificationMessage message,
+    required DateTime when,
+  }) async {
+    final location = _locationOf(message);
+    if (!when.isAfter(DateTime.now())) return false;
+    if (!await hasPermission()) return false;
+    await _ensureTimeZone();
+    await _plugin.zonedSchedule(
+      id: message.id,
+      title: message.title,
+      body: message.body,
+      scheduledDate: tz.TZDateTime.from(when, tz.local),
+      notificationDetails: _details(),
+      androidScheduleMode: AndroidScheduleMode.inexactAllowWhileIdle,
+      payload: location,
+    );
+    return true;
+  }
+
+  NotificationDetails _details() {
+    return NotificationDetails(
+      android: AndroidNotificationDetails(
+        notificationChannelId,
+        _channelName,
+        channelDescription: _channelDescription,
+      ),
+      iOS: const DarwinNotificationDetails(
+        presentAlert: true,
+        presentBanner: true,
+        presentList: true,
+        presentSound: true,
+      ),
+    );
+  }
+
+  Future<void> _ensureTimeZone() async {
+    if (_timeZoneReady) return;
+    tz_data.initializeTimeZones();
+    try {
+      final info = await FlutterTimezone.getLocalTimezone();
+      tz.setLocalLocation(tz.getLocation(info.identifier));
+    } catch (error) {
+      debugPrint('[notifications] timezone $error');
+    }
+    _timeZoneReady = true;
   }
 
   @override

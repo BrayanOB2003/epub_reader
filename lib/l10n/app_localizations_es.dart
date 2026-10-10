@@ -455,6 +455,53 @@ class AppLocalizationsEs extends AppLocalizations {
   String get notificationChannelDescription => 'Avisos de Liora';
 
   @override
+  String get notificationRoutineTitle => 'Hora de leer';
+
+  @override
+  String notificationRoutineBody(String hour, int minutes) {
+    return 'Son las $hour. Hoy tu meta es $minutes min.';
+  }
+
+  @override
+  String get notificationGoalTitle => 'La meta de hoy';
+
+  @override
+  String notificationGoalRemainingBody(int minutes) {
+    return 'Te faltan $minutes min para cerrar el día.';
+  }
+
+  @override
+  String get notificationGoalMetTitle => 'Meta cumplida';
+
+  @override
+  String notificationGoalMetBody(int minutes) {
+    return 'Cerraste el día. $minutes min.';
+  }
+
+  @override
+  String notificationResumeChapterBody(int chapter, String title) {
+    return 'Sigues en el capítulo $chapter de $title.';
+  }
+
+  @override
+  String notificationResumeSectionBody(String section, String title) {
+    return 'Sigues en $section de $title.';
+  }
+
+  @override
+  String notificationResumeBookBody(String title) {
+    return 'Sigues con $title.';
+  }
+
+  @override
+  String get notificationStreakTitle => 'Tu racha';
+
+  @override
+  String notificationStreakBody(int days) {
+    return 'Llevas $days días. Hoy también cuenta.';
+  }
+
+  @override
   String get focusMode => 'Modo concentración';
 
   @override

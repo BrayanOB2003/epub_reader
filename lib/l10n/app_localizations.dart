@@ -908,6 +908,72 @@ abstract class AppLocalizations {
   /// **'Avisos de Liora'**
   String get notificationChannelDescription;
 
+  /// No description provided for @notificationRoutineTitle.
+  ///
+  /// In es, this message translates to:
+  /// **'Hora de leer'**
+  String get notificationRoutineTitle;
+
+  /// No description provided for @notificationRoutineBody.
+  ///
+  /// In es, this message translates to:
+  /// **'Son las {hour}. Hoy tu meta es {minutes} min.'**
+  String notificationRoutineBody(String hour, int minutes);
+
+  /// No description provided for @notificationGoalTitle.
+  ///
+  /// In es, this message translates to:
+  /// **'La meta de hoy'**
+  String get notificationGoalTitle;
+
+  /// No description provided for @notificationGoalRemainingBody.
+  ///
+  /// In es, this message translates to:
+  /// **'Te faltan {minutes} min para cerrar el día.'**
+  String notificationGoalRemainingBody(int minutes);
+
+  /// No description provided for @notificationGoalMetTitle.
+  ///
+  /// In es, this message translates to:
+  /// **'Meta cumplida'**
+  String get notificationGoalMetTitle;
+
+  /// No description provided for @notificationGoalMetBody.
+  ///
+  /// In es, this message translates to:
+  /// **'Cerraste el día. {minutes} min.'**
+  String notificationGoalMetBody(int minutes);
+
+  /// No description provided for @notificationResumeChapterBody.
+  ///
+  /// In es, this message translates to:
+  /// **'Sigues en el capítulo {chapter} de {title}.'**
+  String notificationResumeChapterBody(int chapter, String title);
+
+  /// No description provided for @notificationResumeSectionBody.
+  ///
+  /// In es, this message translates to:
+  /// **'Sigues en {section} de {title}.'**
+  String notificationResumeSectionBody(String section, String title);
+
+  /// No description provided for @notificationResumeBookBody.
+  ///
+  /// In es, this message translates to:
+  /// **'Sigues con {title}.'**
+  String notificationResumeBookBody(String title);
+
+  /// No description provided for @notificationStreakTitle.
+  ///
+  /// In es, this message translates to:
+  /// **'Tu racha'**
+  String get notificationStreakTitle;
+
+  /// No description provided for @notificationStreakBody.
+  ///
+  /// In es, this message translates to:
+  /// **'Llevas {days} días. Hoy también cuenta.'**
+  String notificationStreakBody(int days);
+
   /// No description provided for @focusMode.
   ///
   /// In es, this message translates to:

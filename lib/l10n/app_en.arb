@@ -146,6 +146,55 @@
   "sampleBookTitle": "Sample reading",
   "notificationChannelName": "Notices",
   "notificationChannelDescription": "Notices from Liora",
+  "notificationRoutineTitle": "Time to read",
+  "notificationRoutineBody": "It's {hour}. Today's goal is {minutes} min.",
+  "@notificationRoutineBody": {
+    "placeholders": {
+      "hour": {"type": "String"},
+      "minutes": {"type": "int"}
+    }
+  },
+  "notificationGoalTitle": "Today's goal",
+  "notificationGoalRemainingBody": "{minutes} min left to close the day.",
+  "@notificationGoalRemainingBody": {
+    "placeholders": {
+      "minutes": {"type": "int"}
+    }
+  },
+  "notificationGoalMetTitle": "Goal met",
+  "notificationGoalMetBody": "You closed the day. {minutes} min.",
+  "@notificationGoalMetBody": {
+    "placeholders": {
+      "minutes": {"type": "int"}
+    }
+  },
+  "notificationResumeChapterBody": "You're still on chapter {chapter} of {title}.",
+  "@notificationResumeChapterBody": {
+    "placeholders": {
+      "chapter": {"type": "int"},
+      "title": {"type": "String"}
+    }
+  },
+  "notificationResumeSectionBody": "You're still in {section} of {title}.",
+  "@notificationResumeSectionBody": {
+    "placeholders": {
+      "section": {"type": "String"},
+      "title": {"type": "String"}
+    }
+  },
+  "notificationResumeBookBody": "You're still with {title}.",
+  "@notificationResumeBookBody": {
+    "placeholders": {
+      "title": {"type": "String"}
+    }
+  },
+  "notificationStreakTitle": "Your streak",
+  "notificationStreakBody": "{days} days in a row. Today counts too.",
+  "@notificationStreakBody": {
+    "placeholders": {
+      "days": {"type": "int"}
+    }
+  },
   "focusMode": "Focus mode",
   "focusModeAndroidBody": "Silences notifications and calls while Liora is open. Alarms still ring.",
   "focusModeIosBody": "When you open Liora, your iPhone can turn on Do Not Disturb once you set up Shortcuts.",

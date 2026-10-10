@@ -209,6 +209,55 @@
   "sampleBookTitle": "Lectura de ejemplo",
   "notificationChannelName": "Avisos",
   "notificationChannelDescription": "Avisos de Liora",
+  "notificationRoutineTitle": "Hora de leer",
+  "notificationRoutineBody": "Son las {hour}. Hoy tu meta es {minutes} min.",
+  "@notificationRoutineBody": {
+    "placeholders": {
+      "hour": {"type": "String"},
+      "minutes": {"type": "int"}
+    }
+  },
+  "notificationGoalTitle": "La meta de hoy",
+  "notificationGoalRemainingBody": "Te faltan {minutes} min para cerrar el día.",
+  "@notificationGoalRemainingBody": {
+    "placeholders": {
+      "minutes": {"type": "int"}
+    }
+  },
+  "notificationGoalMetTitle": "Meta cumplida",
+  "notificationGoalMetBody": "Cerraste el día. {minutes} min.",
+  "@notificationGoalMetBody": {
+    "placeholders": {
+      "minutes": {"type": "int"}
+    }
+  },
+  "notificationResumeChapterBody": "Sigues en el capítulo {chapter} de {title}.",
+  "@notificationResumeChapterBody": {
+    "placeholders": {
+      "chapter": {"type": "int"},
+      "title": {"type": "String"}
+    }
+  },
+  "notificationResumeSectionBody": "Sigues en {section} de {title}.",
+  "@notificationResumeSectionBody": {
+    "placeholders": {
+      "section": {"type": "String"},
+      "title": {"type": "String"}
+    }
+  },
+  "notificationResumeBookBody": "Sigues con {title}.",
+  "@notificationResumeBookBody": {
+    "placeholders": {
+      "title": {"type": "String"}
+    }
+  },
+  "notificationStreakTitle": "Tu racha",
+  "notificationStreakBody": "Llevas {days} días. Hoy también cuenta.",
+  "@notificationStreakBody": {
+    "placeholders": {
+      "days": {"type": "int"}
+    }
+  },
   "focusMode": "Modo concentración",
   "focusModeAndroidBody": "Silencia notificaciones y llamadas mientras Liora está abierta. Las alarmas siguen sonando.",
   "focusModeIosBody": "Al abrir Liora, el iPhone entra en No molestar si preparas Atajos una vez.",

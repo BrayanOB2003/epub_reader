@@ -1,5 +1,7 @@
+import 'package:epub_reader/app/providers.dart';
 import 'package:epub_reader/app/router.dart';
 import 'package:epub_reader/features/notifications/local_notifications.dart';
+import 'package:epub_reader/features/notifications/reading_notification_scheduler.dart';
 
 import 'dart:async';
 
@@ -25,6 +27,8 @@ class NotificationBinding extends ConsumerStatefulWidget {
 class _NotificationBindingState extends ConsumerState<NotificationBinding>
     with WidgetsBindingObserver {
   var _applyScheduled = false;
+  var _notificationsReady = false;
+  var _refreshScheduled = false;
 
   @override
   void initState() {
@@ -48,6 +52,7 @@ class _NotificationBindingState extends ConsumerState<NotificationBinding>
     await ref.read(notificationPermissionGrantedProvider.notifier).refresh();
     if (!mounted) return;
     _showPromptIfDue();
+    _scheduleRefresh();
   }
 
   void _showPromptIfDue() {
@@ -88,9 +93,44 @@ class _NotificationBindingState extends ConsumerState<NotificationBinding>
           );
     } catch (error) {
       debugPrint('[notifications] $error');
+      return;
     }
     if (!mounted) return;
+    _notificationsReady = true;
     await ref.read(notificationPermissionGrantedProvider.notifier).refresh();
+    if (!mounted) return;
+    await _refreshReadingNotifications();
+  }
+
+  void _scheduleRefresh() {
+    if (!_notificationsReady || _refreshScheduled) return;
+    _refreshScheduled = true;
+    WidgetsBinding.instance.addPostFrameCallback((_) {
+      _refreshScheduled = false;
+      if (!mounted) return;
+      unawaited(_refreshReadingNotifications());
+    });
+  }
+
+  Future<void> _refreshReadingNotifications() async {
+    if (!mounted || !_notificationsReady) return;
+    final profile = ref.read(readerProfileProvider);
+    final books = ref.read(booksProvider);
+    final sessions = ref.read(readingSessionsProvider);
+    if (!profile.hasValue || !books.hasValue || !sessions.hasValue) return;
+    try {
+      await ref
+          .read(readingNotificationSchedulerProvider)
+          .apply(
+            l10n: AppLocalizations.of(context),
+            profile: profile.value,
+            books: books.value ?? const [],
+            sessions: sessions.value ?? const [],
+            permissionGranted: ref.read(notificationPermissionGrantedProvider),
+          );
+    } catch (error) {
+      debugPrint('[notifications] $error');
+    }
   }
 
   void _scheduleApply() {
@@ -140,7 +180,16 @@ class _NotificationBindingState extends ConsumerState<NotificationBinding>
   Widget build(BuildContext context) {
     ref.listen(pendingNotificationLocationProvider, (_, _) => _scheduleApply());
     ref.listen(onboardingControllerProvider, (_, _) => _scheduleApply());
-    ref.listen(readerProfileProvider, (_, _) => _scheduleApply());
+    ref.listen(readerProfileProvider, (_, _) {
+      _scheduleApply();
+      _scheduleRefresh();
+    });
+    ref.listen(booksProvider, (_, _) => _scheduleRefresh());
+    ref.listen(readingSessionsProvider, (_, _) => _scheduleRefresh());
+    ref.listen(
+      notificationPermissionGrantedProvider,
+      (_, _) => _scheduleRefresh(),
+    );
     return widget.child;
   }
 }
