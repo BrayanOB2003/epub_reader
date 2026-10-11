@@ -462,9 +462,11 @@ packages:
   flutter_readium:
     dependency: "direct main"
     description:
-      path: "../flutter_readium/flutter_readium"
-      relative: true
-    source: path
+      path: flutter_readium
+      ref: prod
+      resolved-ref: "3ac3749794b021966179c315c47900bd966c0060"
+      url: "https://github.com/BrayanOB2003/flutter_readium.git"
+    source: git
     version: "0.6.0"
   flutter_readium_platform_interface:
     dependency: transitive
