@@ -67,6 +67,45 @@ String scheduleDate(DateTime day, String languageCode) {
   return '$weekday ${local.day} de $month';
 }
 
+const _shortMonths = [
+  'ene',
+  'feb',
+  'mar',
+  'abr',
+  'may',
+  'jun',
+  'jul',
+  'ago',
+  'sep',
+  'oct',
+  'nov',
+  'dic',
+];
+
+const _englishShortMonths = [
+  'Jan',
+  'Feb',
+  'Mar',
+  'Apr',
+  'May',
+  'Jun',
+  'Jul',
+  'Aug',
+  'Sep',
+  'Oct',
+  'Nov',
+  'Dec',
+];
+
+/// Day and month, short enough for the 64px column of a listing.
+String scheduleDay(DateTime day, String languageCode) {
+  final local = day.toLocal();
+  if (languageCode == 'en') {
+    return '${_englishShortMonths[local.month - 1]} ${local.day}';
+  }
+  return '${local.day} ${_shortMonths[local.month - 1]}';
+}
+
 class ScheduleHeader extends StatelessWidget {
   const ScheduleHeader({required this.title, this.date, super.key});
 

@@ -22,5 +22,10 @@ class ReadiumReadingEngine {
   Future<void> setPreferences(EPUBPreferences preferences) =>
       _readium.setEPUBPreferences(preferences);
 
+  Future<void> applyDecorations(
+    String id,
+    List<ReaderDecoration> decorations,
+  ) => _readium.applyDecorations(id, decorations);
+
   Stream<Locator> get onLocator => _readium.onTextLocatorChanged;
 }

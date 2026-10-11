@@ -36,6 +36,39 @@ EPUBPreferences readerPreferences({
   );
 }
 
+/// Book progress from 0 to 1.
+///
+/// [Locator.locations.totalProgression] is the publication position. Android
+/// often leaves it empty, so the chapter's place in [hrefs] plus the position
+/// inside that chapter stands in for it.
+double? readingProgress({
+  required Locator? locator,
+  required List<String> hrefs,
+}) {
+  if (locator == null) return null;
+  final total = locator.locations?.totalProgression;
+  if (total != null) return total.clamp(0.0, 1.0);
+  final index = _readingOrderIndex(hrefs, locator.href);
+  if (index == null) return null;
+  final within = (locator.locations?.progression ?? 0).clamp(0.0, 1.0);
+  return ((index + within) / hrefs.length).clamp(0.0, 1.0);
+}
+
+int? _readingOrderIndex(List<String> hrefs, String locatorHref) {
+  if (hrefs.isEmpty) return null;
+  final resource = _readingResource(locatorHref);
+  final exact = hrefs.indexWhere((href) => _readingResource(href) == resource);
+  if (exact >= 0) return exact;
+  for (var i = 0; i < hrefs.length; i++) {
+    final spine = _readingResource(hrefs[i]);
+    if (spine.isEmpty || resource.isEmpty) continue;
+    if (resource.endsWith('/$spine') || spine.endsWith('/$resource')) return i;
+  }
+  return null;
+}
+
+String _readingResource(String href) => href.split('#').first.split('?').first;
+
 bool publicationIsFixed(Publication publication) {
   final layout = publication.metadata.layout?.toLowerCase();
   if (layout == 'fixed') return true;

@@ -10,6 +10,7 @@ import 'package:epub_reader/features/library/data/book_repository.dart';
 import 'package:epub_reader/features/habits/reading_engagement.dart';
 import 'package:epub_reader/features/notifications/reading_notifications.dart';
 import 'package:epub_reader/features/profile/reader_profile_store.dart';
+import 'package:epub_reader/features/reader/quote_highlight.dart';
 import 'package:epub_reader/features/reader/reader_gestures.dart';
 import 'package:epub_reader/features/reader/reader_preferences.dart';
 import 'package:epub_reader/l10n/app_localizations.dart';
@@ -40,6 +41,7 @@ class _ReaderPageState extends ConsumerState<ReaderPage>
   late final ReadiumReadingEngine _engine;
   late final AppAnalytics _analytics;
   late final ReaderProfileStore _profiles;
+  late final QuoteHighlightColorStore _highlightColors;
 
   Book? _book;
   Publication? _publication;
@@ -61,6 +63,9 @@ class _ReaderPageState extends ConsumerState<ReaderPage>
   int? _readingSessionId;
   Future<void> _sessionWrite = Future<void>.value();
   var _sessionReported = false;
+  var _pickingHighlight = false;
+  var _highlightsPainted = false;
+  Future<void> _highlightWrite = Future<void>.value();
 
   @override
   void initState() {
@@ -70,6 +75,7 @@ class _ReaderPageState extends ConsumerState<ReaderPage>
     _engine = ref.read(readingEngineProvider);
     _analytics = ref.read(appAnalyticsProvider);
     _profiles = ref.read(readerProfileStoreProvider);
+    _highlightColors = ref.read(quoteHighlightColorStoreProvider);
     _open();
   }
 
@@ -126,10 +132,10 @@ class _ReaderPageState extends ConsumerState<ReaderPage>
         _book = book;
         _publication = publication;
         _fixedLayout = fixedLayout;
-        _progress =
-            _initialLocator?.locations?.totalProgression ?? book.progress;
+        _progress = _bookProgress(_initialLocator) ?? book.progress;
         _loading = false;
       });
+      unawaited(_applyQuoteHighlights());
     } catch (error, stack) {
       unawaited(_analytics.recordUnexpected('reader_open_failed', stack));
       if (!mounted) return;
@@ -140,13 +146,25 @@ class _ReaderPageState extends ConsumerState<ReaderPage>
     }
   }
 
+  double? _bookProgress(Locator? locator) {
+    final order = _publication?.readingOrder;
+    return readingProgress(
+      locator: locator,
+      hrefs: [for (final link in order ?? const <Link>[]) link.href],
+    );
+  }
+
   void _onLocator(Locator locator) {
+    if (!_highlightsPainted) {
+      _highlightsPainted = true;
+      unawaited(_applyQuoteHighlights());
+    }
     final previous = _latestLocator;
     _latestLocator = locator;
     final leftChapter =
         _textSelected && previous != null && previous.href != locator.href;
     if (leftChapter) _textSelected = false;
-    final progression = locator.locations?.totalProgression;
+    final progression = _bookProgress(locator);
     final progressChanged = progression != null && progression != _progress;
     if (mounted && (leftChapter || progressChanged)) {
       setState(() {
@@ -212,6 +230,7 @@ class _ReaderPageState extends ConsumerState<ReaderPage>
       return;
     }
     setState(() => _dark = !_dark);
+    unawaited(_applyQuoteHighlights());
     await _commitPreferences();
   }
 
@@ -297,24 +316,142 @@ class _ReaderPageState extends ConsumerState<ReaderPage>
     if (text == null || text.isEmpty) return;
     final l10n = AppLocalizations.of(context);
     try {
-      await _repository.saveQuote(
+      final colorId = await _highlightColors.read();
+      final saved = await _repository.saveQuote(
         bookId: widget.bookId,
         text: text,
         locatorJson: jsonEncode(event.locator.toJson()),
+        highlightColor: colorId,
       );
+      if (saved.created) unawaited(_applyQuoteHighlights());
+      if (!mounted) return;
+      _showMessage(saved.created ? l10n.quoteSaved : l10n.quoteAlreadySaved);
     } catch (_) {
       if (!mounted) return;
       _showMessage(l10n.quoteSaveFailed);
       return;
     }
+  }
+
+  /// Paints run one after another so a slow read cannot overwrite a newer list.
+  Future<void> _applyQuoteHighlights() {
+    final next = _highlightWrite.then((_) => _paintQuoteHighlights());
+    _highlightWrite = next;
+    return next;
+  }
+
+  Future<void> _paintQuoteHighlights() async {
+    if (_fixedLayout || !mounted) return;
+    try {
+      final quotes = await _repository.quotesForBook(widget.bookId);
+      if (!mounted) return;
+      final marks = [
+        for (final quote in quotes)
+          QuoteHighlightMark(
+            id: quote.id,
+            locatorJson: quote.locatorJson,
+            colorId: quote.highlightColor,
+          ),
+      ];
+      await _engine.applyDecorations(
+        quoteHighlightGroup,
+        quoteHighlightDecorations(
+          quotes: marks,
+          dark: _dark,
+          activeQuoteId: widget.quoteId,
+        ),
+      );
+    } catch (_) {}
+  }
+
+  Future<void> _onHighlightTap(DecorationInteractionEvent event) async {
+    if (event.type != DecorationInteractionType.tap || _pickingHighlight) {
+      return;
+    }
+    final quoteId = int.tryParse(event.decorationId);
+    if (quoteId == null || !mounted) return;
+    _pickingHighlight = true;
+    try {
+      await _editHighlight(quoteId);
+    } finally {
+      _pickingHighlight = false;
+    }
+  }
+
+  Future<void> _editHighlight(int quoteId) async {
+    final quote = await _repository.quoteById(quoteId);
+    if (quote == null || quote.bookId != widget.bookId || !mounted) return;
+    final choice = await showQuoteHighlightColors(
+      context,
+      selectedId: quote.highlightColor ?? quoteHighlightDefaultId,
+      dark: _dark && !_fixedLayout,
+      allowDelete: true,
+    );
     if (!mounted) return;
-    _showMessage(l10n.quoteSaved);
+    switch (choice) {
+      case null:
+        return;
+      case QuoteHighlightRecolor(:final colorId):
+        await _recolorHighlight(quote, colorId);
+      case QuoteHighlightDelete():
+        await _deleteQuote(quote);
+    }
+  }
+
+  Future<void> _recolorHighlight(SavedQuote quote, String colorId) async {
+    final l10n = AppLocalizations.of(context);
+    try {
+      await recolorQuoteHighlight(
+        repository: _repository,
+        store: _highlightColors,
+        quoteId: quote.id,
+        currentColorId: quote.highlightColor,
+        colorId: colorId,
+      );
+      ref.invalidate(quoteHighlightDefaultProvider);
+      await _applyQuoteHighlights();
+    } catch (_) {
+      if (!mounted) return;
+      _showMessage(l10n.quoteHighlightFailed);
+    }
+  }
+
+  Future<void> _deleteQuote(SavedQuote quote) async {
+    final l10n = AppLocalizations.of(context);
+    final confirmed = await showDialog<bool>(
+      context: context,
+      builder: (context) => AlertDialog(
+        title: Text(l10n.deleteQuoteTitle),
+        content: Text(l10n.deleteQuoteBody),
+        actions: [
+          TextButton(
+            onPressed: () => Navigator.pop(context, false),
+            child: Text(l10n.cancel),
+          ),
+          TextButton(
+            onPressed: () => Navigator.pop(context, true),
+            child: Text(l10n.delete),
+          ),
+        ],
+      ),
+    );
+    if (confirmed != true || !mounted) return;
+    try {
+      await _repository.deleteQuote(quote.id);
+      await _applyQuoteHighlights();
+    } catch (_) {
+      if (!mounted) return;
+      _showMessage(l10n.quoteDeleteFailed);
+      return;
+    }
+    if (!mounted) return;
+    _showMessage(l10n.quoteDeleted);
   }
 
   Future<void> _persist() async {
     final locator = _latestLocator;
     if (locator == null) return;
-    final progress = locator.locations?.totalProgression ?? _progress;
+    final progress = _bookProgress(locator) ?? _progress;
     await _repository.saveProgress(
       id: widget.bookId,
       locatorJson: jsonEncode(locator.toJson()),
@@ -479,7 +616,7 @@ class _ReaderPageState extends ConsumerState<ReaderPage>
         _repository.saveProgress(
           id: widget.bookId,
           locatorJson: jsonEncode(locator.toJson()),
-          progress: locator.locations?.totalProgression ?? _progress,
+          progress: _bookProgress(locator) ?? _progress,
         ),
       );
     }
@@ -540,6 +677,9 @@ class _ReaderPageState extends ConsumerState<ReaderPage>
             ],
             onTextSelected: _onTextSelected,
             onSelectionAction: _onSelectionAction,
+            onDecorationInteraction: _onHighlightTap,
+            onTap: (point) =>
+                _onZone(readerZoneAt(x: point.dx, width: 1, rtl: rtl)),
           ),
         ),
         Positioned(
@@ -548,10 +688,8 @@ class _ReaderPageState extends ConsumerState<ReaderPage>
           right: 0,
           bottom: 0,
           child: ReaderGestureLayer(
-            rtl: rtl,
             scroll: _scroll,
             textSelected: _textSelected,
-            onZone: _onZone,
             onPageDrag: _hideChrome,
             onSelectionTap: _onSelectionTap,
           ),

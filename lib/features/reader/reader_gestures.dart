@@ -3,11 +3,6 @@ import 'package:flutter/material.dart';
 
 enum ReaderZone { previous, menu, next }
 
-/// While text is selected, taps belong to Readium: it clears the selection
-/// and ignores the tap, so the page never turns under an active selection.
-/// Side taps are claimed in both modes. In scroll mode they change chapter.
-bool readerClaimsTap({required bool textSelected}) => !textSelected;
-
 const shortTapDeadline = Duration(milliseconds: 200);
 
 /// Index of the spine resource a side tap opens while scrolling.
@@ -42,109 +37,40 @@ ReaderZone readerZoneAt({
   return ReaderZone.menu;
 }
 
+/// Watches touches on top of the reader without claiming any of them.
+///
+/// Every touch reaches Readium, so a tap on a highlight or a link stays with
+/// it. Readium reports the other taps through `ReadiumReaderWidget.onTap`.
 class ReaderGestureLayer extends StatelessWidget {
   const ReaderGestureLayer({
-    required this.rtl,
     required this.scroll,
     required this.textSelected,
-    required this.onZone,
     required this.onPageDrag,
     required this.onSelectionTap,
     super.key,
   });
 
-  final bool rtl;
   final bool scroll;
   final bool textSelected;
-  final ValueChanged<ReaderZone> onZone;
 
-  /// A horizontal drag in page mode. The layer does not claim it: Readium
-  /// moves the page with the finger.
+  /// A horizontal drag in page mode. Readium moves the page with the finger.
   final VoidCallback onPageDrag;
+
+  /// A short tap while text is selected. Readium clears the selection and
+  /// does not report the tap.
   final VoidCallback onSelectionTap;
 
   @override
   Widget build(BuildContext context) {
-    return RawGestureDetector(
-      behavior: HitTestBehavior.translucent,
-      gestures: <Type, GestureRecognizerFactory>{
-        _ShortTapRecognizer:
-            GestureRecognizerFactoryWithHandlers<_ShortTapRecognizer>(
-              () => _ShortTapRecognizer(),
-              (recognizer) {
-                recognizer.shouldClaim = (position) =>
-                    _claims(context, position);
-                recognizer.onShortTap = (position) =>
-                    _dispatch(context, position);
-              },
-            ),
-      },
-      child: _PageDragObserver(
-        enabled: !scroll && !textSelected,
-        onDrag: onPageDrag,
-        child: _SelectionTapObserver(
-          enabled: textSelected,
-          onShortTap: onSelectionTap,
-        ),
+    return _PageDragObserver(
+      enabled: !scroll && !textSelected,
+      onDrag: onPageDrag,
+      child: _SelectionTapObserver(
+        enabled: textSelected,
+        onShortTap: onSelectionTap,
       ),
     );
   }
-
-  bool _claims(BuildContext context, Offset global) =>
-      readerClaimsTap(textSelected: textSelected);
-
-  void _dispatch(BuildContext context, Offset global) {
-    onZone(_zone(context, global));
-  }
-
-  ReaderZone _zone(BuildContext context, Offset global) {
-    final box = context.findRenderObject() as RenderBox?;
-    if (box == null || !box.hasSize) return ReaderZone.menu;
-    final local = box.globalToLocal(global);
-    return readerZoneAt(x: local.dx, width: box.size.width, rtl: rtl);
-  }
-}
-
-/// A press that lifts inside [shortTapDeadline] without leaving the touch slop.
-///
-/// Moving past the slop rejects the press, so the native navigator receives
-/// the drag and the page follows the finger.
-class _ShortTapRecognizer extends PrimaryPointerGestureRecognizer {
-  _ShortTapRecognizer()
-    : super(deadline: shortTapDeadline, preAcceptSlopTolerance: kTouchSlop);
-
-  bool Function(Offset globalPosition)? shouldClaim;
-  void Function(Offset globalPosition)? onShortTap;
-
-  @override
-  void handlePrimaryPointer(PointerEvent event) {
-    if (event is PointerDownEvent) {
-      final claim = shouldClaim?.call(event.position) ?? true;
-      if (!claim) {
-        resolve(GestureDisposition.rejected);
-      }
-      return;
-    }
-    if (event is! PointerUpEvent) return;
-    final position = event.position;
-    final claim = shouldClaim?.call(position) ?? true;
-    if (!claim) {
-      resolve(GestureDisposition.rejected);
-      return;
-    }
-    resolve(GestureDisposition.accepted);
-    if (onShortTap != null) {
-      invokeCallback<void>('onShortTap', () => onShortTap!(position));
-    }
-  }
-
-  @override
-  void didExceedDeadlineWithEvent(PointerDownEvent event) {
-    resolve(GestureDisposition.rejected);
-  }
-
-  @override
-  String get debugDescription => 'short tap';
 }
 
 /// Sees a horizontal drag without claiming it.

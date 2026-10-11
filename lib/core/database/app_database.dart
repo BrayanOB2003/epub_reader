@@ -74,6 +74,9 @@ class SavedQuotes extends Table {
   TextColumn get locatorJson => text()();
 
   DateTimeColumn get savedAt => dateTime()();
+
+  /// Palette id of this quote's highlight. Null uses the original default.
+  TextColumn get highlightColor => text().nullable()();
 }
 
 class ReadingSessions extends Table {
@@ -93,7 +96,7 @@ class AppDatabase extends _$AppDatabase {
   AppDatabase(super.e);
 
   @override
-  int get schemaVersion => 11;
+  int get schemaVersion => 12;
 
   @override
   MigrationStrategy get migration {
@@ -138,6 +141,9 @@ class AppDatabase extends _$AppDatabase {
         }
         if (from < 11) {
           await migrator.createTable(savedQuotes);
+        }
+        if (from < 12) {
+          await migrator.addColumn(savedQuotes, savedQuotes.highlightColor);
         }
       },
     );

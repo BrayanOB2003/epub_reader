@@ -167,7 +167,16 @@ class AppLocalizationsEn extends AppLocalizations {
   String get noQuotes => 'No quotes yet';
 
   @override
-  String get noQuotesBody => 'Select a passage while reading and save it.';
+  String get noQuotesBody => 'Select a passage and tap Save quote.';
+
+  @override
+  String get quoteAlreadySaved => 'That quote is already saved.';
+
+  @override
+  String get shareQuoteText => 'Share text';
+
+  @override
+  String get quoteShareFailed => 'The quote could not be shared.';
 
   @override
   String quotesLoadFailed(String error) {
@@ -536,6 +545,28 @@ class AppLocalizationsEn extends AppLocalizations {
   }
 
   @override
+  String get notificationNudgeTitle => 'There\'s still time';
+
+  @override
+  String get notificationNudgeBody1 =>
+      'Two minutes are enough to keep the day.';
+
+  @override
+  String get notificationNudgeBody2 =>
+      'If the day filled up, stay for a couple of pages.';
+
+  @override
+  String get notificationNudgeBody3 =>
+      'You don\'t have to hit the goal. Opening the book counts.';
+
+  @override
+  String get notificationNudgeBody4 => 'A short moment still holds the habit.';
+
+  @override
+  String get notificationNudgeBody5 =>
+      'The day still has room for a few lines.';
+
+  @override
   String get focusMode => 'Focus mode';
 
   @override
@@ -593,4 +624,139 @@ class AppLocalizationsEn extends AppLocalizations {
 
   @override
   String get focusGuideOpenFailed => 'Shortcuts could not be opened.';
+
+  @override
+  String get createQuoteImage => 'Create image';
+
+  @override
+  String get quoteImageTitle => 'Image';
+
+  @override
+  String get saveToPhotos => 'Save to photos';
+
+  @override
+  String get quoteImageSaved => 'Image saved to photos';
+
+  @override
+  String get quoteImageSaveFailed => 'The image could not be saved.';
+
+  @override
+  String get quoteImageShareFailed => 'The image could not be shared.';
+
+  @override
+  String get quoteImageTooLong => 'This passage is too long for this format.';
+
+  @override
+  String get quoteImageImportFailed => 'That image could not be used.';
+
+  @override
+  String get quoteImageTooLarge => 'That image is too large.';
+
+  @override
+  String get quoteBackgroundFailed => 'The background could not be opened.';
+
+  @override
+  String get quoteImageMissing => 'This quote is no longer here.';
+
+  @override
+  String get removeQuoteBackground => 'Remove this background?';
+
+  @override
+  String get removeQuoteBackgroundBody =>
+      'The copy stored on this device is deleted.';
+
+  @override
+  String get importQuoteBackground => 'Import background';
+
+  @override
+  String get removeImportedBackground => 'Remove background';
+
+  @override
+  String get quoteFormatStory => 'Story';
+
+  @override
+  String get quoteFormatPost => 'Post';
+
+  @override
+  String get quoteFormatSquare => 'Square';
+
+  @override
+  String get quoteFormatScreen => 'Screen';
+
+  @override
+  String get quoteFontSerif => 'Serif';
+
+  @override
+  String get quoteFontCondensed => 'Condensed';
+
+  @override
+  String get quoteFontPlain => 'Text';
+
+  @override
+  String get quoteTextSize => 'Size';
+
+  @override
+  String get quoteVeil => 'Veil';
+
+  @override
+  String get quoteInkPaper => 'Paper';
+
+  @override
+  String get quoteInkWhite => 'White';
+
+  @override
+  String get quoteInkCream => 'Cream';
+
+  @override
+  String get quoteInkInk => 'Ink';
+
+  @override
+  String get quoteInkBlack => 'Black';
+
+  @override
+  String get quoteInkStation => 'Blue';
+
+  @override
+  String get quoteHighlightColor => 'Highlight color';
+
+  @override
+  String get quoteHighlightAmber => 'Amber';
+
+  @override
+  String get quoteHighlightGreen => 'Green';
+
+  @override
+  String get quoteHighlightBlue => 'Blue';
+
+  @override
+  String get quoteHighlightRose => 'Rose';
+
+  @override
+  String get quoteHighlightViolet => 'Violet';
+
+  @override
+  String get quoteHighlightFailed => 'The color could not be changed.';
+
+  @override
+  String get quoteHighlightDefault => 'Quote color';
+
+  @override
+  String get quoteHighlightDefaultSubtitle =>
+      'For the quotes you save from now on.';
+
+  @override
+  String get deleteQuote => 'Delete quote';
+
+  @override
+  String get deleteQuoteTitle => 'Delete this quote?';
+
+  @override
+  String get deleteQuoteBody =>
+      'It leaves your quotes and is no longer highlighted in the book.';
+
+  @override
+  String get quoteDeleted => 'Quote deleted.';
+
+  @override
+  String get quoteDeleteFailed => 'The quote could not be deleted.';
 }

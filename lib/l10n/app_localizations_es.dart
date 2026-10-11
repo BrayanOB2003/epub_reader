@@ -167,7 +167,16 @@ class AppLocalizationsEs extends AppLocalizations {
   String get noQuotes => 'Todavía no hay citas';
 
   @override
-  String get noQuotesBody => 'Selecciona un pasaje en la lectura y guárdalo.';
+  String get noQuotesBody => 'Selecciona un pasaje y pulsa Guardar cita.';
+
+  @override
+  String get quoteAlreadySaved => 'Esa cita ya está guardada.';
+
+  @override
+  String get shareQuoteText => 'Compartir texto';
+
+  @override
+  String get quoteShareFailed => 'No se pudo compartir la cita.';
 
   @override
   String quotesLoadFailed(String error) {
@@ -538,6 +547,29 @@ class AppLocalizationsEs extends AppLocalizations {
   }
 
   @override
+  String get notificationNudgeTitle => 'Todavía hay tiempo';
+
+  @override
+  String get notificationNudgeBody1 =>
+      'Dos minutos alcanzan para no soltar el día.';
+
+  @override
+  String get notificationNudgeBody2 =>
+      'Si hoy se llenó, quédate con un par de páginas.';
+
+  @override
+  String get notificationNudgeBody3 =>
+      'No hace falta cumplir la meta. Abrir el libro ya cuenta.';
+
+  @override
+  String get notificationNudgeBody4 =>
+      'Un momento corto también sostiene el hábito.';
+
+  @override
+  String get notificationNudgeBody5 =>
+      'El día todavía tiene sitio para unas líneas.';
+
+  @override
   String get focusMode => 'Modo concentración';
 
   @override
@@ -595,4 +627,140 @@ class AppLocalizationsEs extends AppLocalizations {
 
   @override
   String get focusGuideOpenFailed => 'No se pudo abrir Atajos.';
+
+  @override
+  String get createQuoteImage => 'Crear imagen';
+
+  @override
+  String get quoteImageTitle => 'Imagen';
+
+  @override
+  String get saveToPhotos => 'Guardar en fotos';
+
+  @override
+  String get quoteImageSaved => 'Imagen guardada en fotos';
+
+  @override
+  String get quoteImageSaveFailed => 'No se pudo guardar la imagen.';
+
+  @override
+  String get quoteImageShareFailed => 'No se pudo compartir la imagen.';
+
+  @override
+  String get quoteImageTooLong =>
+      'Este pasaje es demasiado largo para este formato.';
+
+  @override
+  String get quoteImageImportFailed => 'No se pudo usar esa imagen.';
+
+  @override
+  String get quoteImageTooLarge => 'Esa imagen pesa demasiado.';
+
+  @override
+  String get quoteBackgroundFailed => 'No se pudo abrir el fondo.';
+
+  @override
+  String get quoteImageMissing => 'Esta cita ya no está.';
+
+  @override
+  String get removeQuoteBackground => '¿Quitar este fondo?';
+
+  @override
+  String get removeQuoteBackgroundBody =>
+      'Se borra la copia guardada en este dispositivo.';
+
+  @override
+  String get importQuoteBackground => 'Importar fondo';
+
+  @override
+  String get removeImportedBackground => 'Quitar fondo';
+
+  @override
+  String get quoteFormatStory => 'Historia';
+
+  @override
+  String get quoteFormatPost => 'Publicación';
+
+  @override
+  String get quoteFormatSquare => 'Cuadrada';
+
+  @override
+  String get quoteFormatScreen => 'Pantalla';
+
+  @override
+  String get quoteFontSerif => 'Serif';
+
+  @override
+  String get quoteFontCondensed => 'Condensada';
+
+  @override
+  String get quoteFontPlain => 'Texto';
+
+  @override
+  String get quoteTextSize => 'Tamaño';
+
+  @override
+  String get quoteVeil => 'Velo';
+
+  @override
+  String get quoteInkPaper => 'Papel';
+
+  @override
+  String get quoteInkWhite => 'Blanco';
+
+  @override
+  String get quoteInkCream => 'Crema';
+
+  @override
+  String get quoteInkInk => 'Tinta';
+
+  @override
+  String get quoteInkBlack => 'Negro';
+
+  @override
+  String get quoteInkStation => 'Azul';
+
+  @override
+  String get quoteHighlightColor => 'Color del resaltado';
+
+  @override
+  String get quoteHighlightAmber => 'Ámbar';
+
+  @override
+  String get quoteHighlightGreen => 'Verde';
+
+  @override
+  String get quoteHighlightBlue => 'Azul';
+
+  @override
+  String get quoteHighlightRose => 'Rosa';
+
+  @override
+  String get quoteHighlightViolet => 'Violeta';
+
+  @override
+  String get quoteHighlightFailed => 'No se pudo cambiar el color.';
+
+  @override
+  String get quoteHighlightDefault => 'Color de las citas';
+
+  @override
+  String get quoteHighlightDefaultSubtitle =>
+      'Para las citas que guardes desde ahora.';
+
+  @override
+  String get deleteQuote => 'Eliminar cita';
+
+  @override
+  String get deleteQuoteTitle => '¿Eliminar esta cita?';
+
+  @override
+  String get deleteQuoteBody =>
+      'Sale de tus citas y deja de estar resaltada en el libro.';
+
+  @override
+  String get quoteDeleted => 'Cita eliminada.';
+
+  @override
+  String get quoteDeleteFailed => 'No se pudo eliminar la cita.';
 }

@@ -401,8 +401,26 @@ abstract class AppLocalizations {
   /// No description provided for @noQuotesBody.
   ///
   /// In es, this message translates to:
-  /// **'Selecciona un pasaje en la lectura y guárdalo.'**
+  /// **'Selecciona un pasaje y pulsa Guardar cita.'**
   String get noQuotesBody;
+
+  /// No description provided for @quoteAlreadySaved.
+  ///
+  /// In es, this message translates to:
+  /// **'Esa cita ya está guardada.'**
+  String get quoteAlreadySaved;
+
+  /// No description provided for @shareQuoteText.
+  ///
+  /// In es, this message translates to:
+  /// **'Compartir texto'**
+  String get shareQuoteText;
+
+  /// No description provided for @quoteShareFailed.
+  ///
+  /// In es, this message translates to:
+  /// **'No se pudo compartir la cita.'**
+  String get quoteShareFailed;
 
   /// No description provided for @quotesLoadFailed.
   ///
@@ -1034,6 +1052,42 @@ abstract class AppLocalizations {
   /// **'Llevas {days} días. Hoy también cuenta.'**
   String notificationStreakBody(int days);
 
+  /// No description provided for @notificationNudgeTitle.
+  ///
+  /// In es, this message translates to:
+  /// **'Todavía hay tiempo'**
+  String get notificationNudgeTitle;
+
+  /// No description provided for @notificationNudgeBody1.
+  ///
+  /// In es, this message translates to:
+  /// **'Dos minutos alcanzan para no soltar el día.'**
+  String get notificationNudgeBody1;
+
+  /// No description provided for @notificationNudgeBody2.
+  ///
+  /// In es, this message translates to:
+  /// **'Si hoy se llenó, quédate con un par de páginas.'**
+  String get notificationNudgeBody2;
+
+  /// No description provided for @notificationNudgeBody3.
+  ///
+  /// In es, this message translates to:
+  /// **'No hace falta cumplir la meta. Abrir el libro ya cuenta.'**
+  String get notificationNudgeBody3;
+
+  /// No description provided for @notificationNudgeBody4.
+  ///
+  /// In es, this message translates to:
+  /// **'Un momento corto también sostiene el hábito.'**
+  String get notificationNudgeBody4;
+
+  /// No description provided for @notificationNudgeBody5.
+  ///
+  /// In es, this message translates to:
+  /// **'El día todavía tiene sitio para unas líneas.'**
+  String get notificationNudgeBody5;
+
   /// No description provided for @focusMode.
   ///
   /// In es, this message translates to:
@@ -1135,6 +1189,270 @@ abstract class AppLocalizations {
   /// In es, this message translates to:
   /// **'No se pudo abrir Atajos.'**
   String get focusGuideOpenFailed;
+
+  /// No description provided for @createQuoteImage.
+  ///
+  /// In es, this message translates to:
+  /// **'Crear imagen'**
+  String get createQuoteImage;
+
+  /// No description provided for @quoteImageTitle.
+  ///
+  /// In es, this message translates to:
+  /// **'Imagen'**
+  String get quoteImageTitle;
+
+  /// No description provided for @saveToPhotos.
+  ///
+  /// In es, this message translates to:
+  /// **'Guardar en fotos'**
+  String get saveToPhotos;
+
+  /// No description provided for @quoteImageSaved.
+  ///
+  /// In es, this message translates to:
+  /// **'Imagen guardada en fotos'**
+  String get quoteImageSaved;
+
+  /// No description provided for @quoteImageSaveFailed.
+  ///
+  /// In es, this message translates to:
+  /// **'No se pudo guardar la imagen.'**
+  String get quoteImageSaveFailed;
+
+  /// No description provided for @quoteImageShareFailed.
+  ///
+  /// In es, this message translates to:
+  /// **'No se pudo compartir la imagen.'**
+  String get quoteImageShareFailed;
+
+  /// No description provided for @quoteImageTooLong.
+  ///
+  /// In es, this message translates to:
+  /// **'Este pasaje es demasiado largo para este formato.'**
+  String get quoteImageTooLong;
+
+  /// No description provided for @quoteImageImportFailed.
+  ///
+  /// In es, this message translates to:
+  /// **'No se pudo usar esa imagen.'**
+  String get quoteImageImportFailed;
+
+  /// No description provided for @quoteImageTooLarge.
+  ///
+  /// In es, this message translates to:
+  /// **'Esa imagen pesa demasiado.'**
+  String get quoteImageTooLarge;
+
+  /// No description provided for @quoteBackgroundFailed.
+  ///
+  /// In es, this message translates to:
+  /// **'No se pudo abrir el fondo.'**
+  String get quoteBackgroundFailed;
+
+  /// No description provided for @quoteImageMissing.
+  ///
+  /// In es, this message translates to:
+  /// **'Esta cita ya no está.'**
+  String get quoteImageMissing;
+
+  /// No description provided for @removeQuoteBackground.
+  ///
+  /// In es, this message translates to:
+  /// **'¿Quitar este fondo?'**
+  String get removeQuoteBackground;
+
+  /// No description provided for @removeQuoteBackgroundBody.
+  ///
+  /// In es, this message translates to:
+  /// **'Se borra la copia guardada en este dispositivo.'**
+  String get removeQuoteBackgroundBody;
+
+  /// No description provided for @importQuoteBackground.
+  ///
+  /// In es, this message translates to:
+  /// **'Importar fondo'**
+  String get importQuoteBackground;
+
+  /// No description provided for @removeImportedBackground.
+  ///
+  /// In es, this message translates to:
+  /// **'Quitar fondo'**
+  String get removeImportedBackground;
+
+  /// No description provided for @quoteFormatStory.
+  ///
+  /// In es, this message translates to:
+  /// **'Historia'**
+  String get quoteFormatStory;
+
+  /// No description provided for @quoteFormatPost.
+  ///
+  /// In es, this message translates to:
+  /// **'Publicación'**
+  String get quoteFormatPost;
+
+  /// No description provided for @quoteFormatSquare.
+  ///
+  /// In es, this message translates to:
+  /// **'Cuadrada'**
+  String get quoteFormatSquare;
+
+  /// No description provided for @quoteFormatScreen.
+  ///
+  /// In es, this message translates to:
+  /// **'Pantalla'**
+  String get quoteFormatScreen;
+
+  /// No description provided for @quoteFontSerif.
+  ///
+  /// In es, this message translates to:
+  /// **'Serif'**
+  String get quoteFontSerif;
+
+  /// No description provided for @quoteFontCondensed.
+  ///
+  /// In es, this message translates to:
+  /// **'Condensada'**
+  String get quoteFontCondensed;
+
+  /// No description provided for @quoteFontPlain.
+  ///
+  /// In es, this message translates to:
+  /// **'Texto'**
+  String get quoteFontPlain;
+
+  /// No description provided for @quoteTextSize.
+  ///
+  /// In es, this message translates to:
+  /// **'Tamaño'**
+  String get quoteTextSize;
+
+  /// No description provided for @quoteVeil.
+  ///
+  /// In es, this message translates to:
+  /// **'Velo'**
+  String get quoteVeil;
+
+  /// No description provided for @quoteInkPaper.
+  ///
+  /// In es, this message translates to:
+  /// **'Papel'**
+  String get quoteInkPaper;
+
+  /// No description provided for @quoteInkWhite.
+  ///
+  /// In es, this message translates to:
+  /// **'Blanco'**
+  String get quoteInkWhite;
+
+  /// No description provided for @quoteInkCream.
+  ///
+  /// In es, this message translates to:
+  /// **'Crema'**
+  String get quoteInkCream;
+
+  /// No description provided for @quoteInkInk.
+  ///
+  /// In es, this message translates to:
+  /// **'Tinta'**
+  String get quoteInkInk;
+
+  /// No description provided for @quoteInkBlack.
+  ///
+  /// In es, this message translates to:
+  /// **'Negro'**
+  String get quoteInkBlack;
+
+  /// No description provided for @quoteInkStation.
+  ///
+  /// In es, this message translates to:
+  /// **'Azul'**
+  String get quoteInkStation;
+
+  /// No description provided for @quoteHighlightColor.
+  ///
+  /// In es, this message translates to:
+  /// **'Color del resaltado'**
+  String get quoteHighlightColor;
+
+  /// No description provided for @quoteHighlightAmber.
+  ///
+  /// In es, this message translates to:
+  /// **'Ámbar'**
+  String get quoteHighlightAmber;
+
+  /// No description provided for @quoteHighlightGreen.
+  ///
+  /// In es, this message translates to:
+  /// **'Verde'**
+  String get quoteHighlightGreen;
+
+  /// No description provided for @quoteHighlightBlue.
+  ///
+  /// In es, this message translates to:
+  /// **'Azul'**
+  String get quoteHighlightBlue;
+
+  /// No description provided for @quoteHighlightRose.
+  ///
+  /// In es, this message translates to:
+  /// **'Rosa'**
+  String get quoteHighlightRose;
+
+  /// No description provided for @quoteHighlightViolet.
+  ///
+  /// In es, this message translates to:
+  /// **'Violeta'**
+  String get quoteHighlightViolet;
+
+  /// No description provided for @quoteHighlightFailed.
+  ///
+  /// In es, this message translates to:
+  /// **'No se pudo cambiar el color.'**
+  String get quoteHighlightFailed;
+
+  /// No description provided for @quoteHighlightDefault.
+  ///
+  /// In es, this message translates to:
+  /// **'Color de las citas'**
+  String get quoteHighlightDefault;
+
+  /// No description provided for @quoteHighlightDefaultSubtitle.
+  ///
+  /// In es, this message translates to:
+  /// **'Para las citas que guardes desde ahora.'**
+  String get quoteHighlightDefaultSubtitle;
+
+  /// No description provided for @deleteQuote.
+  ///
+  /// In es, this message translates to:
+  /// **'Eliminar cita'**
+  String get deleteQuote;
+
+  /// No description provided for @deleteQuoteTitle.
+  ///
+  /// In es, this message translates to:
+  /// **'¿Eliminar esta cita?'**
+  String get deleteQuoteTitle;
+
+  /// No description provided for @deleteQuoteBody.
+  ///
+  /// In es, this message translates to:
+  /// **'Sale de tus citas y deja de estar resaltada en el libro.'**
+  String get deleteQuoteBody;
+
+  /// No description provided for @quoteDeleted.
+  ///
+  /// In es, this message translates to:
+  /// **'Cita eliminada.'**
+  String get quoteDeleted;
+
+  /// No description provided for @quoteDeleteFailed.
+  ///
+  /// In es, this message translates to:
+  /// **'No se pudo eliminar la cita.'**
+  String get quoteDeleteFailed;
 }
 
 class _AppLocalizationsDelegate

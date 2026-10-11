@@ -11,8 +11,26 @@ const unfinishedBookProgress = 0.98;
 const startedBookProgress = 0.02;
 const goalMetNotificationId = 2;
 const readingScheduleIdStart = 10;
+const lateReadingNudgeId = 30;
+const dayEndReadingNudgeId = 31;
+const dayEndHour = 23;
+const nudgeCopyCount = 5;
 
-enum ReadingNotificationKind { routine, goalRemaining, goalMet, resume, streak }
+List<int> get scheduledReadingNotificationIds => [
+  for (var offset = 0; offset < readingNotificationHorizon; offset++)
+    readingScheduleIdStart + offset,
+  lateReadingNudgeId,
+  dayEndReadingNudgeId,
+];
+
+enum ReadingNotificationKind {
+  routine,
+  goalRemaining,
+  goalMet,
+  resume,
+  streak,
+  nudge,
+}
 
 class NotificationSession {
   const NotificationSession({
@@ -55,6 +73,7 @@ class PlannedReadingNotification {
     this.section,
     this.bookTitle,
     this.hourLabel,
+    this.nudgeIndex,
   });
 
   final int id;
@@ -68,6 +87,7 @@ class PlannedReadingNotification {
   final String? section;
   final String? bookTitle;
   final String? hourLabel;
+  final int? nudgeIndex;
 }
 
 /// Upcoming reminders for the reading hour.
@@ -156,6 +176,14 @@ List<PlannedReadingNotification> planReadingNotifications({
       ),
     );
   }
+  planned.addAll(
+    _unreadNudges(
+      now: now,
+      hour: hour,
+      weekdays: weekdays,
+      todaySeconds: todaySeconds,
+    ),
+  );
   return planned;
 }
 
@@ -308,6 +336,7 @@ LocalNotificationMessage readingNotificationMessage(
     ReadingNotificationKind.goalMet => l10n.notificationGoalMetTitle,
     ReadingNotificationKind.resume => bookTitle,
     ReadingNotificationKind.streak => l10n.notificationStreakTitle,
+    ReadingNotificationKind.nudge => l10n.notificationNudgeTitle,
   };
   final body = switch (notification.kind) {
     ReadingNotificationKind.routine => l10n.notificationRoutineBody(
@@ -328,6 +357,10 @@ LocalNotificationMessage readingNotificationMessage(
     ),
     ReadingNotificationKind.streak => l10n.notificationStreakBody(
       notification.streakDays ?? 0,
+    ),
+    ReadingNotificationKind.nudge => _nudgeBody(
+      l10n,
+      notification.nudgeIndex ?? 0,
     ),
   };
   return LocalNotificationMessage(
@@ -351,6 +384,60 @@ String _resumeBody(
     return l10n.notificationResumeSectionBody(section, title);
   }
   return l10n.notificationResumeBookBody(title);
+}
+
+String _nudgeBody(AppLocalizations l10n, int index) {
+  final bodies = [
+    l10n.notificationNudgeBody1,
+    l10n.notificationNudgeBody2,
+    l10n.notificationNudgeBody3,
+    l10n.notificationNudgeBody4,
+    l10n.notificationNudgeBody5,
+  ];
+  return bodies[index % bodies.length];
+}
+
+/// One hour after the reading time, and at 23:00, when today is still unread.
+///
+/// The two share a moment when the reading hour is 22:00, so only one is kept.
+/// At 23:00 the routine reminder already speaks, so the day-end nudge waits.
+List<PlannedReadingNotification> _unreadNudges({
+  required DateTime now,
+  required int hour,
+  required Set<int> weekdays,
+  required int todaySeconds,
+}) {
+  if (todaySeconds > 0) return const [];
+  final today = _localDate(now);
+  final routine = DateTime(today.year, today.month, today.day, hour);
+  final late = routine.add(const Duration(hours: 1));
+  final dayEnd = DateTime(today.year, today.month, today.day, dayEndHour);
+  final nudges = <PlannedReadingNotification>[];
+  final used = <DateTime>{};
+
+  void add(DateTime moment, int id) {
+    if (!moment.isAfter(now) || !used.add(moment)) return;
+    nudges.add(
+      PlannedReadingNotification(
+        id: id,
+        kind: ReadingNotificationKind.nudge,
+        at: moment,
+        location: '/library',
+        nudgeIndex: (_dayOfYear(moment) + nudges.length) % nudgeCopyCount,
+      ),
+    );
+  }
+
+  if (weekdays.contains(today.weekday)) add(late, lateReadingNudgeId);
+  final routineCoversDayEnd =
+      weekdays.contains(today.weekday) && routine == dayEnd;
+  if (!routineCoversDayEnd) add(dayEnd, dayEndReadingNudgeId);
+  return nudges;
+}
+
+int _dayOfYear(DateTime moment) {
+  final day = _localDate(moment);
+  return day.difference(DateTime(day.year)).inDays;
 }
 
 String _shownTitle(String? title, AppLocalizations l10n) {

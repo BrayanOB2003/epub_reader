@@ -15,6 +15,8 @@ class ReadingQuote {
     required this.locatorJson,
     required this.savedAt,
     required this.bookTitle,
+    this.author,
+    this.highlightColor,
   });
 
   final int id;
@@ -23,6 +25,15 @@ class ReadingQuote {
   final String locatorJson;
   final DateTime savedAt;
   final String bookTitle;
+  final String? author;
+  final String? highlightColor;
+}
+
+class QuoteSave {
+  const QuoteSave({required this.id, required this.created});
+
+  final int id;
+  final bool created;
 }
 
 class BookRepository {
@@ -254,13 +265,29 @@ class BookRepository {
     );
   }
 
-  Future<int> saveQuote({
+  Future<QuoteSave> saveQuote({
     required int bookId,
     required String text,
     required String locatorJson,
     DateTime? savedAt,
-  }) {
-    return _database
+    String? highlightColor,
+  }) async {
+    final existing =
+        await (_database.select(_database.savedQuotes)
+              ..where(
+                (table) =>
+                    table.bookId.equals(bookId) & table.passage.equals(text),
+              )
+              ..orderBy([
+                (table) => OrderingTerm(
+                  expression: table.savedAt,
+                  mode: OrderingMode.desc,
+                ),
+              ])
+              ..limit(1))
+            .getSingleOrNull();
+    if (existing != null) return QuoteSave(id: existing.id, created: false);
+    final id = await _database
         .into(_database.savedQuotes)
         .insert(
           SavedQuotesCompanion.insert(
@@ -268,8 +295,32 @@ class BookRepository {
             passage: text,
             locatorJson: locatorJson,
             savedAt: savedAt ?? DateTime.now(),
+            highlightColor: Value(highlightColor),
           ),
         );
+    return QuoteSave(id: id, created: true);
+  }
+
+  Future<void> setQuoteHighlightColor({
+    required int id,
+    required String colorId,
+  }) {
+    return (_database.update(_database.savedQuotes)
+          ..where((table) => table.id.equals(id)))
+        .write(SavedQuotesCompanion(highlightColor: Value(colorId)));
+  }
+
+  Future<void> deleteQuote(int id) {
+    return (_database.delete(
+      _database.savedQuotes,
+    )..where((table) => table.id.equals(id))).go();
+  }
+
+  Future<List<SavedQuote>> quotesForBook(int bookId) {
+    final query = _database.select(_database.savedQuotes)
+      ..where((table) => table.bookId.equals(bookId))
+      ..orderBy([(table) => OrderingTerm(expression: table.savedAt)]);
+    return query.get();
   }
 
   Future<SavedQuote?> quoteById(int id) {
@@ -301,6 +352,8 @@ class BookRepository {
             locatorJson: row.readTable(_database.savedQuotes).locatorJson,
             savedAt: row.readTable(_database.savedQuotes).savedAt,
             bookTitle: row.readTable(_database.books).title,
+            author: row.readTable(_database.books).author,
+            highlightColor: row.readTable(_database.savedQuotes).highlightColor,
           ),
       ];
     });

@@ -1895,6 +1895,17 @@ class $SavedQuotesTable extends SavedQuotes
     type: DriftSqlType.dateTime,
     requiredDuringInsert: true,
   );
+  static const VerificationMeta _highlightColorMeta = const VerificationMeta(
+    'highlightColor',
+  );
+  @override
+  late final GeneratedColumn<String> highlightColor = GeneratedColumn<String>(
+    'highlight_color',
+    aliasedName,
+    true,
+    type: DriftSqlType.string,
+    requiredDuringInsert: false,
+  );
   @override
   List<GeneratedColumn> get $columns => [
     id,
@@ -1902,6 +1913,7 @@ class $SavedQuotesTable extends SavedQuotes
     passage,
     locatorJson,
     savedAt,
+    highlightColor,
   ];
   @override
   String get aliasedName => _alias ?? actualTableName;
@@ -1953,6 +1965,15 @@ class $SavedQuotesTable extends SavedQuotes
     } else if (isInserting) {
       context.missing(_savedAtMeta);
     }
+    if (data.containsKey('highlight_color')) {
+      context.handle(
+        _highlightColorMeta,
+        highlightColor.isAcceptableOrUnknown(
+          data['highlight_color']!,
+          _highlightColorMeta,
+        ),
+      );
+    }
     return context;
   }
 
@@ -1982,6 +2003,10 @@ class $SavedQuotesTable extends SavedQuotes
         DriftSqlType.dateTime,
         data['${effectivePrefix}saved_at'],
       )!,
+      highlightColor: attachedDatabase.typeMapping.read(
+        DriftSqlType.string,
+        data['${effectivePrefix}highlight_color'],
+      ),
     );
   }
 
@@ -1997,12 +2022,16 @@ class SavedQuote extends DataClass implements Insertable<SavedQuote> {
   final String passage;
   final String locatorJson;
   final DateTime savedAt;
+
+  /// Palette id of this quote's highlight. Null uses the original default.
+  final String? highlightColor;
   const SavedQuote({
     required this.id,
     required this.bookId,
     required this.passage,
     required this.locatorJson,
     required this.savedAt,
+    this.highlightColor,
   });
   @override
   Map<String, Expression> toColumns(bool nullToAbsent) {
@@ -2012,6 +2041,9 @@ class SavedQuote extends DataClass implements Insertable<SavedQuote> {
     map['passage'] = Variable<String>(passage);
     map['locator_json'] = Variable<String>(locatorJson);
     map['saved_at'] = Variable<DateTime>(savedAt);
+    if (!nullToAbsent || highlightColor != null) {
+      map['highlight_color'] = Variable<String>(highlightColor);
+    }
     return map;
   }
 
@@ -2022,6 +2054,9 @@ class SavedQuote extends DataClass implements Insertable<SavedQuote> {
       passage: Value(passage),
       locatorJson: Value(locatorJson),
       savedAt: Value(savedAt),
+      highlightColor: highlightColor == null && nullToAbsent
+          ? const Value.absent()
+          : Value(highlightColor),
     );
   }
 
@@ -2036,6 +2071,7 @@ class SavedQuote extends DataClass implements Insertable<SavedQuote> {
       passage: serializer.fromJson<String>(json['passage']),
       locatorJson: serializer.fromJson<String>(json['locatorJson']),
       savedAt: serializer.fromJson<DateTime>(json['savedAt']),
+      highlightColor: serializer.fromJson<String?>(json['highlightColor']),
     );
   }
   @override
@@ -2047,6 +2083,7 @@ class SavedQuote extends DataClass implements Insertable<SavedQuote> {
       'passage': serializer.toJson<String>(passage),
       'locatorJson': serializer.toJson<String>(locatorJson),
       'savedAt': serializer.toJson<DateTime>(savedAt),
+      'highlightColor': serializer.toJson<String?>(highlightColor),
     };
   }
 
@@ -2056,12 +2093,16 @@ class SavedQuote extends DataClass implements Insertable<SavedQuote> {
     String? passage,
     String? locatorJson,
     DateTime? savedAt,
+    Value<String?> highlightColor = const Value.absent(),
   }) => SavedQuote(
     id: id ?? this.id,
     bookId: bookId ?? this.bookId,
     passage: passage ?? this.passage,
     locatorJson: locatorJson ?? this.locatorJson,
     savedAt: savedAt ?? this.savedAt,
+    highlightColor: highlightColor.present
+        ? highlightColor.value
+        : this.highlightColor,
   );
   SavedQuote copyWithCompanion(SavedQuotesCompanion data) {
     return SavedQuote(
@@ -2072,6 +2113,9 @@ class SavedQuote extends DataClass implements Insertable<SavedQuote> {
           ? data.locatorJson.value
           : this.locatorJson,
       savedAt: data.savedAt.present ? data.savedAt.value : this.savedAt,
+      highlightColor: data.highlightColor.present
+          ? data.highlightColor.value
+          : this.highlightColor,
     );
   }
 
@@ -2082,13 +2126,15 @@ class SavedQuote extends DataClass implements Insertable<SavedQuote> {
           ..write('bookId: $bookId, ')
           ..write('passage: $passage, ')
           ..write('locatorJson: $locatorJson, ')
-          ..write('savedAt: $savedAt')
+          ..write('savedAt: $savedAt, ')
+          ..write('highlightColor: $highlightColor')
           ..write(')'))
         .toString();
   }
 
   @override
-  int get hashCode => Object.hash(id, bookId, passage, locatorJson, savedAt);
+  int get hashCode =>
+      Object.hash(id, bookId, passage, locatorJson, savedAt, highlightColor);
   @override
   bool operator ==(Object other) =>
       identical(this, other) ||
@@ -2097,7 +2143,8 @@ class SavedQuote extends DataClass implements Insertable<SavedQuote> {
           other.bookId == this.bookId &&
           other.passage == this.passage &&
           other.locatorJson == this.locatorJson &&
-          other.savedAt == this.savedAt);
+          other.savedAt == this.savedAt &&
+          other.highlightColor == this.highlightColor);
 }
 
 class SavedQuotesCompanion extends UpdateCompanion<SavedQuote> {
@@ -2106,12 +2153,14 @@ class SavedQuotesCompanion extends UpdateCompanion<SavedQuote> {
   final Value<String> passage;
   final Value<String> locatorJson;
   final Value<DateTime> savedAt;
+  final Value<String?> highlightColor;
   const SavedQuotesCompanion({
     this.id = const Value.absent(),
     this.bookId = const Value.absent(),
     this.passage = const Value.absent(),
     this.locatorJson = const Value.absent(),
     this.savedAt = const Value.absent(),
+    this.highlightColor = const Value.absent(),
   });
   SavedQuotesCompanion.insert({
     this.id = const Value.absent(),
@@ -2119,6 +2168,7 @@ class SavedQuotesCompanion extends UpdateCompanion<SavedQuote> {
     required String passage,
     required String locatorJson,
     required DateTime savedAt,
+    this.highlightColor = const Value.absent(),
   }) : bookId = Value(bookId),
        passage = Value(passage),
        locatorJson = Value(locatorJson),
@@ -2129,6 +2179,7 @@ class SavedQuotesCompanion extends UpdateCompanion<SavedQuote> {
     Expression<String>? passage,
     Expression<String>? locatorJson,
     Expression<DateTime>? savedAt,
+    Expression<String>? highlightColor,
   }) {
     return RawValuesInsertable({
       if (id != null) 'id': id,
@@ -2136,6 +2187,7 @@ class SavedQuotesCompanion extends UpdateCompanion<SavedQuote> {
       if (passage != null) 'passage': passage,
       if (locatorJson != null) 'locator_json': locatorJson,
       if (savedAt != null) 'saved_at': savedAt,
+      if (highlightColor != null) 'highlight_color': highlightColor,
     });
   }
 
@@ -2145,6 +2197,7 @@ class SavedQuotesCompanion extends UpdateCompanion<SavedQuote> {
     Value<String>? passage,
     Value<String>? locatorJson,
     Value<DateTime>? savedAt,
+    Value<String?>? highlightColor,
   }) {
     return SavedQuotesCompanion(
       id: id ?? this.id,
@@ -2152,6 +2205,7 @@ class SavedQuotesCompanion extends UpdateCompanion<SavedQuote> {
       passage: passage ?? this.passage,
       locatorJson: locatorJson ?? this.locatorJson,
       savedAt: savedAt ?? this.savedAt,
+      highlightColor: highlightColor ?? this.highlightColor,
     );
   }
 
@@ -2173,6 +2227,9 @@ class SavedQuotesCompanion extends UpdateCompanion<SavedQuote> {
     if (savedAt.present) {
       map['saved_at'] = Variable<DateTime>(savedAt.value);
     }
+    if (highlightColor.present) {
+      map['highlight_color'] = Variable<String>(highlightColor.value);
+    }
     return map;
   }
 
@@ -2183,7 +2240,8 @@ class SavedQuotesCompanion extends UpdateCompanion<SavedQuote> {
           ..write('bookId: $bookId, ')
           ..write('passage: $passage, ')
           ..write('locatorJson: $locatorJson, ')
-          ..write('savedAt: $savedAt')
+          ..write('savedAt: $savedAt, ')
+          ..write('highlightColor: $highlightColor')
           ..write(')'))
         .toString();
   }
@@ -3422,6 +3480,7 @@ typedef $$SavedQuotesTableCreateCompanionBuilder =
       required String passage,
       required String locatorJson,
       required DateTime savedAt,
+      Value<String?> highlightColor,
     });
 typedef $$SavedQuotesTableUpdateCompanionBuilder =
     SavedQuotesCompanion Function({
@@ -3430,6 +3489,7 @@ typedef $$SavedQuotesTableUpdateCompanionBuilder =
       Value<String> passage,
       Value<String> locatorJson,
       Value<DateTime> savedAt,
+      Value<String?> highlightColor,
     });
 
 final class $$SavedQuotesTableReferences
@@ -3480,6 +3540,11 @@ class $$SavedQuotesTableFilterComposer
 
   ColumnFilters<DateTime> get savedAt => $composableBuilder(
     column: $table.savedAt,
+    builder: (column) => ColumnFilters(column),
+  );
+
+  ColumnFilters<String> get highlightColor => $composableBuilder(
+    column: $table.highlightColor,
     builder: (column) => ColumnFilters(column),
   );
 
@@ -3536,6 +3601,11 @@ class $$SavedQuotesTableOrderingComposer
     builder: (column) => ColumnOrderings(column),
   );
 
+  ColumnOrderings<String> get highlightColor => $composableBuilder(
+    column: $table.highlightColor,
+    builder: (column) => ColumnOrderings(column),
+  );
+
   $$BooksTableOrderingComposer get bookId {
     final $$BooksTableOrderingComposer composer = $composerBuilder(
       composer: this,
@@ -3582,6 +3652,11 @@ class $$SavedQuotesTableAnnotationComposer
 
   GeneratedColumn<DateTime> get savedAt =>
       $composableBuilder(column: $table.savedAt, builder: (column) => column);
+
+  GeneratedColumn<String> get highlightColor => $composableBuilder(
+    column: $table.highlightColor,
+    builder: (column) => column,
+  );
 
   $$BooksTableAnnotationComposer get bookId {
     final $$BooksTableAnnotationComposer composer = $composerBuilder(
@@ -3640,12 +3715,14 @@ class $$SavedQuotesTableTableManager
                 Value<String> passage = const Value.absent(),
                 Value<String> locatorJson = const Value.absent(),
                 Value<DateTime> savedAt = const Value.absent(),
+                Value<String?> highlightColor = const Value.absent(),
               }) => SavedQuotesCompanion(
                 id: id,
                 bookId: bookId,
                 passage: passage,
                 locatorJson: locatorJson,
                 savedAt: savedAt,
+                highlightColor: highlightColor,
               ),
           createCompanionCallback:
               ({
@@ -3654,12 +3731,14 @@ class $$SavedQuotesTableTableManager
                 required String passage,
                 required String locatorJson,
                 required DateTime savedAt,
+                Value<String?> highlightColor = const Value.absent(),
               }) => SavedQuotesCompanion.insert(
                 id: id,
                 bookId: bookId,
                 passage: passage,
                 locatorJson: locatorJson,
                 savedAt: savedAt,
+                highlightColor: highlightColor,
               ),
           withReferenceMapper: (p0) => p0
               .map(
