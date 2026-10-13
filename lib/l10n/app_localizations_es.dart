@@ -866,4 +866,125 @@ class AppLocalizationsEs extends AppLocalizations {
   String bookSittingsLeft(int count) {
     return 'Unas $count lecturas como las últimas';
   }
+
+  @override
+  String get monthReading => 'Resumen del mes';
+
+  @override
+  String monthReadingOf(String month) {
+    return 'Resumen de $month';
+  }
+
+  @override
+  String get monthReadingEmpty =>
+      'El resumen aparece al cerrar un mes con lectura.';
+
+  @override
+  String monthPlanDays(String month, int met, int planned) {
+    return 'En $month cumpliste $met de $planned días de tu plan.';
+  }
+
+  @override
+  String monthReadTime(String month, String duration) {
+    return 'En $month leíste $duration.';
+  }
+
+  @override
+  String monthMinutesMore(String duration, String month) {
+    return '$duration más que en $month';
+  }
+
+  @override
+  String monthMinutesLess(String duration, String month) {
+    return '$duration menos que en $month';
+  }
+
+  @override
+  String get monthBookFinished => 'Terminaste este libro.';
+
+  @override
+  String get monthShareFailed => 'No se pudo compartir el resumen.';
+
+  @override
+  String get monthMethodical => 'Lector metódico';
+
+  @override
+  String get monthMethodicalPhrase => 'La constancia ya forma parte de ti.';
+
+  @override
+  String monthMethodicalEvidence(int onTime, int sessions, String hour) {
+    return '$onTime de $sessions lecturas empezaron cerca de las $hour.';
+  }
+
+  @override
+  String get monthAnt => 'Lector hormiga';
+
+  @override
+  String get monthAntPhrase =>
+      'Aprovechas cada momento. Paso a paso construyes grandes lecturas.';
+
+  @override
+  String monthAntEvidence(int met, int planned) {
+    return 'Cumpliste $met de $planned días, en lecturas de 15 min o menos.';
+  }
+
+  @override
+  String get monthMarathoner => 'El maratonista';
+
+  @override
+  String get monthMarathonerPhrase =>
+      'Cuando te sumerges en una historia, el tiempo pierde su forma.';
+
+  @override
+  String monthMarathonerEvidence(String duration) {
+    return 'Los días que leíste, promedias $duration.';
+  }
+
+  @override
+  String get monthHunter => 'Cazador de ideas';
+
+  @override
+  String get monthHunterPhrase =>
+      'No solo lees: coleccionas pensamientos y los haces tuyos.';
+
+  @override
+  String monthHunterEvidence(int withQuotes, int sessions) {
+    return 'Guardaste citas en $withQuotes de $sessions lecturas.';
+  }
+
+  @override
+  String get monthEarly => 'El madrugador';
+
+  @override
+  String get monthEarlyPhrase =>
+      'Inicias el día alimentando tu mente antes de que empiece la rutina.';
+
+  @override
+  String get monthAfternoon => 'Lector de sobremesa';
+
+  @override
+  String get monthAfternoonPhrase =>
+      'Haces una pausa en mitad del día y la llenas de páginas.';
+
+  @override
+  String get monthNight => 'El búho nocturno';
+
+  @override
+  String get monthNightPhrase =>
+      'Encuentras la calma y la concentración cuando el mundo se apaga.';
+
+  @override
+  String monthBandEvidence(int percent) {
+    return 'El $percent % de tu lectura fue en esa franja.';
+  }
+
+  @override
+  String get monthNomad => 'Lector nómada';
+
+  @override
+  String get monthNomadPhrase =>
+      'Cualquier momento es bueno para abrir un libro.';
+
+  @override
+  String get monthNomadEvidence => 'Ninguna franja llega al 60 %.';
 }

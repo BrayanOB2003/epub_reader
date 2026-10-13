@@ -433,5 +433,95 @@
     "placeholders": {
       "count": {"type": "int"}
     }
-  }
+  },
+  "monthReading": "Resumen del mes",
+  "monthReadingOf": "Resumen de {month}",
+  "@monthReadingOf": {
+    "placeholders": {
+      "month": {"type": "String"}
+    }
+  },
+  "monthReadingEmpty": "El resumen aparece al cerrar un mes con lectura.",
+  "monthPlanDays": "En {month} cumpliste {met} de {planned} días de tu plan.",
+  "@monthPlanDays": {
+    "placeholders": {
+      "month": {"type": "String"},
+      "met": {"type": "int"},
+      "planned": {"type": "int"}
+    }
+  },
+  "monthReadTime": "En {month} leíste {duration}.",
+  "@monthReadTime": {
+    "placeholders": {
+      "month": {"type": "String"},
+      "duration": {"type": "String"}
+    }
+  },
+  "monthMinutesMore": "{duration} más que en {month}",
+  "@monthMinutesMore": {
+    "placeholders": {
+      "duration": {"type": "String"},
+      "month": {"type": "String"}
+    }
+  },
+  "monthMinutesLess": "{duration} menos que en {month}",
+  "@monthMinutesLess": {
+    "placeholders": {
+      "duration": {"type": "String"},
+      "month": {"type": "String"}
+    }
+  },
+  "monthBookFinished": "Terminaste este libro.",
+  "monthShareFailed": "No se pudo compartir el resumen.",
+  "monthMethodical": "Lector metódico",
+  "monthMethodicalPhrase": "La constancia ya forma parte de ti.",
+  "monthMethodicalEvidence": "{onTime} de {sessions} lecturas empezaron cerca de las {hour}.",
+  "@monthMethodicalEvidence": {
+    "placeholders": {
+      "onTime": {"type": "int"},
+      "sessions": {"type": "int"},
+      "hour": {"type": "String"}
+    }
+  },
+  "monthAnt": "Lector hormiga",
+  "monthAntPhrase": "Aprovechas cada momento. Paso a paso construyes grandes lecturas.",
+  "monthAntEvidence": "Cumpliste {met} de {planned} días, en lecturas de 15 min o menos.",
+  "@monthAntEvidence": {
+    "placeholders": {
+      "met": {"type": "int"},
+      "planned": {"type": "int"}
+    }
+  },
+  "monthMarathoner": "El maratonista",
+  "monthMarathonerPhrase": "Cuando te sumerges en una historia, el tiempo pierde su forma.",
+  "monthMarathonerEvidence": "Los días que leíste, promedias {duration}.",
+  "@monthMarathonerEvidence": {
+    "placeholders": {
+      "duration": {"type": "String"}
+    }
+  },
+  "monthHunter": "Cazador de ideas",
+  "monthHunterPhrase": "No solo lees: coleccionas pensamientos y los haces tuyos.",
+  "monthHunterEvidence": "Guardaste citas en {withQuotes} de {sessions} lecturas.",
+  "@monthHunterEvidence": {
+    "placeholders": {
+      "withQuotes": {"type": "int"},
+      "sessions": {"type": "int"}
+    }
+  },
+  "monthEarly": "El madrugador",
+  "monthEarlyPhrase": "Inicias el día alimentando tu mente antes de que empiece la rutina.",
+  "monthAfternoon": "Lector de sobremesa",
+  "monthAfternoonPhrase": "Haces una pausa en mitad del día y la llenas de páginas.",
+  "monthNight": "El búho nocturno",
+  "monthNightPhrase": "Encuentras la calma y la concentración cuando el mundo se apaga.",
+  "monthBandEvidence": "El {percent} % de tu lectura fue en esa franja.",
+  "@monthBandEvidence": {
+    "placeholders": {
+      "percent": {"type": "int"}
+    }
+  },
+  "monthNomad": "Lector nómada",
+  "monthNomadPhrase": "Cualquier momento es bueno para abrir un libro.",
+  "monthNomadEvidence": "Ninguna franja llega al 60 %."
 }

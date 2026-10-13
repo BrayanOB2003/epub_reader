@@ -1615,6 +1615,192 @@ abstract class AppLocalizations {
   /// In es, this message translates to:
   /// **'Unas {count} lecturas como las últimas'**
   String bookSittingsLeft(int count);
+
+  /// No description provided for @monthReading.
+  ///
+  /// In es, this message translates to:
+  /// **'Resumen del mes'**
+  String get monthReading;
+
+  /// No description provided for @monthReadingOf.
+  ///
+  /// In es, this message translates to:
+  /// **'Resumen de {month}'**
+  String monthReadingOf(String month);
+
+  /// No description provided for @monthReadingEmpty.
+  ///
+  /// In es, this message translates to:
+  /// **'El resumen aparece al cerrar un mes con lectura.'**
+  String get monthReadingEmpty;
+
+  /// No description provided for @monthPlanDays.
+  ///
+  /// In es, this message translates to:
+  /// **'En {month} cumpliste {met} de {planned} días de tu plan.'**
+  String monthPlanDays(String month, int met, int planned);
+
+  /// No description provided for @monthReadTime.
+  ///
+  /// In es, this message translates to:
+  /// **'En {month} leíste {duration}.'**
+  String monthReadTime(String month, String duration);
+
+  /// No description provided for @monthMinutesMore.
+  ///
+  /// In es, this message translates to:
+  /// **'{duration} más que en {month}'**
+  String monthMinutesMore(String duration, String month);
+
+  /// No description provided for @monthMinutesLess.
+  ///
+  /// In es, this message translates to:
+  /// **'{duration} menos que en {month}'**
+  String monthMinutesLess(String duration, String month);
+
+  /// No description provided for @monthBookFinished.
+  ///
+  /// In es, this message translates to:
+  /// **'Terminaste este libro.'**
+  String get monthBookFinished;
+
+  /// No description provided for @monthShareFailed.
+  ///
+  /// In es, this message translates to:
+  /// **'No se pudo compartir el resumen.'**
+  String get monthShareFailed;
+
+  /// No description provided for @monthMethodical.
+  ///
+  /// In es, this message translates to:
+  /// **'Lector metódico'**
+  String get monthMethodical;
+
+  /// No description provided for @monthMethodicalPhrase.
+  ///
+  /// In es, this message translates to:
+  /// **'La constancia ya forma parte de ti.'**
+  String get monthMethodicalPhrase;
+
+  /// No description provided for @monthMethodicalEvidence.
+  ///
+  /// In es, this message translates to:
+  /// **'{onTime} de {sessions} lecturas empezaron cerca de las {hour}.'**
+  String monthMethodicalEvidence(int onTime, int sessions, String hour);
+
+  /// No description provided for @monthAnt.
+  ///
+  /// In es, this message translates to:
+  /// **'Lector hormiga'**
+  String get monthAnt;
+
+  /// No description provided for @monthAntPhrase.
+  ///
+  /// In es, this message translates to:
+  /// **'Aprovechas cada momento. Paso a paso construyes grandes lecturas.'**
+  String get monthAntPhrase;
+
+  /// No description provided for @monthAntEvidence.
+  ///
+  /// In es, this message translates to:
+  /// **'Cumpliste {met} de {planned} días, en lecturas de 15 min o menos.'**
+  String monthAntEvidence(int met, int planned);
+
+  /// No description provided for @monthMarathoner.
+  ///
+  /// In es, this message translates to:
+  /// **'El maratonista'**
+  String get monthMarathoner;
+
+  /// No description provided for @monthMarathonerPhrase.
+  ///
+  /// In es, this message translates to:
+  /// **'Cuando te sumerges en una historia, el tiempo pierde su forma.'**
+  String get monthMarathonerPhrase;
+
+  /// No description provided for @monthMarathonerEvidence.
+  ///
+  /// In es, this message translates to:
+  /// **'Los días que leíste, promedias {duration}.'**
+  String monthMarathonerEvidence(String duration);
+
+  /// No description provided for @monthHunter.
+  ///
+  /// In es, this message translates to:
+  /// **'Cazador de ideas'**
+  String get monthHunter;
+
+  /// No description provided for @monthHunterPhrase.
+  ///
+  /// In es, this message translates to:
+  /// **'No solo lees: coleccionas pensamientos y los haces tuyos.'**
+  String get monthHunterPhrase;
+
+  /// No description provided for @monthHunterEvidence.
+  ///
+  /// In es, this message translates to:
+  /// **'Guardaste citas en {withQuotes} de {sessions} lecturas.'**
+  String monthHunterEvidence(int withQuotes, int sessions);
+
+  /// No description provided for @monthEarly.
+  ///
+  /// In es, this message translates to:
+  /// **'El madrugador'**
+  String get monthEarly;
+
+  /// No description provided for @monthEarlyPhrase.
+  ///
+  /// In es, this message translates to:
+  /// **'Inicias el día alimentando tu mente antes de que empiece la rutina.'**
+  String get monthEarlyPhrase;
+
+  /// No description provided for @monthAfternoon.
+  ///
+  /// In es, this message translates to:
+  /// **'Lector de sobremesa'**
+  String get monthAfternoon;
+
+  /// No description provided for @monthAfternoonPhrase.
+  ///
+  /// In es, this message translates to:
+  /// **'Haces una pausa en mitad del día y la llenas de páginas.'**
+  String get monthAfternoonPhrase;
+
+  /// No description provided for @monthNight.
+  ///
+  /// In es, this message translates to:
+  /// **'El búho nocturno'**
+  String get monthNight;
+
+  /// No description provided for @monthNightPhrase.
+  ///
+  /// In es, this message translates to:
+  /// **'Encuentras la calma y la concentración cuando el mundo se apaga.'**
+  String get monthNightPhrase;
+
+  /// No description provided for @monthBandEvidence.
+  ///
+  /// In es, this message translates to:
+  /// **'El {percent} % de tu lectura fue en esa franja.'**
+  String monthBandEvidence(int percent);
+
+  /// No description provided for @monthNomad.
+  ///
+  /// In es, this message translates to:
+  /// **'Lector nómada'**
+  String get monthNomad;
+
+  /// No description provided for @monthNomadPhrase.
+  ///
+  /// In es, this message translates to:
+  /// **'Cualquier momento es bueno para abrir un libro.'**
+  String get monthNomadPhrase;
+
+  /// No description provided for @monthNomadEvidence.
+  ///
+  /// In es, this message translates to:
+  /// **'Ninguna franja llega al 60 %.'**
+  String get monthNomadEvidence;
 }
 
 class _AppLocalizationsDelegate

@@ -5,6 +5,7 @@ import 'package:firebase_analytics/firebase_analytics.dart';
 import 'package:epub_reader/features/discover/discover_page.dart';
 import 'package:epub_reader/features/focus/focus_guide_page.dart';
 import 'package:epub_reader/features/habits/book_readings_page.dart';
+import 'package:epub_reader/features/habits/month_reading_page.dart';
 import 'package:epub_reader/features/habits/reading_time_page.dart';
 import 'package:epub_reader/features/library/home_page.dart';
 import 'package:epub_reader/features/notifications/notification_permission_page.dart';
@@ -145,6 +146,13 @@ final appRouterProvider = Provider<GoRouter>((ref) {
                 path: '/profile',
                 name: 'profile',
                 builder: (context, state) => const ProfilePage(),
+                routes: [
+                  GoRoute(
+                    path: 'month',
+                    name: 'month-reading',
+                    builder: (context, state) => const MonthReadingPage(),
+                  ),
+                ],
               ),
             ],
           ),

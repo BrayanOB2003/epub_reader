@@ -68,7 +68,7 @@ class BookReadingBlock extends StatelessWidget {
                       top: remaining == null && perTen == null ? 0 : 4,
                     ),
                     child: Text(
-                      _horizonLabel(l10n, horizon),
+                      readingHorizonLabel(l10n, horizon),
                       style: Theme.of(
                         context,
                       ).textTheme.labelLarge?.copyWith(color: colors.muted),
@@ -87,7 +87,7 @@ String _shownTitle(String title, AppLocalizations l10n) {
   return trimmed.isEmpty ? l10n.untitled : trimmed;
 }
 
-String _horizonLabel(AppLocalizations l10n, ReadingHorizon horizon) {
+String readingHorizonLabel(AppLocalizations l10n, ReadingHorizon horizon) {
   final count = horizon.count;
   return switch (horizon.kind) {
     ReadingHorizonKind.underAWeek => l10n.bookUnderAWeek,

@@ -67,6 +67,20 @@ String scheduleDate(DateTime day, String languageCode) {
   return '$weekday ${local.day} de $month';
 }
 
+/// Month name for a sentence. Spanish stays lowercase; English is capitalized.
+String scheduleMonthName(int month, String languageCode) {
+  final index = (month < 1 || month > 12 ? 1 : month) - 1;
+  if (languageCode == 'en') return _englishMonths[index];
+  return scheduleMonths[index];
+}
+
+/// Month name used as a title: the first letter is uppercase.
+String scheduleMonthTitle(int month, String languageCode) {
+  final name = scheduleMonthName(month, languageCode);
+  if (name.isEmpty) return name;
+  return name[0].toUpperCase() + name.substring(1);
+}
+
 const _shortMonths = [
   'ene',
   'feb',
@@ -134,8 +148,9 @@ class ScheduleHeader extends StatelessWidget {
             const SizedBox(height: 8),
             Text(
               scheduleDate(date!, Localizations.localeOf(context).languageCode),
-              style: Theme.of(context).textTheme.bodyLarge
-                  ?.copyWith(color: colors.muted),
+              style: Theme.of(
+                context,
+              ).textTheme.bodyLarge?.copyWith(color: colors.muted),
             ),
           ],
         ],
@@ -478,8 +493,9 @@ class ScheduleListing extends StatelessWidget {
                     const SizedBox(height: 4),
                     Text(
                       subtitle!,
-                      style: Theme.of(context).textTheme.bodyMedium
-                          ?.copyWith(color: muted),
+                      style: Theme.of(
+                        context,
+                      ).textTheme.bodyMedium?.copyWith(color: muted),
                       maxLines: 2,
                       overflow: TextOverflow.ellipsis,
                     ),
@@ -488,8 +504,9 @@ class ScheduleListing extends StatelessWidget {
                     const SizedBox(height: 4),
                     Text(
                       caption!,
-                      style: Theme.of(context).textTheme.labelLarge
-                          ?.copyWith(color: muted),
+                      style: Theme.of(
+                        context,
+                      ).textTheme.labelLarge?.copyWith(color: muted),
                       maxLines: 1,
                       overflow: TextOverflow.ellipsis,
                     ),
@@ -509,8 +526,9 @@ class ScheduleListing extends StatelessWidget {
                   if (trailing != null)
                     Text(
                       trailing!,
-                      style: Theme.of(context).textTheme.labelLarge
-                          ?.copyWith(color: ink),
+                      style: Theme.of(
+                        context,
+                      ).textTheme.labelLarge?.copyWith(color: ink),
                     ),
                   if (onDelete != null)
                     TextButton(
