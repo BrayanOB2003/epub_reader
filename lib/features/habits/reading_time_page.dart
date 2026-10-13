@@ -3,6 +3,8 @@ import 'package:epub_reader/app/schedule_theme.dart';
 import 'package:epub_reader/app/schedule_widgets.dart';
 import 'package:epub_reader/features/analytics/analytics_events.dart';
 import 'package:epub_reader/features/habits/book_reading_block.dart';
+import 'package:epub_reader/features/habits/month_reading.dart';
+import 'package:epub_reader/features/habits/month_report_store.dart';
 import 'package:epub_reader/features/habits/reading_calendar.dart';
 import 'package:epub_reader/features/habits/reading_time.dart';
 import 'package:epub_reader/features/habits/weekly_reading_chart.dart';
@@ -18,6 +20,7 @@ class ReadingTimePage extends ConsumerWidget {
   @override
   Widget build(BuildContext context, WidgetRef ref) {
     final sessions = ref.watch(readingSessionsProvider);
+    final plansAsync = ref.watch(readingPlanVersionsProvider);
     final goalMinutes = ref
         .watch(readerProfileProvider)
         .asData
@@ -33,6 +36,23 @@ class ReadingTimePage extends ConsumerWidget {
           error: (error, _) =>
               _Message(text: l10n.readingTimeLoadFailed('$error')),
           data: (sessionList) {
+            if (plansAsync.hasError) {
+              return _Message(
+                text: l10n.readingTimeLoadFailed('${plansAsync.error}'),
+              );
+            }
+            if (!plansAsync.hasValue) {
+              return const Center(child: CircularProgressIndicator());
+            }
+            final plans = [
+              for (final plan in plansAsync.requireValue)
+                MonthPlanVersion(
+                  effectiveAt: plan.effectiveAt,
+                  dailyGoalMinutes: plan.dailyGoalMinutes,
+                  routineHour: plan.routineHour,
+                  weekdays: monthPlanWeekdays(plan.routineDays),
+                ),
+            ];
             final now = DateTime.now();
             final books = ref.watch(booksProvider).asData?.value;
             final reports = books == null
@@ -56,7 +76,7 @@ class ReadingTimePage extends ConsumerWidget {
                 const SizedBox(height: 12),
                 ReadingCalendar(
                   sessions: sessionList,
-                  goalSeconds: goalMinutes == null ? null : goalMinutes * 60,
+                  plans: plans,
                   today: now,
                 ),
                 if (report != null)

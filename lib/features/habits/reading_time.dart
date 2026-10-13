@@ -274,7 +274,8 @@ ReadingDayMark readingDayMark({
 ReadingMonth readingMonth({
   required Iterable<ReadingSession> sessions,
   required DateTime month,
-  required int? goalSeconds,
+  int? goalSeconds,
+  int? Function(DateTime day)? goalOn,
 }) {
   final first = DateTime(month.year, month.month);
   final totals = <int, int>{};
@@ -292,7 +293,9 @@ ReadingMonth readingMonth({
         _calendarDay(
           date: DateTime(first.year, first.month, day),
           engagedSeconds: totals[day] ?? 0,
-          goalSeconds: goalSeconds,
+          goalSeconds: goalOn == null
+              ? goalSeconds
+              : goalOn(DateTime(first.year, first.month, day)),
         ),
     ],
   );
