@@ -624,7 +624,7 @@ MonthReadingReport? _report({
     sessions: sessions,
     books: books,
     quotes: quotes,
-    plans: plans ?? [if (plan != null) plan],
+    plans: plans ?? [?plan],
     now: now ?? DateTime(2026, 11, 2, 12),
     month: month,
     archivedPreviousSeconds: archivedPreviousSeconds,
