@@ -147,8 +147,9 @@ class _OnboardingPageState extends ConsumerState<OnboardingPage> {
     } catch (_) {
       if (!mounted) return;
       setState(() => _saving = false);
-      ScaffoldMessenger.of(context)
-          .showSnackBar(SnackBar(content: Text(l10n.answersSaveFailed)));
+      ScaffoldMessenger.of(
+        context,
+      ).showSnackBar(SnackBar(content: Text(l10n.answersSaveFailed)));
     }
   }
 
@@ -322,7 +323,7 @@ class _Welcome extends StatelessWidget {
             padding: const EdgeInsets.fromLTRB(0, 20, 16, 20),
             child: Text(
               l10n.welcomeTitle,
-              style: programTitle(colors.onStation, size: 44),
+              style: programTitle(context, colors.onStation, size: 44),
             ),
           ),
         ),
@@ -391,6 +392,7 @@ class _DayLetter extends StatelessWidget {
         child: Material(
           color: selected ? colors.station : colors.paper,
           shape: RoundedRectangleBorder(
+            borderRadius: scheduleRadius(context),
             side: BorderSide(color: selected ? colors.station : colors.rule),
           ),
           child: InkWell(
@@ -430,6 +432,7 @@ class _HourChip extends StatelessWidget {
     return Material(
       color: selected ? colors.station : colors.paper,
       shape: RoundedRectangleBorder(
+        borderRadius: scheduleRadius(context),
         side: BorderSide(color: selected ? colors.station : colors.rule),
       ),
       child: InkWell(
@@ -467,6 +470,7 @@ class _ChoiceTile extends StatelessWidget {
       child: Material(
         color: selected ? colors.station : colors.paper,
         shape: RoundedRectangleBorder(
+          borderRadius: scheduleRadius(context),
           side: BorderSide(color: selected ? colors.station : colors.rule),
         ),
         child: InkWell(

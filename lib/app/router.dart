@@ -4,6 +4,8 @@ import 'package:epub_reader/features/analytics/app_analytics.dart';
 import 'package:firebase_analytics/firebase_analytics.dart';
 import 'package:epub_reader/features/discover/discover_page.dart';
 import 'package:epub_reader/features/focus/focus_guide_page.dart';
+import 'package:epub_reader/features/habits/book_readings_page.dart';
+import 'package:epub_reader/features/habits/month_reading_page.dart';
 import 'package:epub_reader/features/habits/reading_time_page.dart';
 import 'package:epub_reader/features/library/home_page.dart';
 import 'package:epub_reader/features/notifications/notification_permission_page.dart';
@@ -11,6 +13,7 @@ import 'package:epub_reader/features/notifications/notification_prompt.dart';
 import 'package:epub_reader/features/onboarding/onboarding_answers.dart';
 import 'package:epub_reader/features/onboarding/onboarding_controller.dart';
 import 'package:epub_reader/features/onboarding/onboarding_page.dart';
+import 'package:epub_reader/features/profile/appearance_page.dart';
 import 'package:epub_reader/features/profile/profile_page.dart';
 import 'package:epub_reader/features/profile/quotes_page.dart';
 import 'package:epub_reader/features/quotes/quote_export_page.dart';
@@ -128,6 +131,13 @@ final appRouterProvider = Provider<GoRouter>((ref) {
                 path: '/time',
                 name: 'time',
                 builder: (context, state) => const ReadingTimePage(),
+                routes: [
+                  GoRoute(
+                    path: 'books',
+                    name: 'time-books',
+                    builder: (context, state) => const BookReadingsPage(),
+                  ),
+                ],
               ),
             ],
           ),
@@ -137,6 +147,39 @@ final appRouterProvider = Provider<GoRouter>((ref) {
                 path: '/profile',
                 name: 'profile',
                 builder: (context, state) => const ProfilePage(),
+                routes: [
+                  GoRoute(
+                    path: 'appearance',
+                    name: 'appearance',
+                    builder: (context, state) => const AppearancePage(),
+                  ),
+                  GoRoute(
+                    path: 'month',
+                    name: 'month-reading',
+                    builder: (context, state) => const MonthReadingPage(),
+                    routes: [
+                      GoRoute(
+                        path: ':year/:month',
+                        name: 'month-reading-at',
+                        builder: (context, state) {
+                          final year = int.tryParse(
+                            state.pathParameters['year'] ?? '',
+                          );
+                          final month = int.tryParse(
+                            state.pathParameters['month'] ?? '',
+                          );
+                          if (year == null ||
+                              month == null ||
+                              month < 1 ||
+                              month > 12) {
+                            return const MonthReadingPage();
+                          }
+                          return MonthReadingPage(month: DateTime(year, month));
+                        },
+                      ),
+                    ],
+                  ),
+                ],
               ),
             ],
           ),

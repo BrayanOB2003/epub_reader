@@ -61,6 +61,7 @@ dependencies:
   firebase_crashlytics: ^5.4.0
   image: ^4.10.2
   gal: ^2.3.3
+  webview_flutter: ^4.14.1
 dev_dependencies:
   flutter_test:
     sdk: flutter
@@ -101,6 +102,12 @@ flutter:
       fonts:
         - asset: assets/fonts/SourceSerif4-Regular.ttf
           weight: 400
+        - asset: assets/fonts/SourceSerif4-SemiBold.ttf
+          weight: 600
+    - family: RobotoSlab
+      fonts:
+        - asset: assets/fonts/RobotoSlab-SemiBold.ttf
+          weight: 600
 
   # To add assets to your application, add an assets section, like this:
   # assets:

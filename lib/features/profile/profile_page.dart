@@ -1,8 +1,12 @@
+import 'package:epub_reader/app/app_theme_store.dart';
 import 'package:epub_reader/app/providers.dart';
 import 'package:epub_reader/app/schedule_theme.dart';
 import 'package:epub_reader/app/schedule_widgets.dart';
+import 'package:epub_reader/core/database/app_database.dart';
 import 'package:epub_reader/features/focus/focus_mode.dart';
 import 'package:epub_reader/features/focus/focus_mode_tile.dart';
+import 'package:epub_reader/features/habits/month_reading.dart';
+import 'package:epub_reader/features/profile/appearance_page.dart';
 import 'package:epub_reader/features/profile/reader_profile_store.dart';
 import 'package:epub_reader/features/reader/quote_highlight_default_tile.dart';
 import 'package:epub_reader/l10n/app_localizations.dart';
@@ -42,6 +46,8 @@ class ProfilePage extends ConsumerWidget {
                 .asData
                 ?.value
                 .length;
+            final reviewed = ref.watch(readingSessionsProvider).asData?.value;
+            final reviewTitle = _reviewTitle(context, l10n, reviewed);
             return ListView(
               children: [
                 ScheduleHeader(title: l10n.profile),
@@ -55,17 +61,38 @@ class ProfilePage extends ConsumerWidget {
                 ),
                 const Divider(height: 1),
                 ListTile(
+                  title: Text(reviewTitle),
+                  onTap: () => context.push('/profile/month'),
+                ),
+                const Divider(height: 1),
+                ListTile(
                   title: Text(l10n.savedQuotes),
                   trailing: quoteCount == null
                       ? null
                       : Text(
                           '$quoteCount',
-                          style: Theme.of(context).textTheme.bodyLarge
-                              ?.copyWith(color: colors.muted),
+                          style: Theme.of(
+                            context,
+                          ).textTheme.bodyLarge?.copyWith(color: colors.muted),
                         ),
                   onTap: () => context.push('/quotes'),
                 ),
                 const ScheduleRule(),
+                ListTile(
+                  title: Text(l10n.appearance),
+                  trailing: Text(
+                    themeLabel(
+                      l10n,
+                      ref.watch(appThemeProvider).asData?.value ??
+                          AppThemeId.programa,
+                    ),
+                    style: Theme.of(
+                      context,
+                    ).textTheme.bodyLarge?.copyWith(color: colors.muted),
+                  ),
+                  onTap: () => context.push('/profile/appearance'),
+                ),
+                const Divider(height: 1),
                 const QuoteHighlightDefaultTile(),
                 const Divider(height: 1),
                 if (saved != null &&
@@ -115,8 +142,24 @@ class ProfilePage extends ConsumerWidget {
       ).showSnackBar(SnackBar(content: Text(l10n.sampleReadingsAdded(count))));
     } catch (_) {
       if (!context.mounted) return;
-      ScaffoldMessenger.of(context)
-          .showSnackBar(SnackBar(content: Text(l10n.sampleReadingsFailed)));
+      ScaffoldMessenger.of(
+        context,
+      ).showSnackBar(SnackBar(content: Text(l10n.sampleReadingsFailed)));
     }
   }
+}
+
+String _reviewTitle(
+  BuildContext context,
+  AppLocalizations l10n,
+  List<ReadingSession>? sessions,
+) {
+  if (sessions == null) return l10n.monthReading;
+  final month = monthOnReview(sessions: sessions, now: DateTime.now());
+  if (month == null) return l10n.monthReading;
+  final code = Localizations.localeOf(context).languageCode;
+  final name = code == 'en'
+      ? scheduleMonthTitle(month.month, code)
+      : scheduleMonthName(month.month, code);
+  return l10n.monthReadingOf(name);
 }

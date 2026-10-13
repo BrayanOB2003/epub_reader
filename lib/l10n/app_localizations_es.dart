@@ -143,6 +143,31 @@ class AppLocalizationsEs extends AppLocalizations {
   String get noContents => 'Este libro no tiene índice.';
 
   @override
+  String get contentsKeepReading => 'Puedes seguir pasando páginas.';
+
+  @override
+  String get contentsSearch => 'Buscar en el índice';
+
+  @override
+  String get contentsNoMatches => 'Ningún capítulo coincide.';
+
+  @override
+  String chapterLabel(int position) {
+    return 'Capítulo $position';
+  }
+
+  @override
+  String chapterOpenFailed(String title) {
+    return 'No se pudo abrir «$title».';
+  }
+
+  @override
+  String get showChapters => 'Mostrar capítulos';
+
+  @override
+  String get hideChapters => 'Ocultar capítulos';
+
+  @override
   String get copy => 'Copiar';
 
   @override
@@ -763,4 +788,227 @@ class AppLocalizationsEs extends AppLocalizations {
 
   @override
   String get quoteDeleteFailed => 'No se pudo eliminar la cita.';
+
+  @override
+  String get chapterMinuteLeft => 'Un minuto de capítulo';
+
+  @override
+  String chapterMinutesLeft(int minutes) {
+    return 'Unos $minutes min de capítulo';
+  }
+
+  @override
+  String get chapterFinishTitle => '¿Sigues un poco más?';
+
+  @override
+  String get chapterMinuteAlmostDone =>
+      'Te falta un minuto para acabar el capítulo.';
+
+  @override
+  String chapterMinutesAlmostDone(int minutes) {
+    return 'Te faltan unos $minutes min para acabar el capítulo.';
+  }
+
+  @override
+  String chapterMinuteAlmostDoneNamed(String title) {
+    return 'Te falta un minuto para acabar «$title».';
+  }
+
+  @override
+  String chapterMinutesAlmostDoneNamed(int minutes, String title) {
+    return 'Te faltan unos $minutes min para acabar «$title».';
+  }
+
+  @override
+  String get keepReading => 'Seguir leyendo';
+
+  @override
+  String get leaveReader => 'Salir';
+
+  @override
+  String get tableView => 'Tabla';
+
+  @override
+  String bookTimeLeft(String duration) {
+    return 'Faltan ~$duration';
+  }
+
+  @override
+  String bookPacePerTen(String duration) {
+    return '~$duration por cada 10 %';
+  }
+
+  @override
+  String get bookUnderAWeek => 'A este ritmo, menos de una semana';
+
+  @override
+  String get bookWeekLeft => 'A este ritmo, una semana';
+
+  @override
+  String bookWeeksLeft(int count) {
+    return 'A este ritmo, unas $count semanas';
+  }
+
+  @override
+  String get bookSittingLeft => 'Una lectura como las últimas';
+
+  @override
+  String get readingByBook => 'Por libro';
+
+  @override
+  String get allReadingBooks => 'Todos los libros';
+
+  @override
+  String get readingByBookEmpty =>
+      'Todavía no hay un libro con tiempo de lectura.';
+
+  @override
+  String bookSittingsLeft(int count) {
+    return 'Unas $count lecturas como las últimas';
+  }
+
+  @override
+  String get monthReading => 'Resumen del mes';
+
+  @override
+  String monthReadingOf(String month) {
+    return 'Resumen de $month';
+  }
+
+  @override
+  String get monthReadingEmpty =>
+      'El resumen aparece al cerrar un mes con lectura.';
+
+  @override
+  String get monthInProgress => 'En curso';
+
+  @override
+  String monthPlanDays(String month, int met, int planned) {
+    return 'En $month cumpliste $met de $planned días de tu plan.';
+  }
+
+  @override
+  String monthReadTime(String month, String duration) {
+    return 'En $month leíste $duration.';
+  }
+
+  @override
+  String monthMinutesMore(String duration, String month) {
+    return '$duration más que en $month';
+  }
+
+  @override
+  String monthMinutesLess(String duration, String month) {
+    return '$duration menos que en $month';
+  }
+
+  @override
+  String get monthBookFinished => 'Terminaste este libro.';
+
+  @override
+  String get monthShareFailed => 'No se pudo compartir el resumen.';
+
+  @override
+  String get monthMethodical => 'Lector metódico';
+
+  @override
+  String get monthMethodicalPhrase => 'La constancia ya forma parte de ti.';
+
+  @override
+  String monthMethodicalEvidence(int onTime, int sessions, String hour) {
+    return '$onTime de $sessions lecturas empezaron cerca de las $hour.';
+  }
+
+  @override
+  String get monthAnt => 'Lector hormiga';
+
+  @override
+  String get monthAntPhrase =>
+      'Aprovechas cada momento. Paso a paso construyes grandes lecturas.';
+
+  @override
+  String monthAntEvidence(int met, int planned) {
+    return 'Cumpliste $met de $planned días, en lecturas de 15 min o menos.';
+  }
+
+  @override
+  String get monthMarathoner => 'El maratonista';
+
+  @override
+  String get monthMarathonerPhrase =>
+      'Cuando te sumerges en una historia, el tiempo pierde su forma.';
+
+  @override
+  String monthMarathonerEvidence(String duration) {
+    return 'Los días que leíste, promedias $duration.';
+  }
+
+  @override
+  String get monthHunter => 'Cazador de ideas';
+
+  @override
+  String get monthHunterPhrase =>
+      'No solo lees: coleccionas pensamientos y los haces tuyos.';
+
+  @override
+  String monthHunterEvidence(int withQuotes, int sessions) {
+    return 'Guardaste citas en $withQuotes de $sessions lecturas.';
+  }
+
+  @override
+  String get monthEarly => 'El madrugador';
+
+  @override
+  String get monthEarlyPhrase =>
+      'Inicias el día alimentando tu mente antes de que empiece la rutina.';
+
+  @override
+  String get monthAfternoon => 'Lector de sobremesa';
+
+  @override
+  String get monthAfternoonPhrase =>
+      'Haces una pausa en mitad del día y la llenas de páginas.';
+
+  @override
+  String get monthNight => 'El búho nocturno';
+
+  @override
+  String get monthNightPhrase =>
+      'Encuentras la calma y la concentración cuando el mundo se apaga.';
+
+  @override
+  String monthBandEvidence(int percent) {
+    return 'El $percent % de tu lectura fue en esa franja.';
+  }
+
+  @override
+  String get monthNomad => 'Lector nómada';
+
+  @override
+  String get monthNomadPhrase =>
+      'Cualquier momento es bueno para abrir un libro.';
+
+  @override
+  String get monthNomadEvidence => 'Ninguna franja llega al 60 %.';
+
+  @override
+  String get appearance => 'Apariencia';
+
+  @override
+  String get themePrograma => 'Programa';
+
+  @override
+  String get themeLibro => 'Libro';
+
+  @override
+  String get themeCuaderno => 'Cuaderno';
+
+  @override
+  String get themePeriodico => 'Periódico';
+
+  @override
+  String get themeFicha => 'Ficha';
+
+  @override
+  String get themeChangeFailed => 'No se pudo cambiar la apariencia.';
 }

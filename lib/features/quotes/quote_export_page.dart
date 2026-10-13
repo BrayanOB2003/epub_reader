@@ -28,13 +28,17 @@ class QuoteExportPage extends ConsumerStatefulWidget {
 class _QuoteExportPageState extends ConsumerState<QuoteExportPage> {
   QuoteCardStyle _style = QuoteCardStyle.initial;
   List<StoredQuoteBackground> _imported = const [];
-  String _backgroundId = bundledQuoteBackgroundIds.first;
+  String _backgroundId = defaultQuoteBackgroundId;
   bool _importedBackground = false;
+  String _resolvedId = defaultQuoteBackgroundId;
+  bool _resolvedImported = false;
+  String? _resolvedPath;
   QuoteBackgroundSample? _sample;
   bool _sampleError = false;
   bool _suggestionReady = false;
   bool _ready = false;
   bool _busy = false;
+  bool _resolving = false;
   bool _importing = false;
   int _sampleToken = 0;
   ImageProvider? _preview;
@@ -57,7 +61,7 @@ class _QuoteExportPageState extends ConsumerState<QuoteExportPage> {
       _suggestionReady = !style.inkAutomatic;
     });
     await _selectBackground(
-      bundledQuoteBackgroundIds.first,
+      defaultQuoteBackgroundId,
       imported: false,
       suggest: style.inkAutomatic,
     );
@@ -73,20 +77,32 @@ class _QuoteExportPageState extends ConsumerState<QuoteExportPage> {
       _backgroundId = id;
       _importedBackground = imported;
       _sampleError = false;
+      _resolving = true;
       if (suggest) {
         _style = _style.copyWith(inkAutomatic: true);
         _suggestionReady = false;
       }
     });
     try {
-      final bytes = await ref
-          .read(quoteBackgroundStoreProvider)
-          .load(id: id, imported: imported);
+      final store = ref.read(quoteBackgroundStoreProvider);
+      final bytes = await store.load(id: id, imported: imported);
       final sample = await sampleQuoteBackground(bytes);
+      String? path;
+      if (imported) {
+        for (final item in _imported) {
+          if (item.id == id) path = item.path;
+        }
+      } else if (id != defaultQuoteBackgroundId) {
+        path = (await store.catalogFile(id)).path;
+      }
       if (!mounted || token != _sampleToken) return;
       setState(() {
+        _resolvedId = id;
+        _resolvedImported = imported;
+        _resolvedPath = path;
         _sample = sample;
         _sampleError = false;
+        _resolving = false;
       });
       if (_style.inkAutomatic) _applySuggestion(raiseVeil: true);
       _persist();
@@ -96,6 +112,7 @@ class _QuoteExportPageState extends ConsumerState<QuoteExportPage> {
         _sample = null;
         _sampleError = true;
         _suggestionReady = !_style.inkAutomatic;
+        _resolving = false;
       });
     }
   }
@@ -210,7 +227,7 @@ class _QuoteExportPageState extends ConsumerState<QuoteExportPage> {
       ];
     });
     await _selectBackground(
-      bundledQuoteBackgroundIds.first,
+      defaultQuoteBackgroundId,
       imported: false,
       suggest: true,
     );
@@ -267,21 +284,14 @@ class _QuoteExportPageState extends ConsumerState<QuoteExportPage> {
   }
 
   ImageProvider _backgroundImage(double cacheWidth) {
-    final key = '$_importedBackground:$_backgroundId:${cacheWidth.round()}';
+    final key =
+        '$_resolvedImported:$_resolvedId:${_resolvedPath ?? ''}:${cacheWidth.round()}';
     final current = _preview;
     if (_previewKey == key && current != null) return current;
-    final ImageProvider source;
-    if (_importedBackground) {
-      final path = _imported
-          .where((item) => item.id == _backgroundId)
-          .map((item) => item.path)
-          .firstOrNull;
-      source = path == null
-          ? AssetImage('assets/backgrounds/${bundledQuoteBackgroundIds.first}')
-          : FileImage(File(path));
-    } else {
-      source = AssetImage('assets/backgrounds/$_backgroundId');
-    }
+    final path = _resolvedPath;
+    final ImageProvider source = path == null
+        ? const AssetImage(defaultQuoteBackgroundAsset)
+        : FileImage(File(path));
     final provider = ResizeImage(source, width: cacheWidth.round());
     _preview = provider;
     _previewKey = key;
@@ -325,6 +335,7 @@ class _QuoteExportPageState extends ConsumerState<QuoteExportPage> {
               sampleError: _sampleError,
               showCopy: _suggestionReady || !_style.inkAutomatic,
               busy: _busy,
+              resolving: _resolving,
               importing: _importing,
               backgroundOf: _backgroundImage,
               onBack: () => context.pop(),
@@ -431,6 +442,7 @@ class _Editor extends StatelessWidget {
     required this.sampleError,
     required this.showCopy,
     required this.busy,
+    required this.resolving,
     required this.importing,
     required this.backgroundOf,
     required this.onBack,
@@ -455,6 +467,7 @@ class _Editor extends StatelessWidget {
   final bool sampleError;
   final bool showCopy;
   final bool busy;
+  final bool resolving;
   final bool importing;
   final ImageProvider Function(double cacheWidth) backgroundOf;
   final VoidCallback onBack;
@@ -494,7 +507,12 @@ class _Editor extends StatelessWidget {
       color: Color(0xFF000000 | style.ink.rgb),
     );
     final enabled =
-        measure.fits && !busy && !sampleError && showCopy && !importing;
+        measure.fits &&
+        !busy &&
+        !resolving &&
+        !sampleError &&
+        showCopy &&
+        !importing;
     final notice = sampleError
         ? l10n.quoteBackgroundFailed
         : measure.fits
@@ -535,13 +553,26 @@ class _Editor extends StatelessWidget {
                 aspect: aspect,
                 maxWidth: previewWidth,
                 maxHeight: previewHeight - 12,
-                child: QuoteCardView(
-                  background: backgroundOf(previewWidth),
-                  style: style,
-                  passage: showCopy ? quote.text : '',
-                  attribution: showCopy ? attribution : '',
-                  measure: measure,
-                  exportWidth: pixels.$1.toDouble(),
+                child: Stack(
+                  fit: StackFit.expand,
+                  children: [
+                    QuoteCardView(
+                      background: backgroundOf(previewWidth),
+                      style: style,
+                      passage: showCopy ? quote.text : '',
+                      attribution: showCopy ? attribution : '',
+                      measure: measure,
+                      exportWidth: pixels.$1.toDouble(),
+                    ),
+                    if (resolving)
+                      const Center(
+                        child: SizedBox(
+                          width: 28,
+                          height: 28,
+                          child: CircularProgressIndicator(strokeWidth: 2),
+                        ),
+                      ),
+                  ],
                 ),
               ),
             ),
@@ -690,7 +721,7 @@ class _BackgroundStrip extends StatelessWidget {
   @override
   Widget build(BuildContext context) {
     final l10n = AppLocalizations.of(context);
-    final count = 1 + bundledQuoteBackgroundIds.length + imported.length;
+    final count = 2 + catalogQuoteBackgroundIds.length + imported.length;
     return SizedBox(
       height: 64,
       child: ListView.builder(
@@ -714,16 +745,16 @@ class _BackgroundStrip extends StatelessWidget {
                   : const Icon(Icons.add),
             );
           }
-          final bundledIndex = index - 1;
-          if (bundledIndex < bundledQuoteBackgroundIds.length) {
-            final id = bundledQuoteBackgroundIds[bundledIndex];
+          if (index == 1) {
             return _Thumb(
               label: l10n.quoteImageTitle,
-              selected: !importedBackground && backgroundId == id,
-              onTap: () => onSelectBundled(id),
-              child: Image(
+              selected:
+                  !importedBackground &&
+                  backgroundId == defaultQuoteBackgroundId,
+              onTap: () => onSelectBundled(defaultQuoteBackgroundId),
+              child: const Image(
                 image: ResizeImage(
-                  AssetImage('assets/backgrounds/$id'),
+                  AssetImage(defaultQuoteBackgroundAsset),
                   width: 128,
                 ),
                 fit: BoxFit.cover,
@@ -732,8 +763,19 @@ class _BackgroundStrip extends StatelessWidget {
               ),
             );
           }
+          final catalogIndex = index - 2;
+          if (catalogIndex < catalogQuoteBackgroundIds.length) {
+            final id = catalogQuoteBackgroundIds[catalogIndex];
+            return _Thumb(
+              key: ValueKey(id),
+              label: l10n.quoteImageTitle,
+              selected: !importedBackground && backgroundId == id,
+              onTap: () => onSelectBundled(id),
+              child: _CatalogThumbImage(id: id),
+            );
+          }
           final item =
-              imported[bundledIndex - bundledQuoteBackgroundIds.length];
+              imported[catalogIndex - catalogQuoteBackgroundIds.length];
           return _Thumb(
             key: ValueKey(item.id),
             label: l10n.importQuoteBackground,
@@ -748,6 +790,61 @@ class _BackgroundStrip extends StatelessWidget {
           );
         },
       ),
+    );
+  }
+}
+
+class _CatalogThumbImage extends ConsumerStatefulWidget {
+  const _CatalogThumbImage({required this.id});
+
+  final String id;
+
+  @override
+  ConsumerState<_CatalogThumbImage> createState() => _CatalogThumbImageState();
+}
+
+class _CatalogThumbImageState extends ConsumerState<_CatalogThumbImage> {
+  File? _file;
+  bool _failed = false;
+
+  @override
+  void initState() {
+    super.initState();
+    _load();
+  }
+
+  Future<void> _load() async {
+    try {
+      final file = await ref
+          .read(quoteBackgroundStoreProvider)
+          .catalogFile(widget.id, thumb: true);
+      if (!mounted) return;
+      setState(() => _file = file);
+    } catch (_) {
+      if (!mounted) return;
+      setState(() => _failed = true);
+    }
+  }
+
+  @override
+  Widget build(BuildContext context) {
+    final file = _file;
+    if (file == null) {
+      return Center(
+        child: _failed
+            ? const Icon(Icons.image_outlined)
+            : const SizedBox(
+                width: 18,
+                height: 18,
+                child: CircularProgressIndicator(strokeWidth: 2),
+              ),
+      );
+    }
+    return Image(
+      image: ResizeImage(FileImage(file), width: 128),
+      fit: BoxFit.cover,
+      gaplessPlayback: true,
+      excludeFromSemantics: true,
     );
   }
 }

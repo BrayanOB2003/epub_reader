@@ -44,7 +44,9 @@ final epubImporterProvider = Provider<EpubImporter>((ref) {
 });
 
 final quoteBackgroundStoreProvider = Provider<QuoteBackgroundStore>((ref) {
-  return QuoteBackgroundStore();
+  final store = QuoteBackgroundStore();
+  ref.onDispose(store.close);
+  return store;
 });
 
 final quoteCardStyleStoreProvider = Provider<QuoteCardStyleStore>((ref) {

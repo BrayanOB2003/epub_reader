@@ -350,6 +350,48 @@ abstract class AppLocalizations {
   /// **'Este libro no tiene índice.'**
   String get noContents;
 
+  /// No description provided for @contentsKeepReading.
+  ///
+  /// In es, this message translates to:
+  /// **'Puedes seguir pasando páginas.'**
+  String get contentsKeepReading;
+
+  /// No description provided for @contentsSearch.
+  ///
+  /// In es, this message translates to:
+  /// **'Buscar en el índice'**
+  String get contentsSearch;
+
+  /// No description provided for @contentsNoMatches.
+  ///
+  /// In es, this message translates to:
+  /// **'Ningún capítulo coincide.'**
+  String get contentsNoMatches;
+
+  /// No description provided for @chapterLabel.
+  ///
+  /// In es, this message translates to:
+  /// **'Capítulo {position}'**
+  String chapterLabel(int position);
+
+  /// No description provided for @chapterOpenFailed.
+  ///
+  /// In es, this message translates to:
+  /// **'No se pudo abrir «{title}».'**
+  String chapterOpenFailed(String title);
+
+  /// No description provided for @showChapters.
+  ///
+  /// In es, this message translates to:
+  /// **'Mostrar capítulos'**
+  String get showChapters;
+
+  /// No description provided for @hideChapters.
+  ///
+  /// In es, this message translates to:
+  /// **'Ocultar capítulos'**
+  String get hideChapters;
+
   /// No description provided for @copy.
   ///
   /// In es, this message translates to:
@@ -1453,6 +1495,360 @@ abstract class AppLocalizations {
   /// In es, this message translates to:
   /// **'No se pudo eliminar la cita.'**
   String get quoteDeleteFailed;
+
+  /// No description provided for @chapterMinuteLeft.
+  ///
+  /// In es, this message translates to:
+  /// **'Un minuto de capítulo'**
+  String get chapterMinuteLeft;
+
+  /// No description provided for @chapterMinutesLeft.
+  ///
+  /// In es, this message translates to:
+  /// **'Unos {minutes} min de capítulo'**
+  String chapterMinutesLeft(int minutes);
+
+  /// No description provided for @chapterFinishTitle.
+  ///
+  /// In es, this message translates to:
+  /// **'¿Sigues un poco más?'**
+  String get chapterFinishTitle;
+
+  /// No description provided for @chapterMinuteAlmostDone.
+  ///
+  /// In es, this message translates to:
+  /// **'Te falta un minuto para acabar el capítulo.'**
+  String get chapterMinuteAlmostDone;
+
+  /// No description provided for @chapterMinutesAlmostDone.
+  ///
+  /// In es, this message translates to:
+  /// **'Te faltan unos {minutes} min para acabar el capítulo.'**
+  String chapterMinutesAlmostDone(int minutes);
+
+  /// No description provided for @chapterMinuteAlmostDoneNamed.
+  ///
+  /// In es, this message translates to:
+  /// **'Te falta un minuto para acabar «{title}».'**
+  String chapterMinuteAlmostDoneNamed(String title);
+
+  /// No description provided for @chapterMinutesAlmostDoneNamed.
+  ///
+  /// In es, this message translates to:
+  /// **'Te faltan unos {minutes} min para acabar «{title}».'**
+  String chapterMinutesAlmostDoneNamed(int minutes, String title);
+
+  /// No description provided for @keepReading.
+  ///
+  /// In es, this message translates to:
+  /// **'Seguir leyendo'**
+  String get keepReading;
+
+  /// No description provided for @leaveReader.
+  ///
+  /// In es, this message translates to:
+  /// **'Salir'**
+  String get leaveReader;
+
+  /// No description provided for @tableView.
+  ///
+  /// In es, this message translates to:
+  /// **'Tabla'**
+  String get tableView;
+
+  /// No description provided for @bookTimeLeft.
+  ///
+  /// In es, this message translates to:
+  /// **'Faltan ~{duration}'**
+  String bookTimeLeft(String duration);
+
+  /// No description provided for @bookPacePerTen.
+  ///
+  /// In es, this message translates to:
+  /// **'~{duration} por cada 10 %'**
+  String bookPacePerTen(String duration);
+
+  /// No description provided for @bookUnderAWeek.
+  ///
+  /// In es, this message translates to:
+  /// **'A este ritmo, menos de una semana'**
+  String get bookUnderAWeek;
+
+  /// No description provided for @bookWeekLeft.
+  ///
+  /// In es, this message translates to:
+  /// **'A este ritmo, una semana'**
+  String get bookWeekLeft;
+
+  /// No description provided for @bookWeeksLeft.
+  ///
+  /// In es, this message translates to:
+  /// **'A este ritmo, unas {count} semanas'**
+  String bookWeeksLeft(int count);
+
+  /// No description provided for @bookSittingLeft.
+  ///
+  /// In es, this message translates to:
+  /// **'Una lectura como las últimas'**
+  String get bookSittingLeft;
+
+  /// No description provided for @readingByBook.
+  ///
+  /// In es, this message translates to:
+  /// **'Por libro'**
+  String get readingByBook;
+
+  /// No description provided for @allReadingBooks.
+  ///
+  /// In es, this message translates to:
+  /// **'Todos los libros'**
+  String get allReadingBooks;
+
+  /// No description provided for @readingByBookEmpty.
+  ///
+  /// In es, this message translates to:
+  /// **'Todavía no hay un libro con tiempo de lectura.'**
+  String get readingByBookEmpty;
+
+  /// No description provided for @bookSittingsLeft.
+  ///
+  /// In es, this message translates to:
+  /// **'Unas {count} lecturas como las últimas'**
+  String bookSittingsLeft(int count);
+
+  /// No description provided for @monthReading.
+  ///
+  /// In es, this message translates to:
+  /// **'Resumen del mes'**
+  String get monthReading;
+
+  /// No description provided for @monthReadingOf.
+  ///
+  /// In es, this message translates to:
+  /// **'Resumen de {month}'**
+  String monthReadingOf(String month);
+
+  /// No description provided for @monthReadingEmpty.
+  ///
+  /// In es, this message translates to:
+  /// **'El resumen aparece al cerrar un mes con lectura.'**
+  String get monthReadingEmpty;
+
+  /// No description provided for @monthInProgress.
+  ///
+  /// In es, this message translates to:
+  /// **'En curso'**
+  String get monthInProgress;
+
+  /// No description provided for @monthPlanDays.
+  ///
+  /// In es, this message translates to:
+  /// **'En {month} cumpliste {met} de {planned} días de tu plan.'**
+  String monthPlanDays(String month, int met, int planned);
+
+  /// No description provided for @monthReadTime.
+  ///
+  /// In es, this message translates to:
+  /// **'En {month} leíste {duration}.'**
+  String monthReadTime(String month, String duration);
+
+  /// No description provided for @monthMinutesMore.
+  ///
+  /// In es, this message translates to:
+  /// **'{duration} más que en {month}'**
+  String monthMinutesMore(String duration, String month);
+
+  /// No description provided for @monthMinutesLess.
+  ///
+  /// In es, this message translates to:
+  /// **'{duration} menos que en {month}'**
+  String monthMinutesLess(String duration, String month);
+
+  /// No description provided for @monthBookFinished.
+  ///
+  /// In es, this message translates to:
+  /// **'Terminaste este libro.'**
+  String get monthBookFinished;
+
+  /// No description provided for @monthShareFailed.
+  ///
+  /// In es, this message translates to:
+  /// **'No se pudo compartir el resumen.'**
+  String get monthShareFailed;
+
+  /// No description provided for @monthMethodical.
+  ///
+  /// In es, this message translates to:
+  /// **'Lector metódico'**
+  String get monthMethodical;
+
+  /// No description provided for @monthMethodicalPhrase.
+  ///
+  /// In es, this message translates to:
+  /// **'La constancia ya forma parte de ti.'**
+  String get monthMethodicalPhrase;
+
+  /// No description provided for @monthMethodicalEvidence.
+  ///
+  /// In es, this message translates to:
+  /// **'{onTime} de {sessions} lecturas empezaron cerca de las {hour}.'**
+  String monthMethodicalEvidence(int onTime, int sessions, String hour);
+
+  /// No description provided for @monthAnt.
+  ///
+  /// In es, this message translates to:
+  /// **'Lector hormiga'**
+  String get monthAnt;
+
+  /// No description provided for @monthAntPhrase.
+  ///
+  /// In es, this message translates to:
+  /// **'Aprovechas cada momento. Paso a paso construyes grandes lecturas.'**
+  String get monthAntPhrase;
+
+  /// No description provided for @monthAntEvidence.
+  ///
+  /// In es, this message translates to:
+  /// **'Cumpliste {met} de {planned} días, en lecturas de 15 min o menos.'**
+  String monthAntEvidence(int met, int planned);
+
+  /// No description provided for @monthMarathoner.
+  ///
+  /// In es, this message translates to:
+  /// **'El maratonista'**
+  String get monthMarathoner;
+
+  /// No description provided for @monthMarathonerPhrase.
+  ///
+  /// In es, this message translates to:
+  /// **'Cuando te sumerges en una historia, el tiempo pierde su forma.'**
+  String get monthMarathonerPhrase;
+
+  /// No description provided for @monthMarathonerEvidence.
+  ///
+  /// In es, this message translates to:
+  /// **'Los días que leíste, promedias {duration}.'**
+  String monthMarathonerEvidence(String duration);
+
+  /// No description provided for @monthHunter.
+  ///
+  /// In es, this message translates to:
+  /// **'Cazador de ideas'**
+  String get monthHunter;
+
+  /// No description provided for @monthHunterPhrase.
+  ///
+  /// In es, this message translates to:
+  /// **'No solo lees: coleccionas pensamientos y los haces tuyos.'**
+  String get monthHunterPhrase;
+
+  /// No description provided for @monthHunterEvidence.
+  ///
+  /// In es, this message translates to:
+  /// **'Guardaste citas en {withQuotes} de {sessions} lecturas.'**
+  String monthHunterEvidence(int withQuotes, int sessions);
+
+  /// No description provided for @monthEarly.
+  ///
+  /// In es, this message translates to:
+  /// **'El madrugador'**
+  String get monthEarly;
+
+  /// No description provided for @monthEarlyPhrase.
+  ///
+  /// In es, this message translates to:
+  /// **'Inicias el día alimentando tu mente antes de que empiece la rutina.'**
+  String get monthEarlyPhrase;
+
+  /// No description provided for @monthAfternoon.
+  ///
+  /// In es, this message translates to:
+  /// **'Lector de sobremesa'**
+  String get monthAfternoon;
+
+  /// No description provided for @monthAfternoonPhrase.
+  ///
+  /// In es, this message translates to:
+  /// **'Haces una pausa en mitad del día y la llenas de páginas.'**
+  String get monthAfternoonPhrase;
+
+  /// No description provided for @monthNight.
+  ///
+  /// In es, this message translates to:
+  /// **'El búho nocturno'**
+  String get monthNight;
+
+  /// No description provided for @monthNightPhrase.
+  ///
+  /// In es, this message translates to:
+  /// **'Encuentras la calma y la concentración cuando el mundo se apaga.'**
+  String get monthNightPhrase;
+
+  /// No description provided for @monthBandEvidence.
+  ///
+  /// In es, this message translates to:
+  /// **'El {percent} % de tu lectura fue en esa franja.'**
+  String monthBandEvidence(int percent);
+
+  /// No description provided for @monthNomad.
+  ///
+  /// In es, this message translates to:
+  /// **'Lector nómada'**
+  String get monthNomad;
+
+  /// No description provided for @monthNomadPhrase.
+  ///
+  /// In es, this message translates to:
+  /// **'Cualquier momento es bueno para abrir un libro.'**
+  String get monthNomadPhrase;
+
+  /// No description provided for @monthNomadEvidence.
+  ///
+  /// In es, this message translates to:
+  /// **'Ninguna franja llega al 60 %.'**
+  String get monthNomadEvidence;
+
+  /// No description provided for @appearance.
+  ///
+  /// In es, this message translates to:
+  /// **'Apariencia'**
+  String get appearance;
+
+  /// No description provided for @themePrograma.
+  ///
+  /// In es, this message translates to:
+  /// **'Programa'**
+  String get themePrograma;
+
+  /// No description provided for @themeLibro.
+  ///
+  /// In es, this message translates to:
+  /// **'Libro'**
+  String get themeLibro;
+
+  /// No description provided for @themeCuaderno.
+  ///
+  /// In es, this message translates to:
+  /// **'Cuaderno'**
+  String get themeCuaderno;
+
+  /// No description provided for @themePeriodico.
+  ///
+  /// In es, this message translates to:
+  /// **'Periódico'**
+  String get themePeriodico;
+
+  /// No description provided for @themeFicha.
+  ///
+  /// In es, this message translates to:
+  /// **'Ficha'**
+  String get themeFicha;
+
+  /// No description provided for @themeChangeFailed.
+  ///
+  /// In es, this message translates to:
+  /// **'No se pudo cambiar la apariencia.'**
+  String get themeChangeFailed;
 }
 
 class _AppLocalizationsDelegate

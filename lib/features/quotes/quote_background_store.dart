@@ -3,12 +3,20 @@ import 'dart:io';
 import 'package:epub_reader/features/quotes/quote_card_model.dart';
 import 'package:flutter/foundation.dart';
 import 'package:flutter/services.dart';
+import 'package:http/http.dart' as http;
 import 'package:image/image.dart' as img;
 import 'package:path/path.dart' as p;
 import 'package:path_provider/path_provider.dart';
 
-const bundledQuoteBackgroundIds = <String>[
-  'pexels-agelos-grigoriou-169876553-11039566.jpg',
+const quoteBackgroundStorageBucket = 'epub-reader-6a972.firebasestorage.app';
+
+const defaultQuoteBackgroundId =
+    'pexels-agelos-grigoriou-169876553-11039566.jpg';
+
+const defaultQuoteBackgroundAsset =
+    'assets/backgrounds/$defaultQuoteBackgroundId';
+
+const catalogQuoteBackgroundIds = <String>[
   'pexels-ahmet-kayra-174853248-30072885.jpg',
   'pexels-book-hut-440747141-19355509.jpg',
   'pexels-cafepolverini-13157038.jpg',
@@ -30,6 +38,22 @@ const bundledQuoteBackgroundIds = <String>[
   'pexels-simon73-3408552.jpg',
   'pexels-yuuilina-9066470.jpg',
 ];
+
+Uri quoteBackgroundUrl(String objectName) {
+  return Uri.https(
+    'firebasestorage.googleapis.com',
+    '/v0/b/$quoteBackgroundStorageBucket/o/${Uri.encodeComponent(objectName)}',
+    const {'alt': 'media'},
+  );
+}
+
+String quoteBackgroundThumbName(String id) {
+  final dot = id.lastIndexOf('.');
+  final stem = dot <= 0 ? id : id.substring(0, dot);
+  return '$stem.thumb.jpg';
+}
+
+typedef DownloadQuoteBackground = Future<Uint8List> Function(Uri uri);
 
 class StoredQuoteBackground {
   const StoredQuoteBackground({required this.id, required this.path});
@@ -83,6 +107,8 @@ class QuoteBackgroundStore {
   QuoteBackgroundStore({
     Future<Directory> Function()? documentsDirectory,
     PrepareQuoteBackground? prepare,
+    this._download,
+    this._bundle,
   }) : _documentsDirectory =
            documentsDirectory ?? getApplicationDocumentsDirectory,
        _prepare = prepare ?? prepareQuoteBackground,
@@ -91,6 +117,15 @@ class QuoteBackgroundStore {
   final Future<Directory> Function() _documentsDirectory;
   final PrepareQuoteBackground _prepare;
   final bool _isolate;
+  final DownloadQuoteBackground? _download;
+  final AssetBundle? _bundle;
+  final Map<String, Future<File>> _inFlight = {};
+  http.Client? _client;
+
+  void close() {
+    _client?.close();
+    _client = null;
+  }
 
   Future<List<StoredQuoteBackground>> list() async {
     final dir = await _directory();
@@ -136,8 +171,73 @@ class QuoteBackgroundStore {
       final name = p.basename(id);
       return File(p.join((await _directory()).path, name)).readAsBytes();
     }
-    final data = await rootBundle.load('assets/backgrounds/$id');
+    if (id == defaultQuoteBackgroundId) {
+      return _asset(defaultQuoteBackgroundAsset);
+    }
+    return (await catalogFile(id)).readAsBytes();
+  }
+
+  /// Full catalog photo, or its thumbnail when [thumb] is set.
+  ///
+  /// The first call downloads the object. Later calls read the file already
+  /// stored on disk.
+  Future<File> catalogFile(String id, {bool thumb = false}) {
+    if (!catalogQuoteBackgroundIds.contains(id)) {
+      throw ArgumentError.value(id, 'id', 'fondo de catálogo desconocido');
+    }
+    final key = '${thumb ? 'thumb' : 'full'}:$id';
+    final pending = _inFlight[key];
+    if (pending != null) return pending;
+    final future = _catalogFile(id, thumb: thumb);
+    _inFlight[key] = future;
+    future.whenComplete(() => _inFlight.remove(key));
+    return future;
+  }
+
+  Future<File> _catalogFile(String id, {required bool thumb}) async {
+    final file = await _catalogLocation(id, thumb: thumb);
+    if (await file.exists() && await file.length() > 0) return file;
+    final name = thumb ? quoteBackgroundThumbName(id) : id;
+    final bytes = await (_download ?? _network)(quoteBackgroundUrl(name));
+    if (bytes.isEmpty) {
+      throw HttpException('fondo vacío', uri: quoteBackgroundUrl(name));
+    }
+    await _writeAtomic(file, bytes);
+    return file;
+  }
+
+  Future<Uint8List> _network(Uri uri) async {
+    final client = _client ??= http.Client();
+    final response = await client.get(uri);
+    if (response.statusCode != 200 || response.bodyBytes.isEmpty) {
+      throw HttpException('fondo ${response.statusCode}', uri: uri);
+    }
+    return response.bodyBytes;
+  }
+
+  Future<Uint8List> _asset(String key) async {
+    final data = await (_bundle ?? rootBundle).load(key);
     return data.buffer.asUint8List(data.offsetInBytes, data.lengthInBytes);
+  }
+
+  Future<File> _catalogLocation(String id, {required bool thumb}) async {
+    final root = await _directory();
+    final dir = Directory(
+      p.join(root.path, 'catalog', thumb ? 'thumbs' : 'full'),
+    );
+    if (!dir.existsSync()) await dir.create(recursive: true);
+    return File(p.join(dir.path, p.basename(id)));
+  }
+
+  Future<void> _writeAtomic(File file, Uint8List bytes) async {
+    final temp = File('${file.path}.tmp');
+    await temp.writeAsBytes(bytes, flush: true);
+    try {
+      await temp.rename(file.path);
+    } on FileSystemException {
+      if (await file.exists()) await file.delete();
+      await temp.rename(file.path);
+    }
   }
 
   Future<Directory> _directory() async {

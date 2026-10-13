@@ -2247,6 +2247,643 @@ class SavedQuotesCompanion extends UpdateCompanion<SavedQuote> {
   }
 }
 
+class $ReadingPlanVersionsTable extends ReadingPlanVersions
+    with TableInfo<$ReadingPlanVersionsTable, ReadingPlanVersion> {
+  @override
+  final GeneratedDatabase attachedDatabase;
+  final String? _alias;
+  $ReadingPlanVersionsTable(this.attachedDatabase, [this._alias]);
+  static const VerificationMeta _idMeta = const VerificationMeta('id');
+  @override
+  late final GeneratedColumn<int> id = GeneratedColumn<int>(
+    'id',
+    aliasedName,
+    false,
+    hasAutoIncrement: true,
+    type: DriftSqlType.int,
+    requiredDuringInsert: false,
+    defaultConstraints: GeneratedColumn.constraintIsAlways(
+      'PRIMARY KEY AUTOINCREMENT',
+    ),
+  );
+  static const VerificationMeta _dailyGoalMinutesMeta = const VerificationMeta(
+    'dailyGoalMinutes',
+  );
+  @override
+  late final GeneratedColumn<int> dailyGoalMinutes = GeneratedColumn<int>(
+    'daily_goal_minutes',
+    aliasedName,
+    false,
+    type: DriftSqlType.int,
+    requiredDuringInsert: true,
+  );
+  static const VerificationMeta _routineHourMeta = const VerificationMeta(
+    'routineHour',
+  );
+  @override
+  late final GeneratedColumn<int> routineHour = GeneratedColumn<int>(
+    'routine_hour',
+    aliasedName,
+    true,
+    type: DriftSqlType.int,
+    requiredDuringInsert: false,
+  );
+  static const VerificationMeta _routineDaysMeta = const VerificationMeta(
+    'routineDays',
+  );
+  @override
+  late final GeneratedColumn<String> routineDays = GeneratedColumn<String>(
+    'routine_days',
+    aliasedName,
+    false,
+    type: DriftSqlType.string,
+    requiredDuringInsert: true,
+  );
+  static const VerificationMeta _effectiveAtMeta = const VerificationMeta(
+    'effectiveAt',
+  );
+  @override
+  late final GeneratedColumn<DateTime> effectiveAt = GeneratedColumn<DateTime>(
+    'effective_at',
+    aliasedName,
+    false,
+    type: DriftSqlType.dateTime,
+    requiredDuringInsert: true,
+  );
+  @override
+  List<GeneratedColumn> get $columns => [
+    id,
+    dailyGoalMinutes,
+    routineHour,
+    routineDays,
+    effectiveAt,
+  ];
+  @override
+  String get aliasedName => _alias ?? actualTableName;
+  @override
+  String get actualTableName => $name;
+  static const String $name = 'reading_plan_versions';
+  @override
+  VerificationContext validateIntegrity(
+    Insertable<ReadingPlanVersion> instance, {
+    bool isInserting = false,
+  }) {
+    final context = VerificationContext();
+    final data = instance.toColumns(true);
+    if (data.containsKey('id')) {
+      context.handle(_idMeta, id.isAcceptableOrUnknown(data['id']!, _idMeta));
+    }
+    if (data.containsKey('daily_goal_minutes')) {
+      context.handle(
+        _dailyGoalMinutesMeta,
+        dailyGoalMinutes.isAcceptableOrUnknown(
+          data['daily_goal_minutes']!,
+          _dailyGoalMinutesMeta,
+        ),
+      );
+    } else if (isInserting) {
+      context.missing(_dailyGoalMinutesMeta);
+    }
+    if (data.containsKey('routine_hour')) {
+      context.handle(
+        _routineHourMeta,
+        routineHour.isAcceptableOrUnknown(
+          data['routine_hour']!,
+          _routineHourMeta,
+        ),
+      );
+    }
+    if (data.containsKey('routine_days')) {
+      context.handle(
+        _routineDaysMeta,
+        routineDays.isAcceptableOrUnknown(
+          data['routine_days']!,
+          _routineDaysMeta,
+        ),
+      );
+    } else if (isInserting) {
+      context.missing(_routineDaysMeta);
+    }
+    if (data.containsKey('effective_at')) {
+      context.handle(
+        _effectiveAtMeta,
+        effectiveAt.isAcceptableOrUnknown(
+          data['effective_at']!,
+          _effectiveAtMeta,
+        ),
+      );
+    } else if (isInserting) {
+      context.missing(_effectiveAtMeta);
+    }
+    return context;
+  }
+
+  @override
+  Set<GeneratedColumn> get $primaryKey => {id};
+  @override
+  ReadingPlanVersion map(Map<String, dynamic> data, {String? tablePrefix}) {
+    final effectivePrefix = tablePrefix != null ? '$tablePrefix.' : '';
+    return ReadingPlanVersion(
+      id: attachedDatabase.typeMapping.read(
+        DriftSqlType.int,
+        data['${effectivePrefix}id'],
+      )!,
+      dailyGoalMinutes: attachedDatabase.typeMapping.read(
+        DriftSqlType.int,
+        data['${effectivePrefix}daily_goal_minutes'],
+      )!,
+      routineHour: attachedDatabase.typeMapping.read(
+        DriftSqlType.int,
+        data['${effectivePrefix}routine_hour'],
+      ),
+      routineDays: attachedDatabase.typeMapping.read(
+        DriftSqlType.string,
+        data['${effectivePrefix}routine_days'],
+      )!,
+      effectiveAt: attachedDatabase.typeMapping.read(
+        DriftSqlType.dateTime,
+        data['${effectivePrefix}effective_at'],
+      )!,
+    );
+  }
+
+  @override
+  $ReadingPlanVersionsTable createAlias(String alias) {
+    return $ReadingPlanVersionsTable(attachedDatabase, alias);
+  }
+}
+
+class ReadingPlanVersion extends DataClass
+    implements Insertable<ReadingPlanVersion> {
+  final int id;
+  final int dailyGoalMinutes;
+  final int? routineHour;
+  final String routineDays;
+  final DateTime effectiveAt;
+  const ReadingPlanVersion({
+    required this.id,
+    required this.dailyGoalMinutes,
+    this.routineHour,
+    required this.routineDays,
+    required this.effectiveAt,
+  });
+  @override
+  Map<String, Expression> toColumns(bool nullToAbsent) {
+    final map = <String, Expression>{};
+    map['id'] = Variable<int>(id);
+    map['daily_goal_minutes'] = Variable<int>(dailyGoalMinutes);
+    if (!nullToAbsent || routineHour != null) {
+      map['routine_hour'] = Variable<int>(routineHour);
+    }
+    map['routine_days'] = Variable<String>(routineDays);
+    map['effective_at'] = Variable<DateTime>(effectiveAt);
+    return map;
+  }
+
+  ReadingPlanVersionsCompanion toCompanion(bool nullToAbsent) {
+    return ReadingPlanVersionsCompanion(
+      id: Value(id),
+      dailyGoalMinutes: Value(dailyGoalMinutes),
+      routineHour: routineHour == null && nullToAbsent
+          ? const Value.absent()
+          : Value(routineHour),
+      routineDays: Value(routineDays),
+      effectiveAt: Value(effectiveAt),
+    );
+  }
+
+  factory ReadingPlanVersion.fromJson(
+    Map<String, dynamic> json, {
+    ValueSerializer? serializer,
+  }) {
+    serializer ??= driftRuntimeOptions.defaultSerializer;
+    return ReadingPlanVersion(
+      id: serializer.fromJson<int>(json['id']),
+      dailyGoalMinutes: serializer.fromJson<int>(json['dailyGoalMinutes']),
+      routineHour: serializer.fromJson<int?>(json['routineHour']),
+      routineDays: serializer.fromJson<String>(json['routineDays']),
+      effectiveAt: serializer.fromJson<DateTime>(json['effectiveAt']),
+    );
+  }
+  @override
+  Map<String, dynamic> toJson({ValueSerializer? serializer}) {
+    serializer ??= driftRuntimeOptions.defaultSerializer;
+    return <String, dynamic>{
+      'id': serializer.toJson<int>(id),
+      'dailyGoalMinutes': serializer.toJson<int>(dailyGoalMinutes),
+      'routineHour': serializer.toJson<int?>(routineHour),
+      'routineDays': serializer.toJson<String>(routineDays),
+      'effectiveAt': serializer.toJson<DateTime>(effectiveAt),
+    };
+  }
+
+  ReadingPlanVersion copyWith({
+    int? id,
+    int? dailyGoalMinutes,
+    Value<int?> routineHour = const Value.absent(),
+    String? routineDays,
+    DateTime? effectiveAt,
+  }) => ReadingPlanVersion(
+    id: id ?? this.id,
+    dailyGoalMinutes: dailyGoalMinutes ?? this.dailyGoalMinutes,
+    routineHour: routineHour.present ? routineHour.value : this.routineHour,
+    routineDays: routineDays ?? this.routineDays,
+    effectiveAt: effectiveAt ?? this.effectiveAt,
+  );
+  ReadingPlanVersion copyWithCompanion(ReadingPlanVersionsCompanion data) {
+    return ReadingPlanVersion(
+      id: data.id.present ? data.id.value : this.id,
+      dailyGoalMinutes: data.dailyGoalMinutes.present
+          ? data.dailyGoalMinutes.value
+          : this.dailyGoalMinutes,
+      routineHour: data.routineHour.present
+          ? data.routineHour.value
+          : this.routineHour,
+      routineDays: data.routineDays.present
+          ? data.routineDays.value
+          : this.routineDays,
+      effectiveAt: data.effectiveAt.present
+          ? data.effectiveAt.value
+          : this.effectiveAt,
+    );
+  }
+
+  @override
+  String toString() {
+    return (StringBuffer('ReadingPlanVersion(')
+          ..write('id: $id, ')
+          ..write('dailyGoalMinutes: $dailyGoalMinutes, ')
+          ..write('routineHour: $routineHour, ')
+          ..write('routineDays: $routineDays, ')
+          ..write('effectiveAt: $effectiveAt')
+          ..write(')'))
+        .toString();
+  }
+
+  @override
+  int get hashCode =>
+      Object.hash(id, dailyGoalMinutes, routineHour, routineDays, effectiveAt);
+  @override
+  bool operator ==(Object other) =>
+      identical(this, other) ||
+      (other is ReadingPlanVersion &&
+          other.id == this.id &&
+          other.dailyGoalMinutes == this.dailyGoalMinutes &&
+          other.routineHour == this.routineHour &&
+          other.routineDays == this.routineDays &&
+          other.effectiveAt == this.effectiveAt);
+}
+
+class ReadingPlanVersionsCompanion extends UpdateCompanion<ReadingPlanVersion> {
+  final Value<int> id;
+  final Value<int> dailyGoalMinutes;
+  final Value<int?> routineHour;
+  final Value<String> routineDays;
+  final Value<DateTime> effectiveAt;
+  const ReadingPlanVersionsCompanion({
+    this.id = const Value.absent(),
+    this.dailyGoalMinutes = const Value.absent(),
+    this.routineHour = const Value.absent(),
+    this.routineDays = const Value.absent(),
+    this.effectiveAt = const Value.absent(),
+  });
+  ReadingPlanVersionsCompanion.insert({
+    this.id = const Value.absent(),
+    required int dailyGoalMinutes,
+    this.routineHour = const Value.absent(),
+    required String routineDays,
+    required DateTime effectiveAt,
+  }) : dailyGoalMinutes = Value(dailyGoalMinutes),
+       routineDays = Value(routineDays),
+       effectiveAt = Value(effectiveAt);
+  static Insertable<ReadingPlanVersion> custom({
+    Expression<int>? id,
+    Expression<int>? dailyGoalMinutes,
+    Expression<int>? routineHour,
+    Expression<String>? routineDays,
+    Expression<DateTime>? effectiveAt,
+  }) {
+    return RawValuesInsertable({
+      if (id != null) 'id': id,
+      if (dailyGoalMinutes != null) 'daily_goal_minutes': dailyGoalMinutes,
+      if (routineHour != null) 'routine_hour': routineHour,
+      if (routineDays != null) 'routine_days': routineDays,
+      if (effectiveAt != null) 'effective_at': effectiveAt,
+    });
+  }
+
+  ReadingPlanVersionsCompanion copyWith({
+    Value<int>? id,
+    Value<int>? dailyGoalMinutes,
+    Value<int?>? routineHour,
+    Value<String>? routineDays,
+    Value<DateTime>? effectiveAt,
+  }) {
+    return ReadingPlanVersionsCompanion(
+      id: id ?? this.id,
+      dailyGoalMinutes: dailyGoalMinutes ?? this.dailyGoalMinutes,
+      routineHour: routineHour ?? this.routineHour,
+      routineDays: routineDays ?? this.routineDays,
+      effectiveAt: effectiveAt ?? this.effectiveAt,
+    );
+  }
+
+  @override
+  Map<String, Expression> toColumns(bool nullToAbsent) {
+    final map = <String, Expression>{};
+    if (id.present) {
+      map['id'] = Variable<int>(id.value);
+    }
+    if (dailyGoalMinutes.present) {
+      map['daily_goal_minutes'] = Variable<int>(dailyGoalMinutes.value);
+    }
+    if (routineHour.present) {
+      map['routine_hour'] = Variable<int>(routineHour.value);
+    }
+    if (routineDays.present) {
+      map['routine_days'] = Variable<String>(routineDays.value);
+    }
+    if (effectiveAt.present) {
+      map['effective_at'] = Variable<DateTime>(effectiveAt.value);
+    }
+    return map;
+  }
+
+  @override
+  String toString() {
+    return (StringBuffer('ReadingPlanVersionsCompanion(')
+          ..write('id: $id, ')
+          ..write('dailyGoalMinutes: $dailyGoalMinutes, ')
+          ..write('routineHour: $routineHour, ')
+          ..write('routineDays: $routineDays, ')
+          ..write('effectiveAt: $effectiveAt')
+          ..write(')'))
+        .toString();
+  }
+}
+
+class $MonthReportsTable extends MonthReports
+    with TableInfo<$MonthReportsTable, MonthReport> {
+  @override
+  final GeneratedDatabase attachedDatabase;
+  final String? _alias;
+  $MonthReportsTable(this.attachedDatabase, [this._alias]);
+  static const VerificationMeta _yearMeta = const VerificationMeta('year');
+  @override
+  late final GeneratedColumn<int> year = GeneratedColumn<int>(
+    'year',
+    aliasedName,
+    false,
+    type: DriftSqlType.int,
+    requiredDuringInsert: true,
+  );
+  static const VerificationMeta _monthMeta = const VerificationMeta('month');
+  @override
+  late final GeneratedColumn<int> month = GeneratedColumn<int>(
+    'month',
+    aliasedName,
+    false,
+    type: DriftSqlType.int,
+    requiredDuringInsert: true,
+  );
+  static const VerificationMeta _documentMeta = const VerificationMeta(
+    'document',
+  );
+  @override
+  late final GeneratedColumn<String> document = GeneratedColumn<String>(
+    'document',
+    aliasedName,
+    false,
+    type: DriftSqlType.string,
+    requiredDuringInsert: true,
+  );
+  @override
+  List<GeneratedColumn> get $columns => [year, month, document];
+  @override
+  String get aliasedName => _alias ?? actualTableName;
+  @override
+  String get actualTableName => $name;
+  static const String $name = 'month_reports';
+  @override
+  VerificationContext validateIntegrity(
+    Insertable<MonthReport> instance, {
+    bool isInserting = false,
+  }) {
+    final context = VerificationContext();
+    final data = instance.toColumns(true);
+    if (data.containsKey('year')) {
+      context.handle(
+        _yearMeta,
+        year.isAcceptableOrUnknown(data['year']!, _yearMeta),
+      );
+    } else if (isInserting) {
+      context.missing(_yearMeta);
+    }
+    if (data.containsKey('month')) {
+      context.handle(
+        _monthMeta,
+        month.isAcceptableOrUnknown(data['month']!, _monthMeta),
+      );
+    } else if (isInserting) {
+      context.missing(_monthMeta);
+    }
+    if (data.containsKey('document')) {
+      context.handle(
+        _documentMeta,
+        document.isAcceptableOrUnknown(data['document']!, _documentMeta),
+      );
+    } else if (isInserting) {
+      context.missing(_documentMeta);
+    }
+    return context;
+  }
+
+  @override
+  Set<GeneratedColumn> get $primaryKey => {year, month};
+  @override
+  MonthReport map(Map<String, dynamic> data, {String? tablePrefix}) {
+    final effectivePrefix = tablePrefix != null ? '$tablePrefix.' : '';
+    return MonthReport(
+      year: attachedDatabase.typeMapping.read(
+        DriftSqlType.int,
+        data['${effectivePrefix}year'],
+      )!,
+      month: attachedDatabase.typeMapping.read(
+        DriftSqlType.int,
+        data['${effectivePrefix}month'],
+      )!,
+      document: attachedDatabase.typeMapping.read(
+        DriftSqlType.string,
+        data['${effectivePrefix}document'],
+      )!,
+    );
+  }
+
+  @override
+  $MonthReportsTable createAlias(String alias) {
+    return $MonthReportsTable(attachedDatabase, alias);
+  }
+}
+
+class MonthReport extends DataClass implements Insertable<MonthReport> {
+  final int year;
+  final int month;
+  final String document;
+  const MonthReport({
+    required this.year,
+    required this.month,
+    required this.document,
+  });
+  @override
+  Map<String, Expression> toColumns(bool nullToAbsent) {
+    final map = <String, Expression>{};
+    map['year'] = Variable<int>(year);
+    map['month'] = Variable<int>(month);
+    map['document'] = Variable<String>(document);
+    return map;
+  }
+
+  MonthReportsCompanion toCompanion(bool nullToAbsent) {
+    return MonthReportsCompanion(
+      year: Value(year),
+      month: Value(month),
+      document: Value(document),
+    );
+  }
+
+  factory MonthReport.fromJson(
+    Map<String, dynamic> json, {
+    ValueSerializer? serializer,
+  }) {
+    serializer ??= driftRuntimeOptions.defaultSerializer;
+    return MonthReport(
+      year: serializer.fromJson<int>(json['year']),
+      month: serializer.fromJson<int>(json['month']),
+      document: serializer.fromJson<String>(json['document']),
+    );
+  }
+  @override
+  Map<String, dynamic> toJson({ValueSerializer? serializer}) {
+    serializer ??= driftRuntimeOptions.defaultSerializer;
+    return <String, dynamic>{
+      'year': serializer.toJson<int>(year),
+      'month': serializer.toJson<int>(month),
+      'document': serializer.toJson<String>(document),
+    };
+  }
+
+  MonthReport copyWith({int? year, int? month, String? document}) =>
+      MonthReport(
+        year: year ?? this.year,
+        month: month ?? this.month,
+        document: document ?? this.document,
+      );
+  MonthReport copyWithCompanion(MonthReportsCompanion data) {
+    return MonthReport(
+      year: data.year.present ? data.year.value : this.year,
+      month: data.month.present ? data.month.value : this.month,
+      document: data.document.present ? data.document.value : this.document,
+    );
+  }
+
+  @override
+  String toString() {
+    return (StringBuffer('MonthReport(')
+          ..write('year: $year, ')
+          ..write('month: $month, ')
+          ..write('document: $document')
+          ..write(')'))
+        .toString();
+  }
+
+  @override
+  int get hashCode => Object.hash(year, month, document);
+  @override
+  bool operator ==(Object other) =>
+      identical(this, other) ||
+      (other is MonthReport &&
+          other.year == this.year &&
+          other.month == this.month &&
+          other.document == this.document);
+}
+
+class MonthReportsCompanion extends UpdateCompanion<MonthReport> {
+  final Value<int> year;
+  final Value<int> month;
+  final Value<String> document;
+  final Value<int> rowid;
+  const MonthReportsCompanion({
+    this.year = const Value.absent(),
+    this.month = const Value.absent(),
+    this.document = const Value.absent(),
+    this.rowid = const Value.absent(),
+  });
+  MonthReportsCompanion.insert({
+    required int year,
+    required int month,
+    required String document,
+    this.rowid = const Value.absent(),
+  }) : year = Value(year),
+       month = Value(month),
+       document = Value(document);
+  static Insertable<MonthReport> custom({
+    Expression<int>? year,
+    Expression<int>? month,
+    Expression<String>? document,
+    Expression<int>? rowid,
+  }) {
+    return RawValuesInsertable({
+      if (year != null) 'year': year,
+      if (month != null) 'month': month,
+      if (document != null) 'document': document,
+      if (rowid != null) 'rowid': rowid,
+    });
+  }
+
+  MonthReportsCompanion copyWith({
+    Value<int>? year,
+    Value<int>? month,
+    Value<String>? document,
+    Value<int>? rowid,
+  }) {
+    return MonthReportsCompanion(
+      year: year ?? this.year,
+      month: month ?? this.month,
+      document: document ?? this.document,
+      rowid: rowid ?? this.rowid,
+    );
+  }
+
+  @override
+  Map<String, Expression> toColumns(bool nullToAbsent) {
+    final map = <String, Expression>{};
+    if (year.present) {
+      map['year'] = Variable<int>(year.value);
+    }
+    if (month.present) {
+      map['month'] = Variable<int>(month.value);
+    }
+    if (document.present) {
+      map['document'] = Variable<String>(document.value);
+    }
+    if (rowid.present) {
+      map['rowid'] = Variable<int>(rowid.value);
+    }
+    return map;
+  }
+
+  @override
+  String toString() {
+    return (StringBuffer('MonthReportsCompanion(')
+          ..write('year: $year, ')
+          ..write('month: $month, ')
+          ..write('document: $document, ')
+          ..write('rowid: $rowid')
+          ..write(')'))
+        .toString();
+  }
+}
+
 abstract class _$AppDatabase extends GeneratedDatabase {
   _$AppDatabase(QueryExecutor e) : super(e);
   $AppDatabaseManager get managers => $AppDatabaseManager(this);
@@ -2256,6 +2893,9 @@ abstract class _$AppDatabase extends GeneratedDatabase {
   );
   late final $ReaderProfilesTable readerProfiles = $ReaderProfilesTable(this);
   late final $SavedQuotesTable savedQuotes = $SavedQuotesTable(this);
+  late final $ReadingPlanVersionsTable readingPlanVersions =
+      $ReadingPlanVersionsTable(this);
+  late final $MonthReportsTable monthReports = $MonthReportsTable(this);
   @override
   Iterable<TableInfo<Table, Object?>> get allTables =>
       allSchemaEntities.whereType<TableInfo<Table, Object?>>();
@@ -2265,6 +2905,8 @@ abstract class _$AppDatabase extends GeneratedDatabase {
     readingSessions,
     readerProfiles,
     savedQuotes,
+    readingPlanVersions,
+    monthReports,
   ];
 }
 
@@ -3805,6 +4447,406 @@ typedef $$SavedQuotesTableProcessedTableManager =
       SavedQuote,
       PrefetchHooks Function({bool bookId})
     >;
+typedef $$ReadingPlanVersionsTableCreateCompanionBuilder =
+    ReadingPlanVersionsCompanion Function({
+      Value<int> id,
+      required int dailyGoalMinutes,
+      Value<int?> routineHour,
+      required String routineDays,
+      required DateTime effectiveAt,
+    });
+typedef $$ReadingPlanVersionsTableUpdateCompanionBuilder =
+    ReadingPlanVersionsCompanion Function({
+      Value<int> id,
+      Value<int> dailyGoalMinutes,
+      Value<int?> routineHour,
+      Value<String> routineDays,
+      Value<DateTime> effectiveAt,
+    });
+
+class $$ReadingPlanVersionsTableFilterComposer
+    extends Composer<_$AppDatabase, $ReadingPlanVersionsTable> {
+  $$ReadingPlanVersionsTableFilterComposer({
+    required super.$db,
+    required super.$table,
+    super.joinBuilder,
+    super.$addJoinBuilderToRootComposer,
+    super.$removeJoinBuilderFromRootComposer,
+  });
+  ColumnFilters<int> get id => $composableBuilder(
+    column: $table.id,
+    builder: (column) => ColumnFilters(column),
+  );
+
+  ColumnFilters<int> get dailyGoalMinutes => $composableBuilder(
+    column: $table.dailyGoalMinutes,
+    builder: (column) => ColumnFilters(column),
+  );
+
+  ColumnFilters<int> get routineHour => $composableBuilder(
+    column: $table.routineHour,
+    builder: (column) => ColumnFilters(column),
+  );
+
+  ColumnFilters<String> get routineDays => $composableBuilder(
+    column: $table.routineDays,
+    builder: (column) => ColumnFilters(column),
+  );
+
+  ColumnFilters<DateTime> get effectiveAt => $composableBuilder(
+    column: $table.effectiveAt,
+    builder: (column) => ColumnFilters(column),
+  );
+}
+
+class $$ReadingPlanVersionsTableOrderingComposer
+    extends Composer<_$AppDatabase, $ReadingPlanVersionsTable> {
+  $$ReadingPlanVersionsTableOrderingComposer({
+    required super.$db,
+    required super.$table,
+    super.joinBuilder,
+    super.$addJoinBuilderToRootComposer,
+    super.$removeJoinBuilderFromRootComposer,
+  });
+  ColumnOrderings<int> get id => $composableBuilder(
+    column: $table.id,
+    builder: (column) => ColumnOrderings(column),
+  );
+
+  ColumnOrderings<int> get dailyGoalMinutes => $composableBuilder(
+    column: $table.dailyGoalMinutes,
+    builder: (column) => ColumnOrderings(column),
+  );
+
+  ColumnOrderings<int> get routineHour => $composableBuilder(
+    column: $table.routineHour,
+    builder: (column) => ColumnOrderings(column),
+  );
+
+  ColumnOrderings<String> get routineDays => $composableBuilder(
+    column: $table.routineDays,
+    builder: (column) => ColumnOrderings(column),
+  );
+
+  ColumnOrderings<DateTime> get effectiveAt => $composableBuilder(
+    column: $table.effectiveAt,
+    builder: (column) => ColumnOrderings(column),
+  );
+}
+
+class $$ReadingPlanVersionsTableAnnotationComposer
+    extends Composer<_$AppDatabase, $ReadingPlanVersionsTable> {
+  $$ReadingPlanVersionsTableAnnotationComposer({
+    required super.$db,
+    required super.$table,
+    super.joinBuilder,
+    super.$addJoinBuilderToRootComposer,
+    super.$removeJoinBuilderFromRootComposer,
+  });
+  GeneratedColumn<int> get id =>
+      $composableBuilder(column: $table.id, builder: (column) => column);
+
+  GeneratedColumn<int> get dailyGoalMinutes => $composableBuilder(
+    column: $table.dailyGoalMinutes,
+    builder: (column) => column,
+  );
+
+  GeneratedColumn<int> get routineHour => $composableBuilder(
+    column: $table.routineHour,
+    builder: (column) => column,
+  );
+
+  GeneratedColumn<String> get routineDays => $composableBuilder(
+    column: $table.routineDays,
+    builder: (column) => column,
+  );
+
+  GeneratedColumn<DateTime> get effectiveAt => $composableBuilder(
+    column: $table.effectiveAt,
+    builder: (column) => column,
+  );
+}
+
+class $$ReadingPlanVersionsTableTableManager
+    extends
+        RootTableManager<
+          _$AppDatabase,
+          $ReadingPlanVersionsTable,
+          ReadingPlanVersion,
+          $$ReadingPlanVersionsTableFilterComposer,
+          $$ReadingPlanVersionsTableOrderingComposer,
+          $$ReadingPlanVersionsTableAnnotationComposer,
+          $$ReadingPlanVersionsTableCreateCompanionBuilder,
+          $$ReadingPlanVersionsTableUpdateCompanionBuilder,
+          (
+            ReadingPlanVersion,
+            BaseReferences<
+              _$AppDatabase,
+              $ReadingPlanVersionsTable,
+              ReadingPlanVersion
+            >,
+          ),
+          ReadingPlanVersion,
+          PrefetchHooks Function()
+        > {
+  $$ReadingPlanVersionsTableTableManager(
+    _$AppDatabase db,
+    $ReadingPlanVersionsTable table,
+  ) : super(
+        TableManagerState(
+          db: db,
+          table: table,
+          createFilteringComposer: () =>
+              $$ReadingPlanVersionsTableFilterComposer($db: db, $table: table),
+          createOrderingComposer: () =>
+              $$ReadingPlanVersionsTableOrderingComposer(
+                $db: db,
+                $table: table,
+              ),
+          createComputedFieldComposer: () =>
+              $$ReadingPlanVersionsTableAnnotationComposer(
+                $db: db,
+                $table: table,
+              ),
+          updateCompanionCallback:
+              ({
+                Value<int> id = const Value.absent(),
+                Value<int> dailyGoalMinutes = const Value.absent(),
+                Value<int?> routineHour = const Value.absent(),
+                Value<String> routineDays = const Value.absent(),
+                Value<DateTime> effectiveAt = const Value.absent(),
+              }) => ReadingPlanVersionsCompanion(
+                id: id,
+                dailyGoalMinutes: dailyGoalMinutes,
+                routineHour: routineHour,
+                routineDays: routineDays,
+                effectiveAt: effectiveAt,
+              ),
+          createCompanionCallback:
+              ({
+                Value<int> id = const Value.absent(),
+                required int dailyGoalMinutes,
+                Value<int?> routineHour = const Value.absent(),
+                required String routineDays,
+                required DateTime effectiveAt,
+              }) => ReadingPlanVersionsCompanion.insert(
+                id: id,
+                dailyGoalMinutes: dailyGoalMinutes,
+                routineHour: routineHour,
+                routineDays: routineDays,
+                effectiveAt: effectiveAt,
+              ),
+          withReferenceMapper: (p0) => p0
+              .map(
+                (e) => (
+                  e.readTable<$ReadingPlanVersionsTable, ReadingPlanVersion>(
+                    table,
+                  ),
+                  BaseReferences<
+                    _$AppDatabase,
+                    $ReadingPlanVersionsTable,
+                    ReadingPlanVersion
+                  >(db, table, e),
+                ),
+              )
+              .toList(),
+          prefetchHooksCallback: null,
+        ),
+      );
+}
+
+typedef $$ReadingPlanVersionsTableProcessedTableManager =
+    ProcessedTableManager<
+      _$AppDatabase,
+      $ReadingPlanVersionsTable,
+      ReadingPlanVersion,
+      $$ReadingPlanVersionsTableFilterComposer,
+      $$ReadingPlanVersionsTableOrderingComposer,
+      $$ReadingPlanVersionsTableAnnotationComposer,
+      $$ReadingPlanVersionsTableCreateCompanionBuilder,
+      $$ReadingPlanVersionsTableUpdateCompanionBuilder,
+      (
+        ReadingPlanVersion,
+        BaseReferences<
+          _$AppDatabase,
+          $ReadingPlanVersionsTable,
+          ReadingPlanVersion
+        >,
+      ),
+      ReadingPlanVersion,
+      PrefetchHooks Function()
+    >;
+typedef $$MonthReportsTableCreateCompanionBuilder =
+    MonthReportsCompanion Function({
+      required int year,
+      required int month,
+      required String document,
+      Value<int> rowid,
+    });
+typedef $$MonthReportsTableUpdateCompanionBuilder =
+    MonthReportsCompanion Function({
+      Value<int> year,
+      Value<int> month,
+      Value<String> document,
+      Value<int> rowid,
+    });
+
+class $$MonthReportsTableFilterComposer
+    extends Composer<_$AppDatabase, $MonthReportsTable> {
+  $$MonthReportsTableFilterComposer({
+    required super.$db,
+    required super.$table,
+    super.joinBuilder,
+    super.$addJoinBuilderToRootComposer,
+    super.$removeJoinBuilderFromRootComposer,
+  });
+  ColumnFilters<int> get year => $composableBuilder(
+    column: $table.year,
+    builder: (column) => ColumnFilters(column),
+  );
+
+  ColumnFilters<int> get month => $composableBuilder(
+    column: $table.month,
+    builder: (column) => ColumnFilters(column),
+  );
+
+  ColumnFilters<String> get document => $composableBuilder(
+    column: $table.document,
+    builder: (column) => ColumnFilters(column),
+  );
+}
+
+class $$MonthReportsTableOrderingComposer
+    extends Composer<_$AppDatabase, $MonthReportsTable> {
+  $$MonthReportsTableOrderingComposer({
+    required super.$db,
+    required super.$table,
+    super.joinBuilder,
+    super.$addJoinBuilderToRootComposer,
+    super.$removeJoinBuilderFromRootComposer,
+  });
+  ColumnOrderings<int> get year => $composableBuilder(
+    column: $table.year,
+    builder: (column) => ColumnOrderings(column),
+  );
+
+  ColumnOrderings<int> get month => $composableBuilder(
+    column: $table.month,
+    builder: (column) => ColumnOrderings(column),
+  );
+
+  ColumnOrderings<String> get document => $composableBuilder(
+    column: $table.document,
+    builder: (column) => ColumnOrderings(column),
+  );
+}
+
+class $$MonthReportsTableAnnotationComposer
+    extends Composer<_$AppDatabase, $MonthReportsTable> {
+  $$MonthReportsTableAnnotationComposer({
+    required super.$db,
+    required super.$table,
+    super.joinBuilder,
+    super.$addJoinBuilderToRootComposer,
+    super.$removeJoinBuilderFromRootComposer,
+  });
+  GeneratedColumn<int> get year =>
+      $composableBuilder(column: $table.year, builder: (column) => column);
+
+  GeneratedColumn<int> get month =>
+      $composableBuilder(column: $table.month, builder: (column) => column);
+
+  GeneratedColumn<String> get document =>
+      $composableBuilder(column: $table.document, builder: (column) => column);
+}
+
+class $$MonthReportsTableTableManager
+    extends
+        RootTableManager<
+          _$AppDatabase,
+          $MonthReportsTable,
+          MonthReport,
+          $$MonthReportsTableFilterComposer,
+          $$MonthReportsTableOrderingComposer,
+          $$MonthReportsTableAnnotationComposer,
+          $$MonthReportsTableCreateCompanionBuilder,
+          $$MonthReportsTableUpdateCompanionBuilder,
+          (
+            MonthReport,
+            BaseReferences<_$AppDatabase, $MonthReportsTable, MonthReport>,
+          ),
+          MonthReport,
+          PrefetchHooks Function()
+        > {
+  $$MonthReportsTableTableManager(_$AppDatabase db, $MonthReportsTable table)
+    : super(
+        TableManagerState(
+          db: db,
+          table: table,
+          createFilteringComposer: () =>
+              $$MonthReportsTableFilterComposer($db: db, $table: table),
+          createOrderingComposer: () =>
+              $$MonthReportsTableOrderingComposer($db: db, $table: table),
+          createComputedFieldComposer: () =>
+              $$MonthReportsTableAnnotationComposer($db: db, $table: table),
+          updateCompanionCallback:
+              ({
+                Value<int> year = const Value.absent(),
+                Value<int> month = const Value.absent(),
+                Value<String> document = const Value.absent(),
+                Value<int> rowid = const Value.absent(),
+              }) => MonthReportsCompanion(
+                year: year,
+                month: month,
+                document: document,
+                rowid: rowid,
+              ),
+          createCompanionCallback:
+              ({
+                required int year,
+                required int month,
+                required String document,
+                Value<int> rowid = const Value.absent(),
+              }) => MonthReportsCompanion.insert(
+                year: year,
+                month: month,
+                document: document,
+                rowid: rowid,
+              ),
+          withReferenceMapper: (p0) => p0
+              .map(
+                (e) => (
+                  e.readTable<$MonthReportsTable, MonthReport>(table),
+                  BaseReferences<
+                    _$AppDatabase,
+                    $MonthReportsTable,
+                    MonthReport
+                  >(db, table, e),
+                ),
+              )
+              .toList(),
+          prefetchHooksCallback: null,
+        ),
+      );
+}
+
+typedef $$MonthReportsTableProcessedTableManager =
+    ProcessedTableManager<
+      _$AppDatabase,
+      $MonthReportsTable,
+      MonthReport,
+      $$MonthReportsTableFilterComposer,
+      $$MonthReportsTableOrderingComposer,
+      $$MonthReportsTableAnnotationComposer,
+      $$MonthReportsTableCreateCompanionBuilder,
+      $$MonthReportsTableUpdateCompanionBuilder,
+      (
+        MonthReport,
+        BaseReferences<_$AppDatabase, $MonthReportsTable, MonthReport>,
+      ),
+      MonthReport,
+      PrefetchHooks Function()
+    >;
 
 class $AppDatabaseManager {
   final _$AppDatabase _db;
@@ -3817,4 +4859,8 @@ class $AppDatabaseManager {
       $$ReaderProfilesTableTableManager(_db, _db.readerProfiles);
   $$SavedQuotesTableTableManager get savedQuotes =>
       $$SavedQuotesTableTableManager(_db, _db.savedQuotes);
+  $$ReadingPlanVersionsTableTableManager get readingPlanVersions =>
+      $$ReadingPlanVersionsTableTableManager(_db, _db.readingPlanVersions);
+  $$MonthReportsTableTableManager get monthReports =>
+      $$MonthReportsTableTableManager(_db, _db.monthReports);
 }

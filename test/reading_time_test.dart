@@ -1,8 +1,10 @@
 import 'package:epub_reader/core/database/app_database.dart';
+import 'package:epub_reader/features/habits/month_reading.dart';
 import 'package:epub_reader/features/habits/reading_calendar.dart';
-import 'package:epub_reader/features/habits/weekly_reading_chart.dart';
-import 'package:epub_reader/l10n/app_localizations.dart';
 import 'package:epub_reader/features/habits/reading_time.dart';
+import 'package:epub_reader/features/habits/weekly_reading_chart.dart';
+import 'package:epub_reader/features/profile/reading_routine.dart';
+import 'package:epub_reader/l10n/app_localizations.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter_test/flutter_test.dart';
 
@@ -166,6 +168,32 @@ void main() {
     expect(formatReadingMonth(month.month), 'Septiembre 2026');
   });
 
+  test('a later goal does not recolor earlier calendar days', () {
+    final month = readingMonth(
+      month: DateTime(2026, 9),
+      goalOn: (day) => day.day < 20 ? 10 * 60 : 30 * 60,
+      sessions: [
+        _session(
+          id: 1,
+          bookId: 1,
+          startedAt: DateTime(2026, 9, 10, 20).toUtc(),
+          endedAt: DateTime(2026, 9, 10, 20, 10).toUtc(),
+          seconds: 10 * 60,
+        ),
+        _session(
+          id: 2,
+          bookId: 1,
+          startedAt: DateTime(2026, 9, 20, 20).toUtc(),
+          endedAt: DateTime(2026, 9, 20, 20, 10).toUtc(),
+          seconds: 10 * 60,
+        ),
+      ],
+    );
+
+    expect(month.days[9].mark, ReadingDayMark.met);
+    expect(month.days[19].mark, ReadingDayMark.partial);
+  });
+
   testWidgets('the calendar stays on the current month and can move back', (
     tester,
   ) async {
@@ -195,7 +223,14 @@ void main() {
                   seconds: 9 * 60,
                 ),
               ],
-              goalSeconds: 10 * 60,
+              plans: [
+                MonthPlanVersion(
+                  effectiveAt: DateTime.utc(2020, 1, 1),
+                  dailyGoalMinutes: 10,
+                  routineHour: 21,
+                  weekdays: defaultReadingWeekdays,
+                ),
+              ],
               today: today,
             ),
           ),

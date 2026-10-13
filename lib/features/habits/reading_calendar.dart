@@ -1,4 +1,5 @@
 import 'package:epub_reader/core/database/app_database.dart';
+import 'package:epub_reader/features/habits/month_reading.dart';
 import 'package:epub_reader/features/habits/reading_time.dart';
 import 'package:epub_reader/features/habits/weekly_reading_chart.dart';
 import 'package:epub_reader/l10n/app_localizations.dart';
@@ -8,12 +9,14 @@ class ReadingCalendar extends StatefulWidget {
   const ReadingCalendar({
     super.key,
     required this.sessions,
-    required this.goalSeconds,
+    required this.plans,
     required this.today,
   });
 
   final List<ReadingSession> sessions;
-  final int? goalSeconds;
+
+  /// Goal in effect on each day. A later change does not recolor earlier days.
+  final List<MonthPlanVersion> plans;
   final DateTime today;
 
   @override
@@ -47,7 +50,11 @@ class _ReadingCalendarState extends State<ReadingCalendar> {
     final month = readingMonth(
       sessions: widget.sessions,
       month: _month,
-      goalSeconds: widget.goalSeconds,
+      goalOn: (day) {
+        final plan = monthPlanOn(day, widget.plans);
+        if (plan == null || plan.dailyGoalMinutes <= 0) return null;
+        return plan.dailyGoalMinutes * 60;
+      },
     );
     final cells = <ReadingCalendarDay?>[
       for (var index = 0; index < month.leadingBlanks; index++) null,

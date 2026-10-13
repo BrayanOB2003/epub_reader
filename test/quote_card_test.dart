@@ -1,5 +1,4 @@
 import 'dart:io';
-import 'dart:typed_data';
 
 import 'package:epub_reader/app/providers.dart';
 import 'package:epub_reader/app/schedule_theme.dart';
@@ -13,6 +12,7 @@ import 'package:epub_reader/features/quotes/quote_card_style_store.dart';
 import 'package:epub_reader/features/quotes/quote_contrast.dart';
 import 'package:epub_reader/l10n/app_localizations.dart';
 import 'package:flutter/material.dart';
+import 'package:flutter/services.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:flutter_test/flutter_test.dart';
 import 'package:go_router/go_router.dart';
@@ -128,6 +128,53 @@ void main() {
     expect(await store.list(), isEmpty);
   });
 
+  test('the default background is the bundled asset', () async {
+    final store = QuoteBackgroundStore(
+      documentsDirectory: () async => Directory.systemTemp,
+      bundle: _BytesBundle(Uint8List.fromList([4, 5])),
+      download: (_) async => Uint8List(0),
+    );
+
+    expect(await store.load(id: defaultQuoteBackgroundId, imported: false), [
+      4,
+      5,
+    ]);
+  });
+
+  test(
+    'a catalog background is downloaded once and then read from disk',
+    () async {
+      final dir = await Directory.systemTemp.createTemp('quote-catalog');
+      addTearDown(() => dir.delete(recursive: true));
+      final uris = <Uri>[];
+      final store = QuoteBackgroundStore(
+        documentsDirectory: () async => dir,
+        download: (uri) async {
+          uris.add(uri);
+          return Uint8List.fromList([9, 9, 9]);
+        },
+      );
+      addTearDown(store.close);
+
+      final id = catalogQuoteBackgroundIds.first;
+      expect(await store.load(id: id, imported: false), [9, 9, 9]);
+      expect(await store.load(id: id, imported: false), [9, 9, 9]);
+      expect(uris, hasLength(1));
+      expect(uris.single.path, contains(Uri.encodeComponent(id)));
+      expect(uris.single.queryParameters['alt'], 'media');
+
+      final thumb = await store.catalogFile(id, thumb: true);
+      expect(await thumb.readAsBytes(), [9, 9, 9]);
+      expect(uris, hasLength(2));
+      expect(
+        uris.last.path,
+        contains(Uri.encodeComponent(quoteBackgroundThumbName(id))),
+      );
+      expect(thumb.path, contains('thumbs'));
+      expect(await store.list(), isEmpty);
+    },
+  );
+
   test('a photo is reduced so its long side stays within 2000 px', () {
     final wide = img.Image(width: 2100, height: 20);
     img.fill(wide, color: img.ColorRgb8(20, 40, 60));
@@ -230,6 +277,15 @@ ReadingQuote get _quote => ReadingQuote(
   bookTitle: 'Uno',
   author: 'Autora',
 );
+
+class _BytesBundle extends CachingAssetBundle {
+  _BytesBundle(this.bytes);
+
+  final Uint8List bytes;
+
+  @override
+  Future<ByteData> load(String key) async => ByteData.sublistView(bytes);
+}
 
 Uint8List _solid(int rgb, int width, int height) {
   final bytes = Uint8List(width * height * 4);

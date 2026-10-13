@@ -57,6 +57,23 @@
   "close": "Cerrar",
   "back": "Atrás",
   "noContents": "Este libro no tiene índice.",
+  "contentsKeepReading": "Puedes seguir pasando páginas.",
+  "contentsSearch": "Buscar en el índice",
+  "contentsNoMatches": "Ningún capítulo coincide.",
+  "chapterLabel": "Capítulo {position}",
+  "@chapterLabel": {
+    "placeholders": {
+      "position": {"type": "int"}
+    }
+  },
+  "chapterOpenFailed": "No se pudo abrir «{title}».",
+  "@chapterOpenFailed": {
+    "placeholders": {
+      "title": {"type": "String"}
+    }
+  },
+  "showChapters": "Mostrar capítulos",
+  "hideChapters": "Ocultar capítulos",
   "copy": "Copiar",
   "share": "Compartir",
   "copied": "Copiado",
@@ -355,5 +372,164 @@
   "deleteQuoteTitle": "¿Eliminar esta cita?",
   "deleteQuoteBody": "Sale de tus citas y deja de estar resaltada en el libro.",
   "quoteDeleted": "Cita eliminada.",
-  "quoteDeleteFailed": "No se pudo eliminar la cita."
+  "quoteDeleteFailed": "No se pudo eliminar la cita.",
+  "chapterMinuteLeft": "Un minuto de capítulo",
+  "chapterMinutesLeft": "Unos {minutes} min de capítulo",
+  "@chapterMinutesLeft": {
+    "placeholders": {
+      "minutes": {"type": "int"}
+    }
+  },
+  "chapterFinishTitle": "¿Sigues un poco más?",
+  "chapterMinuteAlmostDone": "Te falta un minuto para acabar el capítulo.",
+  "chapterMinutesAlmostDone": "Te faltan unos {minutes} min para acabar el capítulo.",
+  "@chapterMinutesAlmostDone": {
+    "placeholders": {
+      "minutes": {"type": "int"}
+    }
+  },
+  "chapterMinuteAlmostDoneNamed": "Te falta un minuto para acabar «{title}».",
+  "@chapterMinuteAlmostDoneNamed": {
+    "placeholders": {
+      "title": {"type": "String"}
+    }
+  },
+  "chapterMinutesAlmostDoneNamed": "Te faltan unos {minutes} min para acabar «{title}».",
+  "@chapterMinutesAlmostDoneNamed": {
+    "placeholders": {
+      "minutes": {"type": "int"},
+      "title": {"type": "String"}
+    }
+  },
+  "keepReading": "Seguir leyendo",
+  "leaveReader": "Salir",
+  "tableView": "Tabla",
+  "bookTimeLeft": "Faltan ~{duration}",
+  "@bookTimeLeft": {
+    "placeholders": {
+      "duration": {"type": "String"}
+    }
+  },
+  "bookPacePerTen": "~{duration} por cada 10 %",
+  "@bookPacePerTen": {
+    "placeholders": {
+      "duration": {"type": "String"}
+    }
+  },
+  "bookUnderAWeek": "A este ritmo, menos de una semana",
+  "bookWeekLeft": "A este ritmo, una semana",
+  "bookWeeksLeft": "A este ritmo, unas {count} semanas",
+  "@bookWeeksLeft": {
+    "placeholders": {
+      "count": {"type": "int"}
+    }
+  },
+  "bookSittingLeft": "Una lectura como las últimas",
+  "readingByBook": "Por libro",
+  "allReadingBooks": "Todos los libros",
+  "readingByBookEmpty": "Todavía no hay un libro con tiempo de lectura.",
+  "bookSittingsLeft": "Unas {count} lecturas como las últimas",
+  "@bookSittingsLeft": {
+    "placeholders": {
+      "count": {"type": "int"}
+    }
+  },
+  "monthReading": "Resumen del mes",
+  "monthReadingOf": "Resumen de {month}",
+  "@monthReadingOf": {
+    "placeholders": {
+      "month": {"type": "String"}
+    }
+  },
+  "monthReadingEmpty": "El resumen aparece al cerrar un mes con lectura.",
+  "monthInProgress": "En curso",
+  "monthPlanDays": "En {month} cumpliste {met} de {planned} días de tu plan.",
+  "@monthPlanDays": {
+    "placeholders": {
+      "month": {"type": "String"},
+      "met": {"type": "int"},
+      "planned": {"type": "int"}
+    }
+  },
+  "monthReadTime": "En {month} leíste {duration}.",
+  "@monthReadTime": {
+    "placeholders": {
+      "month": {"type": "String"},
+      "duration": {"type": "String"}
+    }
+  },
+  "monthMinutesMore": "{duration} más que en {month}",
+  "@monthMinutesMore": {
+    "placeholders": {
+      "duration": {"type": "String"},
+      "month": {"type": "String"}
+    }
+  },
+  "monthMinutesLess": "{duration} menos que en {month}",
+  "@monthMinutesLess": {
+    "placeholders": {
+      "duration": {"type": "String"},
+      "month": {"type": "String"}
+    }
+  },
+  "monthBookFinished": "Terminaste este libro.",
+  "monthShareFailed": "No se pudo compartir el resumen.",
+  "monthMethodical": "Lector metódico",
+  "monthMethodicalPhrase": "La constancia ya forma parte de ti.",
+  "monthMethodicalEvidence": "{onTime} de {sessions} lecturas empezaron cerca de las {hour}.",
+  "@monthMethodicalEvidence": {
+    "placeholders": {
+      "onTime": {"type": "int"},
+      "sessions": {"type": "int"},
+      "hour": {"type": "String"}
+    }
+  },
+  "monthAnt": "Lector hormiga",
+  "monthAntPhrase": "Aprovechas cada momento. Paso a paso construyes grandes lecturas.",
+  "monthAntEvidence": "Cumpliste {met} de {planned} días, en lecturas de 15 min o menos.",
+  "@monthAntEvidence": {
+    "placeholders": {
+      "met": {"type": "int"},
+      "planned": {"type": "int"}
+    }
+  },
+  "monthMarathoner": "El maratonista",
+  "monthMarathonerPhrase": "Cuando te sumerges en una historia, el tiempo pierde su forma.",
+  "monthMarathonerEvidence": "Los días que leíste, promedias {duration}.",
+  "@monthMarathonerEvidence": {
+    "placeholders": {
+      "duration": {"type": "String"}
+    }
+  },
+  "monthHunter": "Cazador de ideas",
+  "monthHunterPhrase": "No solo lees: coleccionas pensamientos y los haces tuyos.",
+  "monthHunterEvidence": "Guardaste citas en {withQuotes} de {sessions} lecturas.",
+  "@monthHunterEvidence": {
+    "placeholders": {
+      "withQuotes": {"type": "int"},
+      "sessions": {"type": "int"}
+    }
+  },
+  "monthEarly": "El madrugador",
+  "monthEarlyPhrase": "Inicias el día alimentando tu mente antes de que empiece la rutina.",
+  "monthAfternoon": "Lector de sobremesa",
+  "monthAfternoonPhrase": "Haces una pausa en mitad del día y la llenas de páginas.",
+  "monthNight": "El búho nocturno",
+  "monthNightPhrase": "Encuentras la calma y la concentración cuando el mundo se apaga.",
+  "monthBandEvidence": "El {percent} % de tu lectura fue en esa franja.",
+  "@monthBandEvidence": {
+    "placeholders": {
+      "percent": {"type": "int"}
+    }
+  },
+  "monthNomad": "Lector nómada",
+  "monthNomadPhrase": "Cualquier momento es bueno para abrir un libro.",
+  "monthNomadEvidence": "Ninguna franja llega al 60 %.",
+  "appearance": "Apariencia",
+  "themePrograma": "Programa",
+  "themeLibro": "Libro",
+  "themeCuaderno": "Cuaderno",
+  "themePeriodico": "Periódico",
+  "themeFicha": "Ficha",
+  "themeChangeFailed": "No se pudo cambiar la apariencia."
 }

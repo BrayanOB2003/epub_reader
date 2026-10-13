@@ -118,7 +118,11 @@ class _NotificationPermissionPageState
                           padding: const EdgeInsets.fromLTRB(0, 20, 16, 20),
                           child: Text(
                             l10n.notificationPermissionTitle,
-                            style: programTitle(colors.onStation, size: 44),
+                            style: programTitle(
+                              context,
+                              colors.onStation,
+                              size: 44,
+                            ),
                           ),
                         ),
                       ),

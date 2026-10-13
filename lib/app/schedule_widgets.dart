@@ -67,6 +67,20 @@ String scheduleDate(DateTime day, String languageCode) {
   return '$weekday ${local.day} de $month';
 }
 
+/// Month name for a sentence. Spanish stays lowercase; English is capitalized.
+String scheduleMonthName(int month, String languageCode) {
+  final index = (month < 1 || month > 12 ? 1 : month) - 1;
+  if (languageCode == 'en') return _englishMonths[index];
+  return scheduleMonths[index];
+}
+
+/// Month name used as a title: the first letter is uppercase.
+String scheduleMonthTitle(int month, String languageCode) {
+  final name = scheduleMonthName(month, languageCode);
+  if (name.isEmpty) return name;
+  return name[0].toUpperCase() + name.substring(1);
+}
+
 const _shortMonths = [
   'ene',
   'feb',
@@ -134,8 +148,9 @@ class ScheduleHeader extends StatelessWidget {
             const SizedBox(height: 8),
             Text(
               scheduleDate(date!, Localizations.localeOf(context).languageCode),
-              style: Theme.of(context).textTheme.bodyLarge
-                  ?.copyWith(color: colors.muted),
+              style: Theme.of(
+                context,
+              ).textTheme.bodyLarge?.copyWith(color: colors.muted),
             ),
           ],
         ],
@@ -232,7 +247,7 @@ class ScheduleCoverPlaceholder extends StatelessWidget {
                   child: Text(
                     initial,
                     maxLines: 1,
-                    style: programTitle(ink, size: height * 0.46),
+                    style: programTitle(context, ink, size: height * 0.46),
                   ),
                 ),
               ),
@@ -256,12 +271,16 @@ class _CoverFrame extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) {
+    final radius = scheduleRadius(context);
     return SizedBox(
       width: width,
       height: height,
       child: DecoratedBox(
-        decoration: BoxDecoration(border: Border.all(color: borderColor)),
-        child: child,
+        decoration: BoxDecoration(
+          border: Border.all(color: borderColor),
+          borderRadius: radius,
+        ),
+        child: ClipRRect(borderRadius: radius, child: child),
       ),
     );
   }
@@ -470,7 +489,7 @@ class ScheduleListing extends StatelessWidget {
                 children: [
                   Text(
                     title,
-                    style: programTitle(ink, size: titleSize),
+                    style: programTitle(context, ink, size: titleSize),
                     maxLines: 2,
                     overflow: TextOverflow.ellipsis,
                   ),
@@ -478,8 +497,9 @@ class ScheduleListing extends StatelessWidget {
                     const SizedBox(height: 4),
                     Text(
                       subtitle!,
-                      style: Theme.of(context).textTheme.bodyMedium
-                          ?.copyWith(color: muted),
+                      style: Theme.of(
+                        context,
+                      ).textTheme.bodyMedium?.copyWith(color: muted),
                       maxLines: 2,
                       overflow: TextOverflow.ellipsis,
                     ),
@@ -488,8 +508,9 @@ class ScheduleListing extends StatelessWidget {
                     const SizedBox(height: 4),
                     Text(
                       caption!,
-                      style: Theme.of(context).textTheme.labelLarge
-                          ?.copyWith(color: muted),
+                      style: Theme.of(
+                        context,
+                      ).textTheme.labelLarge?.copyWith(color: muted),
                       maxLines: 1,
                       overflow: TextOverflow.ellipsis,
                     ),
@@ -509,8 +530,9 @@ class ScheduleListing extends StatelessWidget {
                   if (trailing != null)
                     Text(
                       trailing!,
-                      style: Theme.of(context).textTheme.labelLarge
-                          ?.copyWith(color: ink),
+                      style: Theme.of(
+                        context,
+                      ).textTheme.labelLarge?.copyWith(color: ink),
                     ),
                   if (onDelete != null)
                     TextButton(
@@ -567,6 +589,7 @@ class ScheduleAction extends StatelessWidget {
     final ios = Theme.of(context).platform == TargetPlatform.iOS;
     final background = onAir ? colors.onStation : colors.station;
     final foreground = onAir ? colors.station : colors.onStation;
+    final radius = scheduleRadius(context);
     if (ios) {
       return SizedBox(
         width: double.infinity,
@@ -574,7 +597,7 @@ class ScheduleAction extends StatelessWidget {
         child: CupertinoButton(
           padding: EdgeInsets.zero,
           color: onPressed == null ? colors.rule : background,
-          borderRadius: BorderRadius.zero,
+          borderRadius: radius,
           onPressed: onPressed,
           child: Text(
             label,
@@ -596,7 +619,7 @@ class ScheduleAction extends StatelessWidget {
           disabledBackgroundColor: colors.rule,
           disabledForegroundColor: colors.muted,
           minimumSize: const Size.fromHeight(48),
-          shape: const RoundedRectangleBorder(),
+          shape: RoundedRectangleBorder(borderRadius: radius),
         ),
         child: Text(label),
       ),

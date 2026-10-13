@@ -280,6 +280,7 @@ void main() {
               ),
             ]),
           ),
+          readingSessionsProvider.overrideWith((ref) => Stream.value(const [])),
           quoteHighlightDefaultProvider.overrideWith((ref) => 'amber'),
         ],
         child: MaterialApp(
