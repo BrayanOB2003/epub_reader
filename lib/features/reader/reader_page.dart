@@ -12,6 +12,7 @@ import 'package:epub_reader/features/habits/reading_engagement.dart';
 import 'package:epub_reader/features/habits/reading_estimate.dart';
 import 'package:epub_reader/features/notifications/reading_notifications.dart';
 import 'package:epub_reader/features/profile/reader_profile_store.dart';
+import 'package:epub_reader/features/reader/chapter_finish_dialog.dart';
 import 'package:epub_reader/features/reader/contents.dart';
 import 'package:epub_reader/features/reader/contents_dialog.dart';
 import 'package:epub_reader/features/reader/quote_highlight.dart';
@@ -525,26 +526,24 @@ class _ReaderPageState extends ConsumerState<ReaderPage>
       return false;
     }
     final l10n = AppLocalizations.of(context);
+    final publication = _publication;
+    final locator = _latestLocator ?? _initialLocator;
+    final chapterTitle = publication == null || locator == null
+        ? null
+        : finishChapterTitle(
+            locatorTitle: locator.title,
+            roots: contentsTree(
+              tableOfContents: publication.tableOfContents,
+              readingOrder: publication.readingOrder,
+            ),
+            href: locator.href,
+            untitled: l10n.untitled,
+            chapter: l10n.chapterLabel,
+          );
     final leave = await showDialog<bool>(
       context: context,
-      builder: (context) => AlertDialog(
-        title: Text(
-          minutes == 1
-              ? l10n.chapterMinuteAlmostDone
-              : l10n.chapterMinutesAlmostDone(minutes),
-        ),
-        content: Text(l10n.chapterAlmostDoneBody),
-        actions: [
-          TextButton(
-            onPressed: () => Navigator.pop(context, false),
-            child: Text(l10n.keepReading),
-          ),
-          TextButton(
-            onPressed: () => Navigator.pop(context, true),
-            child: Text(l10n.leaveReader),
-          ),
-        ],
-      ),
+      builder: (context) =>
+          ChapterFinishDialog(minutes: minutes, chapterTitle: chapterTitle),
     );
     return leave != true;
   }

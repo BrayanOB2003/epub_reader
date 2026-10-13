@@ -289,14 +289,11 @@
       "minutes": {"type": "int"}
     }
   },
-  "chapterMinuteAlmostDone": "A minute left",
-  "chapterMinutesAlmostDone": "About {minutes} min left",
-  "@chapterMinutesAlmostDone": {
-    "placeholders": {
-      "minutes": {"type": "int"}
-    }
-  },
-  "chapterAlmostDoneBody": "To finish the chapter.",
+  "chapterFinishTitle": "Keep going a little longer?",
+  "chapterMinuteAlmostDone": "A minute left to finish the chapter.",
+  "chapterMinutesAlmostDone": "About {minutes} min left to finish the chapter.",
+  "chapterMinuteAlmostDoneNamed": "A minute left to finish “{title}”.",
+  "chapterMinutesAlmostDoneNamed": "About {minutes} min left to finish “{title}”.",
   "keepReading": "Keep reading",
   "leaveReader": "Leave",
   "tableView": "Table"

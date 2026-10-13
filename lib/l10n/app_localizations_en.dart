@@ -794,15 +794,25 @@ class AppLocalizationsEn extends AppLocalizations {
   }
 
   @override
-  String get chapterMinuteAlmostDone => 'A minute left';
+  String get chapterFinishTitle => 'Keep going a little longer?';
+
+  @override
+  String get chapterMinuteAlmostDone => 'A minute left to finish the chapter.';
 
   @override
   String chapterMinutesAlmostDone(int minutes) {
-    return 'About $minutes min left';
+    return 'About $minutes min left to finish the chapter.';
   }
 
   @override
-  String get chapterAlmostDoneBody => 'To finish the chapter.';
+  String chapterMinuteAlmostDoneNamed(String title) {
+    return 'A minute left to finish “$title”.';
+  }
+
+  @override
+  String chapterMinutesAlmostDoneNamed(int minutes, String title) {
+    return 'About $minutes min left to finish “$title”.';
+  }
 
   @override
   String get keepReading => 'Keep reading';

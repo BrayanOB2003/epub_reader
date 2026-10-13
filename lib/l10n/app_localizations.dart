@@ -1508,28 +1508,40 @@ abstract class AppLocalizations {
   /// **'Unos {minutes} min de capítulo'**
   String chapterMinutesLeft(int minutes);
 
+  /// No description provided for @chapterFinishTitle.
+  ///
+  /// In es, this message translates to:
+  /// **'¿Sigues un poco más?'**
+  String get chapterFinishTitle;
+
   /// No description provided for @chapterMinuteAlmostDone.
   ///
   /// In es, this message translates to:
-  /// **'Te falta un minuto'**
+  /// **'Te falta un minuto para acabar el capítulo.'**
   String get chapterMinuteAlmostDone;
 
   /// No description provided for @chapterMinutesAlmostDone.
   ///
   /// In es, this message translates to:
-  /// **'Te faltan unos {minutes} min'**
+  /// **'Te faltan unos {minutes} min para acabar el capítulo.'**
   String chapterMinutesAlmostDone(int minutes);
 
-  /// No description provided for @chapterAlmostDoneBody.
+  /// No description provided for @chapterMinuteAlmostDoneNamed.
   ///
   /// In es, this message translates to:
-  /// **'Para acabar el capítulo.'**
-  String get chapterAlmostDoneBody;
+  /// **'Te falta un minuto para acabar «{title}».'**
+  String chapterMinuteAlmostDoneNamed(String title);
+
+  /// No description provided for @chapterMinutesAlmostDoneNamed.
+  ///
+  /// In es, this message translates to:
+  /// **'Te faltan unos {minutes} min para acabar «{title}».'**
+  String chapterMinutesAlmostDoneNamed(int minutes, String title);
 
   /// No description provided for @keepReading.
   ///
   /// In es, this message translates to:
-  /// **'Seguir'**
+  /// **'Seguir leyendo'**
   String get keepReading;
 
   /// No description provided for @leaveReader.

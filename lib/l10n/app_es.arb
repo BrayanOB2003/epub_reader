@@ -380,15 +380,28 @@
       "minutes": {"type": "int"}
     }
   },
-  "chapterMinuteAlmostDone": "Te falta un minuto",
-  "chapterMinutesAlmostDone": "Te faltan unos {minutes} min",
+  "chapterFinishTitle": "¿Sigues un poco más?",
+  "chapterMinuteAlmostDone": "Te falta un minuto para acabar el capítulo.",
+  "chapterMinutesAlmostDone": "Te faltan unos {minutes} min para acabar el capítulo.",
   "@chapterMinutesAlmostDone": {
     "placeholders": {
       "minutes": {"type": "int"}
     }
   },
-  "chapterAlmostDoneBody": "Para acabar el capítulo.",
-  "keepReading": "Seguir",
+  "chapterMinuteAlmostDoneNamed": "Te falta un minuto para acabar «{title}».",
+  "@chapterMinuteAlmostDoneNamed": {
+    "placeholders": {
+      "title": {"type": "String"}
+    }
+  },
+  "chapterMinutesAlmostDoneNamed": "Te faltan unos {minutes} min para acabar «{title}».",
+  "@chapterMinutesAlmostDoneNamed": {
+    "placeholders": {
+      "minutes": {"type": "int"},
+      "title": {"type": "String"}
+    }
+  },
+  "keepReading": "Seguir leyendo",
   "leaveReader": "Salir",
   "tableView": "Tabla"
 }
