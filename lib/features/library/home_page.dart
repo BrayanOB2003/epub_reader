@@ -65,8 +65,9 @@ class _HomePageState extends ConsumerState<HomePage> {
 
   void _showMessage(String message) {
     if (!mounted) return;
-    ScaffoldMessenger.of(context)
-        .showSnackBar(SnackBar(content: Text(message)));
+    ScaffoldMessenger.of(
+      context,
+    ).showSnackBar(SnackBar(content: Text(message)));
   }
 
   Future<void> _delete(Book book) async {
@@ -232,12 +233,16 @@ class _EmptyLibrary extends StatelessWidget {
       child: Column(
         crossAxisAlignment: CrossAxisAlignment.start,
         children: [
-          Text(l10n.noBooksYet, style: programTitle(colors.ink, size: 36)),
+          Text(
+            l10n.noBooksYet,
+            style: programTitle(context, colors.ink, size: 36),
+          ),
           const SizedBox(height: 8),
           Text(
             l10n.epubOnDevice,
-            style: Theme.of(context).textTheme.bodyLarge
-                ?.copyWith(color: colors.muted),
+            style: Theme.of(
+              context,
+            ).textTheme.bodyLarge?.copyWith(color: colors.muted),
           ),
           const Spacer(),
           ScheduleAction(
@@ -349,8 +354,9 @@ class _LiveBand extends StatelessWidget {
                       const SizedBox(height: 4),
                       Text(
                         period.label(AppLocalizations.of(context)),
-                        style: Theme.of(context).textTheme.labelLarge
-                            ?.copyWith(color: colors.onStation),
+                        style: Theme.of(context).textTheme.labelLarge?.copyWith(
+                          color: colors.onStation,
+                        ),
                       ),
                     ],
                   ),
@@ -380,6 +386,7 @@ class _LiveBand extends StatelessWidget {
                       Text(
                         title,
                         style: programTitle(
+                          context,
                           colors.onStation,
                           size: book == null ? 36 : 28,
                         ),
@@ -485,6 +492,7 @@ class _MinuteField extends StatelessWidget {
         decoration: BoxDecoration(
           color: background,
           border: Border.all(color: colors.onStationMuted),
+          borderRadius: scheduleRadius(context),
         ),
         child: Padding(
           padding: const EdgeInsets.symmetric(horizontal: 12, vertical: 8),
@@ -493,11 +501,12 @@ class _MinuteField extends StatelessWidget {
             children: [
               Text(
                 caption,
-                style: Theme.of(context).textTheme.labelLarge
-                    ?.copyWith(color: captionColor),
+                style: Theme.of(
+                  context,
+                ).textTheme.labelLarge?.copyWith(color: captionColor),
               ),
               const SizedBox(height: 4),
-              Text(label, style: programTitle(foreground, size: 28)),
+              Text(label, style: programTitle(context, foreground, size: 28)),
             ],
           ),
         ),

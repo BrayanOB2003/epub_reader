@@ -46,25 +46,29 @@ class MonthCardExport {
 }
 
 /// Square paper card: the month, the sentence, the minutes, and Liora.
-Future<Uint8List> renderMonthCard(MonthCardCopy copy) async {
+Future<Uint8List> renderMonthCard(
+  MonthCardCopy copy, {
+  ScheduleColors colors = ScheduleColors.light,
+  ScheduleLook look = ScheduleLook.programa,
+}) async {
   const size = 1080.0;
   const inset = 72.0;
   final recorder = ui.PictureRecorder();
   final canvas = Canvas(recorder);
   canvas.drawRect(
     const Rect.fromLTWH(0, 0, size, size),
-    Paint()..color = const Color(0xFFF4F7FB),
+    Paint()..color = colors.paper,
   );
   canvas.drawRect(
     const Rect.fromLTWH(0, 0, size, 16),
-    Paint()..color = const Color(0xFF0C4DA2),
+    Paint()..color = colors.station,
   );
   final width = size - inset * 2;
   var y = 96.0;
   y = _drawText(
     canvas: canvas,
     text: copy.month,
-    style: programTitle(const Color(0xFF0E1A2B), size: 72),
+    style: lookTitle(look, colors.ink, size: 72),
     x: inset,
     y: y,
     width: width,
@@ -73,17 +77,13 @@ Future<Uint8List> renderMonthCard(MonthCardCopy copy) async {
   y += 28;
   canvas.drawRect(
     Rect.fromLTWH(inset, y, width, 1),
-    Paint()..color = const Color(0xFFD5DBE3),
+    Paint()..color = colors.rule,
   );
   y += 36;
   y = _drawText(
     canvas: canvas,
     text: copy.headline,
-    style: const TextStyle(
-      color: Color(0xFF0E1A2B),
-      fontSize: 36,
-      height: 1.35,
-    ),
+    style: TextStyle(color: colors.ink, fontSize: 36, height: 1.35),
     x: inset,
     y: y,
     width: width,
@@ -93,7 +93,7 @@ Future<Uint8List> renderMonthCard(MonthCardCopy copy) async {
   y = _drawText(
     canvas: canvas,
     text: copy.minutes,
-    style: programTitle(const Color(0xFF0E1A2B), size: 56),
+    style: lookTitle(look, colors.ink, size: 56),
     x: inset,
     y: y,
     width: width,
@@ -104,7 +104,7 @@ Future<Uint8List> renderMonthCard(MonthCardCopy copy) async {
     _drawText(
       canvas: canvas,
       text: archetype,
-      style: programTitle(const Color(0xFF0E1A2B), size: 44),
+      style: lookTitle(look, colors.ink, size: 44),
       x: inset,
       y: y,
       width: width,
@@ -114,7 +114,7 @@ Future<Uint8List> renderMonthCard(MonthCardCopy copy) async {
   _drawText(
     canvas: canvas,
     text: 'Liora',
-    style: programTitle(const Color(0xFF0C4DA2), size: 36),
+    style: lookTitle(look, colors.station, size: 36),
     x: inset,
     y: size - 120,
     width: width,

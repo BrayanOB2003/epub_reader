@@ -83,21 +83,242 @@ class ScheduleColors extends ThemeExtension<ScheduleColors> {
 
 const programFace = 'BarlowCondensed';
 
-TextStyle programTitle(Color color, {double size = 40}) {
+/// The five appearances. [programa] is the printed log the app shipped with.
+enum AppThemeId {
+  programa,
+  libro,
+  cuaderno,
+  periodico,
+  ficha;
+
+  static AppThemeId byId(String? raw) {
+    final name = raw?.trim();
+    for (final id in values) {
+      if (id.name == name) return id;
+    }
+    return programa;
+  }
+}
+
+/// Title face, scale, and the radius of controls and covers.
+///
+/// Bands stay edge to edge. [radius] is only for buttons, choices, the minute
+/// field, and cover frames.
+@immutable
+class ScheduleLook extends ThemeExtension<ScheduleLook> {
+  const ScheduleLook({
+    required this.titleFamily,
+    required this.titleWeight,
+    required this.titleScale,
+    required this.titleHeight,
+    required this.titleTracking,
+    required this.radius,
+  });
+
+  /// Null uses the platform face.
+  final String? titleFamily;
+  final FontWeight titleWeight;
+  final double titleScale;
+  final double titleHeight;
+  final double titleTracking;
+  final double radius;
+
+  static const programa = ScheduleLook(
+    titleFamily: programFace,
+    titleWeight: FontWeight.w600,
+    titleScale: 1,
+    titleHeight: 0.95,
+    titleTracking: -0.02,
+    radius: 0,
+  );
+
+  static const libro = ScheduleLook(
+    titleFamily: 'SourceSerif4',
+    titleWeight: FontWeight.w600,
+    titleScale: 0.92,
+    titleHeight: 1.15,
+    titleTracking: 0,
+    radius: 0,
+  );
+
+  static const cuaderno = ScheduleLook(
+    titleFamily: null,
+    titleWeight: FontWeight.w600,
+    titleScale: 0.9,
+    titleHeight: 1.15,
+    titleTracking: 0,
+    radius: 8,
+  );
+
+  static const periodico = programa;
+
+  static const ficha = ScheduleLook(
+    titleFamily: 'RobotoSlab',
+    titleWeight: FontWeight.w600,
+    titleScale: 0.86,
+    titleHeight: 1.15,
+    titleTracking: 0,
+    radius: 0,
+  );
+
+  static ScheduleLook of(BuildContext context) {
+    return Theme.of(context).extension<ScheduleLook>() ?? programa;
+  }
+
+  static ScheduleLook forTheme(AppThemeId id) {
+    return switch (id) {
+      AppThemeId.programa => programa,
+      AppThemeId.libro => libro,
+      AppThemeId.cuaderno => cuaderno,
+      AppThemeId.periodico => periodico,
+      AppThemeId.ficha => ficha,
+    };
+  }
+
+  @override
+  ScheduleLook copyWith({
+    String? titleFamily,
+    FontWeight? titleWeight,
+    double? titleScale,
+    double? titleHeight,
+    double? titleTracking,
+    double? radius,
+  }) {
+    return ScheduleLook(
+      titleFamily: titleFamily ?? this.titleFamily,
+      titleWeight: titleWeight ?? this.titleWeight,
+      titleScale: titleScale ?? this.titleScale,
+      titleHeight: titleHeight ?? this.titleHeight,
+      titleTracking: titleTracking ?? this.titleTracking,
+      radius: radius ?? this.radius,
+    );
+  }
+
+  @override
+  ScheduleLook lerp(ScheduleLook? other, double t) {
+    if (other == null) return this;
+    if (t < 0.5) return this;
+    return other;
+  }
+}
+
+const _libroLight = ScheduleColors(
+  paper: Color(0xFFF6F1E8),
+  ink: Color(0xFF2C2416),
+  muted: Color(0xFF6B5E4E),
+  rule: Color(0xFFE4D9C8),
+  station: Color(0xFF8C3D2F),
+  onStation: Color(0xFFF6F1E8),
+  onStationMuted: Color(0xFFF3D2C6),
+);
+
+const _libroDark = ScheduleColors(
+  paper: Color(0xFF1C1712),
+  ink: Color(0xFFF6F1E8),
+  muted: Color(0xFFC9B8A6),
+  rule: Color(0xFF3C322A),
+  station: Color(0xFFAA5644),
+  onStation: Color(0xFFF6F1E8),
+  onStationMuted: Color(0xFFFFF4EE),
+);
+
+const _cuadernoLight = ScheduleColors(
+  paper: Color(0xFFF4F5F1),
+  ink: Color(0xFF1C1F1A),
+  muted: Color(0xFF5C6158),
+  rule: Color(0xFFD9DDD4),
+  station: Color(0xFF234E43),
+  onStation: Color(0xFFF4F5F1),
+  onStationMuted: Color(0xFFD5E4DC),
+);
+
+const _cuadernoDark = ScheduleColors(
+  paper: Color(0xFF141614),
+  ink: Color(0xFFF4F5F1),
+  muted: Color(0xFFC5CBC0),
+  rule: Color(0xFF2E3530),
+  station: Color(0xFF3C7A68),
+  onStation: Color(0xFFF4F5F1),
+  onStationMuted: Color(0xFFEAF6F0),
+);
+
+const _periodicoLight = ScheduleColors(
+  paper: Color(0xFFEFECE4),
+  ink: Color(0xFF1A1814),
+  muted: Color(0xFF5E584E),
+  rule: Color(0xFFD2CDC2),
+  station: Color(0xFF8F1D2C),
+  onStation: Color(0xFFF7F4EC),
+  onStationMuted: Color(0xFFF6D4D8),
+);
+
+const _periodicoDark = ScheduleColors(
+  paper: Color(0xFF141311),
+  ink: Color(0xFFF3F0E8),
+  muted: Color(0xFFC8C2B6),
+  rule: Color(0xFF3A342C),
+  station: Color(0xFFB44A56),
+  onStation: Color(0xFFF7F4EC),
+  onStationMuted: Color(0xFFFFF1F2),
+);
+
+const _fichaLight = ScheduleColors(
+  paper: Color(0xFFF3F0E8),
+  ink: Color(0xFF1C1916),
+  muted: Color(0xFF5C564E),
+  rule: Color(0xFFDDD6CC),
+  station: Color(0xFF2C2824),
+  onStation: Color(0xFFF3F0E8),
+  onStationMuted: Color(0xFFD4CFC6),
+);
+
+const _fichaDark = ScheduleColors(
+  paper: Color(0xFF161513),
+  ink: Color(0xFFF3F0E8),
+  muted: Color(0xFFC8C2B6),
+  rule: Color(0xFF3A3630),
+  station: Color(0xFF746C62),
+  onStation: Color(0xFFF3F0E8),
+  onStationMuted: Color(0xFFF7F4EE),
+);
+
+ScheduleColors scheduleColors(AppThemeId id, Brightness brightness) {
+  final dark = brightness == Brightness.dark;
+  return switch (id) {
+    AppThemeId.programa => dark ? ScheduleColors.dark : ScheduleColors.light,
+    AppThemeId.libro => dark ? _libroDark : _libroLight,
+    AppThemeId.cuaderno => dark ? _cuadernoDark : _cuadernoLight,
+    AppThemeId.periodico => dark ? _periodicoDark : _periodicoLight,
+    AppThemeId.ficha => dark ? _fichaDark : _fichaLight,
+  };
+}
+
+BorderRadius scheduleRadius(BuildContext context) {
+  return BorderRadius.circular(ScheduleLook.of(context).radius);
+}
+
+TextStyle lookTitle(ScheduleLook look, Color color, {double size = 40}) {
+  final scaled = size * look.titleScale;
   return TextStyle(
-    fontFamily: programFace,
-    fontWeight: FontWeight.w600,
-    fontSize: size,
-    height: 0.95,
-    letterSpacing: size * -0.02,
+    fontFamily: look.titleFamily,
+    fontWeight: look.titleWeight,
+    fontSize: scaled,
+    height: look.titleHeight,
+    letterSpacing: scaled * look.titleTracking,
     color: color,
   );
 }
 
-ThemeData scheduleTheme(Brightness brightness) {
-  final colors = brightness == Brightness.dark
-      ? ScheduleColors.dark
-      : ScheduleColors.light;
+TextStyle programTitle(BuildContext context, Color color, {double size = 40}) {
+  return lookTitle(ScheduleLook.of(context), color, size: size);
+}
+
+ThemeData scheduleTheme(
+  Brightness brightness, [
+  AppThemeId id = AppThemeId.programa,
+]) {
+  final colors = scheduleColors(id, brightness);
+  final look = ScheduleLook.forTheme(id);
   final scheme =
       ColorScheme.fromSeed(
         seedColor: colors.station,
@@ -118,7 +339,7 @@ ThemeData scheduleTheme(Brightness brightness) {
     colorScheme: scheme,
     scaffoldBackgroundColor: colors.paper,
     dividerColor: colors.rule,
-    extensions: [colors],
+    extensions: [colors, look],
   );
   return base.copyWith(
     textTheme: base.textTheme.apply(
@@ -148,7 +369,9 @@ ThemeData scheduleTheme(Brightness brightness) {
         minimumSize: const Size(64, 48),
         backgroundColor: colors.station,
         foregroundColor: colors.onStation,
-        shape: const RoundedRectangleBorder(),
+        shape: RoundedRectangleBorder(
+          borderRadius: BorderRadius.circular(look.radius),
+        ),
       ),
     ),
     textButtonTheme: TextButtonThemeData(

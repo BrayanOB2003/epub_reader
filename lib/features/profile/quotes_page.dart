@@ -157,12 +157,16 @@ class _EmptyQuotes extends StatelessWidget {
           child: Column(
             crossAxisAlignment: CrossAxisAlignment.start,
             children: [
-              Text(l10n.noQuotes, style: programTitle(colors.ink, size: 36)),
+              Text(
+                l10n.noQuotes,
+                style: programTitle(context, colors.ink, size: 36),
+              ),
               const SizedBox(height: 8),
               Text(
                 l10n.noQuotesBody,
-                style: Theme.of(context).textTheme.bodyLarge
-                    ?.copyWith(color: colors.muted),
+                style: Theme.of(
+                  context,
+                ).textTheme.bodyLarge?.copyWith(color: colors.muted),
               ),
               const SizedBox(height: 24),
               ScheduleAction(
@@ -194,7 +198,7 @@ class _BookHeading extends StatelessWidget {
         children: [
           Text(
             _shownTitle(group.bookTitle, l10n),
-            style: programTitle(colors.ink, size: 22),
+            style: programTitle(context, colors.ink, size: 22),
             maxLines: 2,
             overflow: TextOverflow.ellipsis,
           ),
@@ -202,8 +206,9 @@ class _BookHeading extends StatelessWidget {
             const SizedBox(height: 4),
             Text(
               author,
-              style: Theme.of(context).textTheme.bodyLarge
-                  ?.copyWith(color: colors.muted),
+              style: Theme.of(
+                context,
+              ).textTheme.bodyLarge?.copyWith(color: colors.muted),
               maxLines: 2,
               overflow: TextOverflow.ellipsis,
             ),
@@ -299,8 +304,9 @@ class _QuotePassage extends StatelessWidget {
             alignment: Alignment.centerLeft,
             child: Text(
               quote.text,
-              style: Theme.of(context).textTheme.bodyLarge
-                  ?.copyWith(color: color),
+              style: Theme.of(
+                context,
+              ).textTheme.bodyLarge?.copyWith(color: color),
             ),
           ),
         ),

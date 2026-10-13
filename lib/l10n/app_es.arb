@@ -524,5 +524,12 @@
   },
   "monthNomad": "Lector nómada",
   "monthNomadPhrase": "Cualquier momento es bueno para abrir un libro.",
-  "monthNomadEvidence": "Ninguna franja llega al 60 %."
+  "monthNomadEvidence": "Ninguna franja llega al 60 %.",
+  "appearance": "Apariencia",
+  "themePrograma": "Programa",
+  "themeLibro": "Libro",
+  "themeCuaderno": "Cuaderno",
+  "themePeriodico": "Periódico",
+  "themeFicha": "Ficha",
+  "themeChangeFailed": "No se pudo cambiar la apariencia."
 }

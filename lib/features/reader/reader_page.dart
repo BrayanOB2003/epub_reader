@@ -214,8 +214,9 @@ class _ReaderPageState extends ConsumerState<ReaderPage>
   }
 
   void _showMessage(String message) {
-    ScaffoldMessenger.of(context)
-        .showSnackBar(SnackBar(content: Text(message)));
+    ScaffoldMessenger.of(
+      context,
+    ).showSnackBar(SnackBar(content: Text(message)));
   }
 
   Future<void> _applyPreferences() async {
@@ -833,6 +834,7 @@ class _ReaderPageState extends ConsumerState<ReaderPage>
 
   Widget _readerChrome({bool forceVisible = false}) {
     final l10n = AppLocalizations.of(context);
+    final colors = ScheduleColors.of(context);
     final visible = forceVisible || _chromeVisible;
     return Column(
       mainAxisSize: MainAxisSize.min,
@@ -841,8 +843,8 @@ class _ReaderPageState extends ConsumerState<ReaderPage>
           child: LinearProgressIndicator(
             minHeight: 3,
             value: _loading ? null : _progress.clamp(0, 1),
-            backgroundColor: const Color(0x330E1A2B),
-            color: const Color(0xFF0C4DA2),
+            backgroundColor: colors.ink.withValues(alpha: 0.2),
+            color: colors.station,
           ),
         ),
         ClipRect(
@@ -852,11 +854,11 @@ class _ReaderPageState extends ConsumerState<ReaderPage>
             duration: const Duration(milliseconds: 180),
             curve: Curves.easeOut,
             child: Material(
-              color: const Color(0xF2F4F7FB),
+              color: colors.paper.withValues(alpha: 0.95),
               child: SafeArea(
                 bottom: false,
                 child: IconTheme(
-                  data: IconThemeData(color: ScheduleColors.light.ink),
+                  data: IconThemeData(color: colors.ink),
                   child: Column(
                     mainAxisSize: MainAxisSize.min,
                     crossAxisAlignment: CrossAxisAlignment.start,
@@ -924,10 +926,7 @@ class _ReaderPageState extends ConsumerState<ReaderPage>
                             _chapterMinutes == 1
                                 ? l10n.chapterMinuteLeft
                                 : l10n.chapterMinutesLeft(_chapterMinutes!),
-                            style: TextStyle(
-                              color: ScheduleColors.light.muted,
-                              fontSize: 13,
-                            ),
+                            style: TextStyle(color: colors.muted, fontSize: 13),
                           ),
                         ),
                     ],

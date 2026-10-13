@@ -1,4 +1,5 @@
 import 'package:epub_reader/app/app_locale.dart';
+import 'package:epub_reader/app/app_theme_store.dart';
 import 'package:epub_reader/app/router.dart';
 import 'package:epub_reader/app/schedule_theme.dart';
 import 'package:epub_reader/features/focus/focus_binding.dart';
@@ -14,13 +15,15 @@ class EpubReaderApp extends ConsumerWidget {
   @override
   Widget build(BuildContext context, WidgetRef ref) {
     final locale = ref.watch(appLocaleProvider);
+    final themeId =
+        ref.watch(appThemeProvider).asData?.value ?? AppThemeId.programa;
     return MaterialApp.router(
       title: 'Liora',
       locale: locale,
       supportedLocales: AppLocalizations.supportedLocales,
       localizationsDelegates: AppLocalizations.localizationsDelegates,
-      theme: scheduleTheme(Brightness.light),
-      darkTheme: scheduleTheme(Brightness.dark),
+      theme: scheduleTheme(Brightness.light, themeId),
+      darkTheme: scheduleTheme(Brightness.dark, themeId),
       themeMode: ThemeMode.system,
       routerConfig: ref.watch(appRouterProvider),
       builder: (context, child) {

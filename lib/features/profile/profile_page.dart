@@ -1,3 +1,4 @@
+import 'package:epub_reader/app/app_theme_store.dart';
 import 'package:epub_reader/app/providers.dart';
 import 'package:epub_reader/app/schedule_theme.dart';
 import 'package:epub_reader/app/schedule_widgets.dart';
@@ -5,6 +6,7 @@ import 'package:epub_reader/core/database/app_database.dart';
 import 'package:epub_reader/features/focus/focus_mode.dart';
 import 'package:epub_reader/features/focus/focus_mode_tile.dart';
 import 'package:epub_reader/features/habits/month_reading.dart';
+import 'package:epub_reader/features/profile/appearance_page.dart';
 import 'package:epub_reader/features/profile/reader_profile_store.dart';
 import 'package:epub_reader/features/reader/quote_highlight_default_tile.dart';
 import 'package:epub_reader/l10n/app_localizations.dart';
@@ -76,6 +78,21 @@ class ProfilePage extends ConsumerWidget {
                   onTap: () => context.push('/quotes'),
                 ),
                 const ScheduleRule(),
+                ListTile(
+                  title: Text(l10n.appearance),
+                  trailing: Text(
+                    themeLabel(
+                      l10n,
+                      ref.watch(appThemeProvider).asData?.value ??
+                          AppThemeId.programa,
+                    ),
+                    style: Theme.of(
+                      context,
+                    ).textTheme.bodyLarge?.copyWith(color: colors.muted),
+                  ),
+                  onTap: () => context.push('/profile/appearance'),
+                ),
+                const Divider(height: 1),
                 const QuoteHighlightDefaultTile(),
                 const Divider(height: 1),
                 if (saved != null &&

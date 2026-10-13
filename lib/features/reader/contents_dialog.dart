@@ -394,11 +394,13 @@ class _ContentsRow extends StatelessWidget {
     final indent = 20.0 + depth * 16;
     return Material(
       color: current ? colors.station : Colors.transparent,
-      child: part ? _part(indent: indent) : _chapter(ink: ink, indent: indent),
+      child: part
+          ? _part(context, indent: indent)
+          : _chapter(ink: ink, indent: indent),
     );
   }
 
-  Widget _part({required double indent}) {
+  Widget _part(BuildContext context, {required double indent}) {
     return ConstrainedBox(
       constraints: const BoxConstraints(minHeight: 48),
       child: Padding(
@@ -417,14 +419,11 @@ class _ContentsRow extends StatelessWidget {
                       title,
                       maxLines: 2,
                       overflow: TextOverflow.ellipsis,
-                      style: TextStyle(
-                        fontFamily: programFace,
-                        fontWeight: FontWeight.w600,
-                        fontSize: 18,
-                        height: 1.15,
-                        letterSpacing: -0.36,
-                        color: current ? colors.onStation : colors.muted,
-                      ),
+                      style: programTitle(
+                        context,
+                        current ? colors.onStation : colors.muted,
+                        size: 18,
+                      ).copyWith(height: 1.15),
                     ),
                   ),
                 ),

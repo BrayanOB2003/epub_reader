@@ -247,7 +247,7 @@ class ScheduleCoverPlaceholder extends StatelessWidget {
                   child: Text(
                     initial,
                     maxLines: 1,
-                    style: programTitle(ink, size: height * 0.46),
+                    style: programTitle(context, ink, size: height * 0.46),
                   ),
                 ),
               ),
@@ -271,12 +271,16 @@ class _CoverFrame extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) {
+    final radius = scheduleRadius(context);
     return SizedBox(
       width: width,
       height: height,
       child: DecoratedBox(
-        decoration: BoxDecoration(border: Border.all(color: borderColor)),
-        child: child,
+        decoration: BoxDecoration(
+          border: Border.all(color: borderColor),
+          borderRadius: radius,
+        ),
+        child: ClipRRect(borderRadius: radius, child: child),
       ),
     );
   }
@@ -485,7 +489,7 @@ class ScheduleListing extends StatelessWidget {
                 children: [
                   Text(
                     title,
-                    style: programTitle(ink, size: titleSize),
+                    style: programTitle(context, ink, size: titleSize),
                     maxLines: 2,
                     overflow: TextOverflow.ellipsis,
                   ),
@@ -585,6 +589,7 @@ class ScheduleAction extends StatelessWidget {
     final ios = Theme.of(context).platform == TargetPlatform.iOS;
     final background = onAir ? colors.onStation : colors.station;
     final foreground = onAir ? colors.station : colors.onStation;
+    final radius = scheduleRadius(context);
     if (ios) {
       return SizedBox(
         width: double.infinity,
@@ -592,7 +597,7 @@ class ScheduleAction extends StatelessWidget {
         child: CupertinoButton(
           padding: EdgeInsets.zero,
           color: onPressed == null ? colors.rule : background,
-          borderRadius: BorderRadius.zero,
+          borderRadius: radius,
           onPressed: onPressed,
           child: Text(
             label,
@@ -614,7 +619,7 @@ class ScheduleAction extends StatelessWidget {
           disabledBackgroundColor: colors.rule,
           disabledForegroundColor: colors.muted,
           minimumSize: const Size.fromHeight(48),
-          shape: const RoundedRectangleBorder(),
+          shape: RoundedRectangleBorder(borderRadius: radius),
         ),
         child: Text(label),
       ),

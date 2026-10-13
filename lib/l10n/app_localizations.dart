@@ -1807,6 +1807,48 @@ abstract class AppLocalizations {
   /// In es, this message translates to:
   /// **'Ninguna franja llega al 60 %.'**
   String get monthNomadEvidence;
+
+  /// No description provided for @appearance.
+  ///
+  /// In es, this message translates to:
+  /// **'Apariencia'**
+  String get appearance;
+
+  /// No description provided for @themePrograma.
+  ///
+  /// In es, this message translates to:
+  /// **'Programa'**
+  String get themePrograma;
+
+  /// No description provided for @themeLibro.
+  ///
+  /// In es, this message translates to:
+  /// **'Libro'**
+  String get themeLibro;
+
+  /// No description provided for @themeCuaderno.
+  ///
+  /// In es, this message translates to:
+  /// **'Cuaderno'**
+  String get themeCuaderno;
+
+  /// No description provided for @themePeriodico.
+  ///
+  /// In es, this message translates to:
+  /// **'Periódico'**
+  String get themePeriodico;
+
+  /// No description provided for @themeFicha.
+  ///
+  /// In es, this message translates to:
+  /// **'Ficha'**
+  String get themeFicha;
+
+  /// No description provided for @themeChangeFailed.
+  ///
+  /// In es, this message translates to:
+  /// **'No se pudo cambiar la apariencia.'**
+  String get themeChangeFailed;
 }
 
 class _AppLocalizationsDelegate

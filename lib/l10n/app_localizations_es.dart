@@ -990,4 +990,25 @@ class AppLocalizationsEs extends AppLocalizations {
 
   @override
   String get monthNomadEvidence => 'Ninguna franja llega al 60 %.';
+
+  @override
+  String get appearance => 'Apariencia';
+
+  @override
+  String get themePrograma => 'Programa';
+
+  @override
+  String get themeLibro => 'Libro';
+
+  @override
+  String get themeCuaderno => 'Cuaderno';
+
+  @override
+  String get themePeriodico => 'Periódico';
+
+  @override
+  String get themeFicha => 'Ficha';
+
+  @override
+  String get themeChangeFailed => 'No se pudo cambiar la apariencia.';
 }

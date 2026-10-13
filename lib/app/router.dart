@@ -13,6 +13,7 @@ import 'package:epub_reader/features/notifications/notification_prompt.dart';
 import 'package:epub_reader/features/onboarding/onboarding_answers.dart';
 import 'package:epub_reader/features/onboarding/onboarding_controller.dart';
 import 'package:epub_reader/features/onboarding/onboarding_page.dart';
+import 'package:epub_reader/features/profile/appearance_page.dart';
 import 'package:epub_reader/features/profile/profile_page.dart';
 import 'package:epub_reader/features/profile/quotes_page.dart';
 import 'package:epub_reader/features/quotes/quote_export_page.dart';
@@ -147,6 +148,11 @@ final appRouterProvider = Provider<GoRouter>((ref) {
                 name: 'profile',
                 builder: (context, state) => const ProfilePage(),
                 routes: [
+                  GoRoute(
+                    path: 'appearance',
+                    name: 'appearance',
+                    builder: (context, state) => const AppearancePage(),
+                  ),
                   GoRoute(
                     path: 'month',
                     name: 'month-reading',

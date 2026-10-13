@@ -294,14 +294,19 @@ class _MonthReadingPageState extends ConsumerState<MonthReadingPage> {
     setState(() => _sharing = true);
     final l10n = AppLocalizations.of(context);
     try {
-      final png = await renderMonthCard(copy);
+      final png = await renderMonthCard(
+        copy,
+        colors: ScheduleColors.of(context),
+        look: ScheduleLook.of(context),
+      );
       final file = await _export.writePng(png);
       if (!mounted) return;
       await _export.share(file.path, origin: origin);
     } catch (_) {
       if (!mounted) return;
-      ScaffoldMessenger.of(context)
-          .showSnackBar(SnackBar(content: Text(l10n.monthShareFailed)));
+      ScaffoldMessenger.of(
+        context,
+      ).showSnackBar(SnackBar(content: Text(l10n.monthShareFailed)));
     } finally {
       if (mounted) setState(() => _sharing = false);
     }
@@ -369,7 +374,11 @@ class MonthReadingView extends StatelessWidget {
                 const SizedBox(height: 12),
                 Text(
                   minutes,
-                  style: programTitle(ScheduleColors.of(context).ink, size: 28),
+                  style: programTitle(
+                    context,
+                    ScheduleColors.of(context).ink,
+                    size: 28,
+                  ),
                 ),
               ],
               if (report.minuteDeltaSeconds != null &&
@@ -377,8 +386,9 @@ class MonthReadingView extends StatelessWidget {
                 const SizedBox(height: 8),
                 Text(
                   _comparison(l10n, report, code),
-                  style: Theme.of(context).textTheme.bodyMedium
-                      ?.copyWith(color: ScheduleColors.of(context).muted),
+                  style: Theme.of(context).textTheme.bodyMedium?.copyWith(
+                    color: ScheduleColors.of(context).muted,
+                  ),
                 ),
               ],
             ],
@@ -459,7 +469,7 @@ class _ArchetypeBlock extends StatelessWidget {
         children: [
           Text(
             _archetypeName(l10n, report.kind),
-            style: programTitle(colors.ink, size: 28),
+            style: programTitle(context, colors.ink, size: 28),
           ),
           const SizedBox(height: 8),
           Text(
@@ -469,8 +479,9 @@ class _ArchetypeBlock extends StatelessWidget {
           const SizedBox(height: 4),
           Text(
             _archetypeEvidence(l10n, report.evidence),
-            style: Theme.of(context).textTheme.bodyMedium
-                ?.copyWith(color: colors.muted),
+            style: Theme.of(
+              context,
+            ).textTheme.bodyMedium?.copyWith(color: colors.muted),
           ),
         ],
       ),
@@ -502,8 +513,9 @@ class _QuoteBlock extends StatelessWidget {
             const SizedBox(height: 4),
             Text(
               title,
-              style: Theme.of(context).textTheme.bodyMedium
-                  ?.copyWith(color: colors.muted),
+              style: Theme.of(
+                context,
+              ).textTheme.bodyMedium?.copyWith(color: colors.muted),
             ),
           ],
         ],

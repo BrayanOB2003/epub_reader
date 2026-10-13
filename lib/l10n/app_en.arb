@@ -338,5 +338,12 @@
   "monthBandEvidence": "{percent}% of your reading was in that part of the day.",
   "monthNomad": "Nomad reader",
   "monthNomadPhrase": "Any moment is a good moment to open a book.",
-  "monthNomadEvidence": "No part of the day reaches 60%."
+  "monthNomadEvidence": "No part of the day reaches 60%.",
+  "appearance": "Appearance",
+  "themePrograma": "Program",
+  "themeLibro": "Book",
+  "themeCuaderno": "Notebook",
+  "themePeriodico": "Newspaper",
+  "themeFicha": "Card",
+  "themeChangeFailed": "The appearance could not be changed."
 }

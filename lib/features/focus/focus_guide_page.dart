@@ -77,7 +77,11 @@ class _FocusGuidePageState extends ConsumerState<FocusGuidePage> {
                         padding: const EdgeInsets.fromLTRB(0, 20, 16, 20),
                         child: Text(
                           l10n.focusGuideTitle,
-                          style: programTitle(colors.onStation, size: 40),
+                          style: programTitle(
+                            context,
+                            colors.onStation,
+                            size: 40,
+                          ),
                         ),
                       ),
                     ),

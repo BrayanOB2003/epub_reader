@@ -86,8 +86,9 @@ class _DiscoverPageState extends ConsumerState<DiscoverPage> {
 
   void _showMessage(String message) {
     if (!mounted) return;
-    ScaffoldMessenger.of(context)
-        .showSnackBar(SnackBar(content: Text(message)));
+    ScaffoldMessenger.of(
+      context,
+    ).showSnackBar(SnackBar(content: Text(message)));
   }
 
   @override
@@ -245,7 +246,7 @@ class _SectionTitle extends StatelessWidget {
       padding: const EdgeInsets.fromLTRB(20, 16, 20, 8),
       child: Text(
         label,
-        style: programTitle(ScheduleColors.of(context).ink, size: 22),
+        style: programTitle(context, ScheduleColors.of(context).ink, size: 22),
       ),
     );
   }
@@ -264,8 +265,9 @@ class _GenreLabel extends StatelessWidget {
         header: true,
         child: Text(
           label,
-          style: Theme.of(context).textTheme.labelLarge
-              ?.copyWith(color: ScheduleColors.of(context).muted),
+          style: Theme.of(context).textTheme.labelLarge?.copyWith(
+            color: ScheduleColors.of(context).muted,
+          ),
         ),
       ),
     );
@@ -386,15 +388,18 @@ class _LanguageChip extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) {
+    final radius = scheduleRadius(context);
     return Semantics(
       button: true,
       selected: selected,
       child: InkWell(
         onTap: onTap,
+        customBorder: RoundedRectangleBorder(borderRadius: radius),
         child: DecoratedBox(
           decoration: BoxDecoration(
             color: selected ? colors.station : colors.paper,
             border: Border.all(color: selected ? colors.station : colors.rule),
+            borderRadius: radius,
           ),
           child: ConstrainedBox(
             constraints: const BoxConstraints(minHeight: 44, minWidth: 44),
@@ -402,8 +407,9 @@ class _LanguageChip extends StatelessWidget {
               padding: const EdgeInsets.symmetric(horizontal: 14, vertical: 10),
               child: Text(
                 label,
-                style: Theme.of(context).textTheme.labelLarge
-                    ?.copyWith(color: selected ? colors.onStation : colors.ink),
+                style: Theme.of(context).textTheme.labelLarge?.copyWith(
+                  color: selected ? colors.onStation : colors.ink,
+                ),
               ),
             ),
           ),
