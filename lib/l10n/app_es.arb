@@ -403,5 +403,35 @@
   },
   "keepReading": "Seguir leyendo",
   "leaveReader": "Salir",
-  "tableView": "Tabla"
+  "tableView": "Tabla",
+  "bookTimeLeft": "Faltan ~{duration}",
+  "@bookTimeLeft": {
+    "placeholders": {
+      "duration": {"type": "String"}
+    }
+  },
+  "bookPacePerTen": "~{duration} por cada 10 %",
+  "@bookPacePerTen": {
+    "placeholders": {
+      "duration": {"type": "String"}
+    }
+  },
+  "bookUnderAWeek": "A este ritmo, menos de una semana",
+  "bookWeekLeft": "A este ritmo, una semana",
+  "bookWeeksLeft": "A este ritmo, unas {count} semanas",
+  "@bookWeeksLeft": {
+    "placeholders": {
+      "count": {"type": "int"}
+    }
+  },
+  "bookSittingLeft": "Una lectura como las últimas",
+  "readingByBook": "Por libro",
+  "allReadingBooks": "Todos los libros",
+  "readingByBookEmpty": "Todavía no hay un libro con tiempo de lectura.",
+  "bookSittingsLeft": "Unas {count} lecturas como las últimas",
+  "@bookSittingsLeft": {
+    "placeholders": {
+      "count": {"type": "int"}
+    }
+  }
 }

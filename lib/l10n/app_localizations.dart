@@ -1555,6 +1555,66 @@ abstract class AppLocalizations {
   /// In es, this message translates to:
   /// **'Tabla'**
   String get tableView;
+
+  /// No description provided for @bookTimeLeft.
+  ///
+  /// In es, this message translates to:
+  /// **'Faltan ~{duration}'**
+  String bookTimeLeft(String duration);
+
+  /// No description provided for @bookPacePerTen.
+  ///
+  /// In es, this message translates to:
+  /// **'~{duration} por cada 10 %'**
+  String bookPacePerTen(String duration);
+
+  /// No description provided for @bookUnderAWeek.
+  ///
+  /// In es, this message translates to:
+  /// **'A este ritmo, menos de una semana'**
+  String get bookUnderAWeek;
+
+  /// No description provided for @bookWeekLeft.
+  ///
+  /// In es, this message translates to:
+  /// **'A este ritmo, una semana'**
+  String get bookWeekLeft;
+
+  /// No description provided for @bookWeeksLeft.
+  ///
+  /// In es, this message translates to:
+  /// **'A este ritmo, unas {count} semanas'**
+  String bookWeeksLeft(int count);
+
+  /// No description provided for @bookSittingLeft.
+  ///
+  /// In es, this message translates to:
+  /// **'Una lectura como las últimas'**
+  String get bookSittingLeft;
+
+  /// No description provided for @readingByBook.
+  ///
+  /// In es, this message translates to:
+  /// **'Por libro'**
+  String get readingByBook;
+
+  /// No description provided for @allReadingBooks.
+  ///
+  /// In es, this message translates to:
+  /// **'Todos los libros'**
+  String get allReadingBooks;
+
+  /// No description provided for @readingByBookEmpty.
+  ///
+  /// In es, this message translates to:
+  /// **'Todavía no hay un libro con tiempo de lectura.'**
+  String get readingByBookEmpty;
+
+  /// No description provided for @bookSittingsLeft.
+  ///
+  /// In es, this message translates to:
+  /// **'Unas {count} lecturas como las últimas'**
+  String bookSittingsLeft(int count);
 }
 
 class _AppLocalizationsDelegate

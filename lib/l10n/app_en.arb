@@ -296,5 +296,15 @@
   "chapterMinutesAlmostDoneNamed": "About {minutes} min left to finish “{title}”.",
   "keepReading": "Keep reading",
   "leaveReader": "Leave",
-  "tableView": "Table"
+  "tableView": "Table",
+  "bookTimeLeft": "About {duration} left",
+  "bookPacePerTen": "~{duration} per 10%",
+  "bookUnderAWeek": "At this pace, less than a week",
+  "bookWeekLeft": "At this pace, a week",
+  "bookWeeksLeft": "At this pace, about {count} weeks",
+  "readingByBook": "By book",
+  "allReadingBooks": "All books",
+  "readingByBookEmpty": "No book has reading time yet.",
+  "bookSittingLeft": "One session like the recent ones",
+  "bookSittingsLeft": "About {count} sessions like the recent ones"
 }

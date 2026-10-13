@@ -827,4 +827,43 @@ class AppLocalizationsEs extends AppLocalizations {
 
   @override
   String get tableView => 'Tabla';
+
+  @override
+  String bookTimeLeft(String duration) {
+    return 'Faltan ~$duration';
+  }
+
+  @override
+  String bookPacePerTen(String duration) {
+    return '~$duration por cada 10 %';
+  }
+
+  @override
+  String get bookUnderAWeek => 'A este ritmo, menos de una semana';
+
+  @override
+  String get bookWeekLeft => 'A este ritmo, una semana';
+
+  @override
+  String bookWeeksLeft(int count) {
+    return 'A este ritmo, unas $count semanas';
+  }
+
+  @override
+  String get bookSittingLeft => 'Una lectura como las últimas';
+
+  @override
+  String get readingByBook => 'Por libro';
+
+  @override
+  String get allReadingBooks => 'Todos los libros';
+
+  @override
+  String get readingByBookEmpty =>
+      'Todavía no hay un libro con tiempo de lectura.';
+
+  @override
+  String bookSittingsLeft(int count) {
+    return 'Unas $count lecturas como las últimas';
+  }
 }

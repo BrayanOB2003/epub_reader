@@ -1,4 +1,5 @@
 import 'package:epub_reader/core/database/app_database.dart';
+import 'package:epub_reader/features/habits/reading_estimate.dart';
 
 class BookReadingTime {
   const BookReadingTime({
@@ -38,6 +39,178 @@ List<BookReadingTime> readingTimeByBook({
     (a, b) => b.sessions.first.endedAt.compareTo(a.sessions.first.endedAt),
   );
   return records;
+}
+
+const _horizonMinSessions = 3;
+const _horizonMinDays = 2;
+const _horizonWindowDays = 14;
+const _horizonWeekSpanDays = 7;
+
+/// Below this, a week-rate is still "less than a week", not "one week".
+const _underAWeek = 0.75;
+
+enum ReadingHorizonKind { underAWeek, weeks, sittings }
+
+class ReadingHorizon {
+  const ReadingHorizon.underAWeek()
+    : kind = ReadingHorizonKind.underAWeek,
+      count = null;
+
+  const ReadingHorizon.weeks(int this.count) : kind = ReadingHorizonKind.weeks;
+
+  const ReadingHorizon.sittings(int this.count)
+    : kind = ReadingHorizonKind.sittings;
+
+  final ReadingHorizonKind kind;
+  final int? count;
+}
+
+class BookReadingPace {
+  const BookReadingPace({
+    this.remainingMinutes,
+    this.minutesPerTenPercent,
+    this.horizon,
+  });
+
+  final int? remainingMinutes;
+  final int? minutesPerTenPercent;
+  final ReadingHorizon? horizon;
+}
+
+class BookReadingReport {
+  const BookReadingReport({
+    required this.book,
+    required this.engagedSeconds,
+    required this.pace,
+  });
+
+  final Book book;
+  final int engagedSeconds;
+  final BookReadingPace pace;
+}
+
+/// Every library book that has a session, newest visit first.
+List<BookReadingReport> bookReadingReports({
+  required List<Book> books,
+  required List<ReadingSession> sessions,
+  required DateTime now,
+}) {
+  final byId = {for (final book in books) book.id: book};
+  final grouped = readingTimeByBook(
+    titles: {for (final book in books) book.id: book.title},
+    sessions: sessions,
+  );
+  final reports = <BookReadingReport>[];
+  for (final record in grouped) {
+    final book = byId[record.bookId];
+    if (book == null) continue;
+    reports.add(
+      BookReadingReport(
+        book: book,
+        engagedSeconds: record.engagedSeconds,
+        pace: bookReadingPace(
+          engagedSeconds: record.engagedSeconds,
+          progress: book.progress,
+          sessions: record.sessions,
+          now: now,
+        ),
+      ),
+    );
+  }
+  return reports;
+}
+
+/// The book of the latest session that is still in the library.
+BookReadingReport? currentBookReading({
+  required List<Book> books,
+  required List<ReadingSession> sessions,
+  required DateTime now,
+}) {
+  final reports = bookReadingReports(
+    books: books,
+    sessions: sessions,
+    now: now,
+  );
+  if (reports.isEmpty) return null;
+  return reports.first;
+}
+
+/// Remaining time and pace share [estimateReading]. The horizon uses only
+/// recent sessions of this book, and stays empty until several of them fall
+/// on more than one day.
+BookReadingPace bookReadingPace({
+  required int engagedSeconds,
+  required double progress,
+  required List<ReadingSession> sessions,
+  required DateTime now,
+}) {
+  final remaining = estimateReading(
+    engagedSeconds: engagedSeconds,
+    progress: progress,
+  ).bookMinutes;
+  return BookReadingPace(
+    remainingMinutes: remaining,
+    minutesPerTenPercent: _minutesPerTenPercent(
+      engagedSeconds: engagedSeconds,
+      progress: progress,
+    ),
+    horizon: remaining == null
+        ? null
+        : _horizon(remainingMinutes: remaining, sessions: sessions, now: now),
+  );
+}
+
+int? _minutesPerTenPercent({
+  required int engagedSeconds,
+  required double progress,
+}) {
+  if (engagedSeconds < readingEstimateMinSeconds) return null;
+  if (progress < readingEstimateMinProgress || progress >= 1) return null;
+  return readingMinutes((engagedSeconds / progress * 0.1).round());
+}
+
+ReadingHorizon? _horizon({
+  required int remainingMinutes,
+  required List<ReadingSession> sessions,
+  required DateTime now,
+}) {
+  final today = _localDate(now);
+  final windowStart = today.subtract(
+    const Duration(days: _horizonWindowDays - 1),
+  );
+  final recent = [
+    for (final session in sessions)
+      if (!_localDate(session.startedAt).isBefore(windowStart)) session,
+  ];
+  if (recent.length < _horizonMinSessions) return null;
+  final days = <DateTime>{
+    for (final session in recent) _localDate(session.startedAt),
+  };
+  if (days.length < _horizonMinDays) return null;
+  final seconds = recent.fold<int>(
+    0,
+    (total, session) => total + session.engagedSeconds,
+  );
+  if (seconds <= 0) return null;
+
+  var earliest = days.first;
+  for (final day in days) {
+    if (day.isBefore(earliest)) earliest = day;
+  }
+  final spanDays = _calendarDaysBetween(earliest, today) + 1;
+  if (spanDays < 1) return null;
+  if (spanDays < _horizonWeekSpanDays) {
+    final averageMinutes = seconds / recent.length / 60;
+    if (averageMinutes <= 0) return null;
+    final sittings = remainingMinutes / averageMinutes;
+    return ReadingHorizon.sittings(sittings.round().clamp(1, 9999));
+  }
+
+  final weeklyMinutes = (seconds / 60) / (spanDays / 7);
+  if (weeklyMinutes <= 0) return null;
+  final weeks = remainingMinutes / weeklyMinutes;
+  if (weeks < _underAWeek) return const ReadingHorizon.underAWeek();
+  return ReadingHorizon.weeks(weeks.round().clamp(1, 9999));
 }
 
 class DailyReading {
