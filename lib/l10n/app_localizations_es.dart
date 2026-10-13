@@ -880,6 +880,9 @@ class AppLocalizationsEs extends AppLocalizations {
       'El resumen aparece al cerrar un mes con lectura.';
 
   @override
+  String get monthInProgress => 'En curso';
+
+  @override
   String monthPlanDays(String month, int met, int planned) {
     return 'En $month cumpliste $met de $planned días de tu plan.';
   }

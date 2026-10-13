@@ -151,6 +151,27 @@ final appRouterProvider = Provider<GoRouter>((ref) {
                     path: 'month',
                     name: 'month-reading',
                     builder: (context, state) => const MonthReadingPage(),
+                    routes: [
+                      GoRoute(
+                        path: ':year/:month',
+                        name: 'month-reading-at',
+                        builder: (context, state) {
+                          final year = int.tryParse(
+                            state.pathParameters['year'] ?? '',
+                          );
+                          final month = int.tryParse(
+                            state.pathParameters['month'] ?? '',
+                          );
+                          if (year == null ||
+                              month == null ||
+                              month < 1 ||
+                              month > 12) {
+                            return const MonthReadingPage();
+                          }
+                          return MonthReadingPage(month: DateTime(year, month));
+                        },
+                      ),
+                    ],
                   ),
                 ],
               ),

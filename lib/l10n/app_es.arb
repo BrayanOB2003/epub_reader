@@ -442,6 +442,7 @@
     }
   },
   "monthReadingEmpty": "El resumen aparece al cerrar un mes con lectura.",
+  "monthInProgress": "En curso",
   "monthPlanDays": "En {month} cumpliste {met} de {planned} días de tu plan.",
   "@monthPlanDays": {
     "placeholders": {

@@ -3,6 +3,7 @@ import 'package:epub_reader/core/database/app_database.dart';
 import 'package:epub_reader/features/habits/month_reading.dart';
 import 'package:epub_reader/features/habits/month_reading_card.dart';
 import 'package:epub_reader/features/habits/month_reading_page.dart';
+import 'package:epub_reader/features/habits/month_report_document.dart';
 import 'package:epub_reader/features/habits/reading_time.dart';
 import 'package:epub_reader/features/profile/reading_routine.dart';
 import 'package:epub_reader/l10n/app_localizations.dart';
@@ -273,6 +274,63 @@ void main() {
     expect(report?.plannedDays, 30);
   });
 
+  test('a new goal applies from the day it is saved', () {
+    final report = _report(
+      plans: [
+        _plan(goal: 10, effectiveAt: DateTime(2026, 9, 1)),
+        _plan(goal: 30, effectiveAt: DateTime(2026, 10, 20, 8)),
+      ],
+      sessions: [
+        for (var day = 1; day <= 31; day++)
+          _session(id: day, at: DateTime(2026, 10, day, 21), seconds: 10 * 60),
+      ],
+    );
+
+    expect(report?.plannedDays, 31);
+    expect(report?.metDays, 19);
+  });
+
+  test('a plan version from the next month leaves this month alone', () {
+    final report = _report(
+      plans: [
+        _plan(goal: 10),
+        _plan(goal: 60, effectiveAt: DateTime(2026, 11, 1, 9)),
+      ],
+      sessions: [
+        for (var day = 1; day <= 31; day++)
+          _session(id: day, at: DateTime(2026, 10, day, 21), seconds: 10 * 60),
+      ],
+    );
+
+    expect(report?.metDays, 31);
+    expect(report?.plannedDays, 31);
+  });
+
+  test('two hours in one month is not methodical', () {
+    final report = _report(
+      plans: [
+        _plan(hour: 15, effectiveAt: DateTime(2026, 9, 1)),
+        _plan(hour: 21, effectiveAt: DateTime(2026, 10, 5, 8)),
+      ],
+      sessions: [
+        for (var day = 1; day <= 8; day++)
+          _session(id: day, at: DateTime(2026, 10, day, 15), seconds: 10 * 60),
+      ],
+    );
+
+    expect(report?.archetype?.kind, isNot(MonthArchetype.methodical));
+  });
+
+  test('the comparison can use an archived previous month', () {
+    final report = _report(
+      sessions: [_session(id: 1, at: DateTime(2026, 10, 3, 21), seconds: 3600)],
+      archivedPreviousSeconds: 3 * 3600,
+    );
+
+    expect(report?.minuteDeltaSeconds, -2 * 3600);
+    expect(report?.comparedMonth, DateTime(2026, 9));
+  });
+
   test('a finished book has no horizon and an open one keeps the weeks', () {
     final now = DateTime(2026, 11, 2, 18);
     final sessions = [
@@ -334,10 +392,11 @@ void main() {
       ],
     );
 
-    expect(
-      report?.books.map((book) => book.title).toList(),
-      ['Largo', 'Medio', 'Corto'],
-    );
+    expect(report?.books.map((book) => book.title).toList(), [
+      'Largo',
+      'Medio',
+      'Corto',
+    ]);
   });
 
   test('the latest quote of the month is kept', () {
@@ -453,6 +512,73 @@ void main() {
     expect(find.text('Compartir'), findsOneWidget);
   });
 
+  testWidgets('other months are listed under the review', (tester) async {
+    await tester.pumpWidget(
+      _app(
+        MonthReadingView(
+          report: MonthReadingReport(
+            month: DateTime(2026, 9),
+            closed: true,
+            engagedSeconds: 60,
+            books: const [],
+          ),
+          links: [
+            MonthLink(DateTime(2026, 10), draft: true),
+            MonthLink(DateTime(2026, 8)),
+          ],
+          onRead: (_) {},
+          onOpenMonth: (_) {},
+          onShare: (_, _) {},
+        ),
+      ),
+    );
+
+    expect(find.text('Octubre'), findsOneWidget);
+    expect(find.text('En curso'), findsOneWidget);
+    expect(find.text('Agosto'), findsOneWidget);
+  });
+
+  test('a closed report keeps its facts when encoded', () {
+    final report = MonthReadingReport(
+      month: DateTime(2026, 9),
+      closed: true,
+      engagedSeconds: 100,
+      metDays: 28,
+      plannedDays: 30,
+      minuteDeltaSeconds: -60,
+      comparedMonth: DateTime(2026, 8),
+      books: const [
+        MonthBookLine(
+          bookId: 4,
+          title: 'Faro',
+          engagedSeconds: 600,
+          progress: 0.4,
+          finished: false,
+          horizon: ReadingHorizon.weeks(3),
+        ),
+      ],
+      archetype: const MonthArchetypeReport(
+        kind: MonthArchetype.ant,
+        evidence: AntEvidence(metDays: 28, plannedDays: 30),
+      ),
+      quote: const MonthQuoteLine(passage: 'Calma', bookTitle: 'Faro'),
+    );
+
+    final decoded = decodeMonthReport(
+      encodeMonthReport(report),
+      month: DateTime(2026, 9),
+    );
+
+    expect(decoded.metDays, 28);
+    expect(decoded.plannedDays, 30);
+    expect(decoded.minuteDeltaSeconds, -60);
+    expect(decoded.comparedMonth, DateTime(2026, 8));
+    expect(decoded.books.single.title, 'Faro');
+    expect(decoded.books.single.horizon?.count, 3);
+    expect(decoded.archetype?.kind, MonthArchetype.ant);
+    expect(decoded.quote?.passage, 'Calma');
+  });
+
   testWidgets('without a month the review says when it appears', (
     tester,
   ) async {
@@ -487,25 +613,32 @@ void main() {
 MonthReadingReport? _report({
   required List<ReadingSession> sessions,
   DateTime? now,
-  MonthPlan? plan,
+  MonthPlanVersion? plan,
+  List<MonthPlanVersion>? plans,
   List<Book> books = const [],
   List<MonthQuoteInput> quotes = const [],
+  DateTime? month,
+  int? archivedPreviousSeconds,
 }) {
   return monthReadingReport(
     sessions: sessions,
     books: books,
     quotes: quotes,
-    plan: plan,
+    plans: plans ?? [if (plan != null) plan],
     now: now ?? DateTime(2026, 11, 2, 12),
+    month: month,
+    archivedPreviousSeconds: archivedPreviousSeconds,
   );
 }
 
-MonthPlan _plan({
+MonthPlanVersion _plan({
   int goal = 10,
   int? hour = 15,
   Set<ReadingWeekday> weekdays = defaultReadingWeekdays,
+  DateTime? effectiveAt,
 }) {
-  return MonthPlan(
+  return MonthPlanVersion(
+    effectiveAt: effectiveAt ?? DateTime.utc(2020, 1, 1),
     dailyGoalMinutes: goal,
     routineHour: hour,
     weekdays: weekdays,

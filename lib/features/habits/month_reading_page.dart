@@ -6,17 +6,28 @@ import 'package:epub_reader/features/analytics/analytics_events.dart';
 import 'package:epub_reader/features/habits/book_reading_block.dart';
 import 'package:epub_reader/features/habits/month_reading.dart';
 import 'package:epub_reader/features/habits/month_reading_card.dart';
+import 'package:epub_reader/features/habits/month_report_document.dart';
+import 'package:epub_reader/features/habits/month_report_store.dart';
 import 'package:epub_reader/features/habits/reading_time.dart';
 import 'package:epub_reader/features/library/data/book_repository.dart';
-import 'package:epub_reader/features/profile/reader_profile_store.dart';
 import 'package:epub_reader/features/profile/reading_routine.dart';
 import 'package:epub_reader/l10n/app_localizations.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:go_router/go_router.dart';
 
+class MonthLink {
+  const MonthLink(this.month, {this.draft = false});
+
+  final DateTime month;
+  final bool draft;
+}
+
 class MonthReadingPage extends ConsumerStatefulWidget {
-  const MonthReadingPage({super.key});
+  const MonthReadingPage({this.month, super.key});
+
+  /// The month to show. Empty opens the month currently on review.
+  final DateTime? month;
 
   @override
   ConsumerState<MonthReadingPage> createState() => _MonthReadingPageState();
@@ -25,6 +36,7 @@ class MonthReadingPage extends ConsumerStatefulWidget {
 class _MonthReadingPageState extends ConsumerState<MonthReadingPage> {
   final _export = MonthCardExport();
   var _sharing = false;
+  var _closing = false;
 
   @override
   Widget build(BuildContext context) {
@@ -32,7 +44,8 @@ class _MonthReadingPageState extends ConsumerState<MonthReadingPage> {
     final sessions = ref.watch(readingSessionsProvider);
     final books = ref.watch(booksProvider);
     final quotes = ref.watch(savedQuotesProvider);
-    final profile = ref.watch(readerProfileProvider);
+    final reports = ref.watch(monthReportsProvider);
+    final plans = ref.watch(readingPlanVersionsProvider);
     return Scaffold(
       body: SafeArea(
         bottom: false,
@@ -51,7 +64,8 @@ class _MonthReadingPageState extends ConsumerState<MonthReadingPage> {
                 sessions: sessions,
                 books: books,
                 quotes: quotes,
-                profile: profile,
+                reports: reports,
+                plans: plans,
               ),
             ),
           ],
@@ -66,7 +80,8 @@ class _MonthReadingPageState extends ConsumerState<MonthReadingPage> {
     required AsyncValue<List<ReadingSession>> sessions,
     required AsyncValue<List<Book>> books,
     required AsyncValue<List<ReadingQuote>> quotes,
-    required AsyncValue<ReaderProfile?> profile,
+    required AsyncValue<List<MonthReport>> reports,
+    required AsyncValue<List<ReadingPlanVersion>> plans,
   }) {
     if (sessions.hasError) {
       return _Message(text: l10n.readingTimeLoadFailed('${sessions.error}'));
@@ -77,45 +92,201 @@ class _MonthReadingPageState extends ConsumerState<MonthReadingPage> {
     if (quotes.hasError) {
       return _Message(text: l10n.readingTimeLoadFailed('${quotes.error}'));
     }
-    if (profile.hasError) {
-      return _Message(text: l10n.profileLoadFailed('${profile.error}'));
+    if (reports.hasError) {
+      return _Message(text: l10n.readingTimeLoadFailed('${reports.error}'));
+    }
+    if (plans.hasError) {
+      return _Message(text: l10n.readingTimeLoadFailed('${plans.error}'));
     }
     if (!sessions.hasValue ||
         !books.hasValue ||
         !quotes.hasValue ||
-        !profile.hasValue) {
+        !reports.hasValue ||
+        !plans.hasValue) {
       return const Center(child: CircularProgressIndicator());
     }
-    final saved = profile.requireValue;
-    final report = monthReadingReport(
-      sessions: sessions.requireValue,
-      books: books.requireValue,
-      quotes: [
-        for (final quote in quotes.requireValue)
-          MonthQuoteInput(
-            id: quote.id,
-            bookId: quote.bookId,
-            savedAt: quote.savedAt,
-            text: quote.text,
-            bookTitle: quote.bookTitle,
-          ),
-      ],
-      plan: saved == null
-          ? null
-          : MonthPlan(
-              dailyGoalMinutes: saved.dailyGoalMinutes,
-              routineHour: saved.routineHour,
-              weekdays: monthPlanWeekdays(saved.routineDays),
-            ),
-      now: DateTime.now(),
+    final now = DateTime.now();
+    final sessionRows = sessions.requireValue;
+    final bookRows = books.requireValue;
+    final reportRows = reports.requireValue;
+    final quoteRows = [
+      for (final quote in quotes.requireValue)
+        MonthQuoteInput(
+          id: quote.id,
+          bookId: quote.bookId,
+          savedAt: quote.savedAt,
+          text: quote.text,
+          bookTitle: quote.bookTitle,
+        ),
+    ];
+    final planRows = [
+      for (final plan in plans.requireValue)
+        MonthPlanVersion(
+          effectiveAt: plan.effectiveAt,
+          dailyGoalMinutes: plan.dailyGoalMinutes,
+          routineHour: plan.routineHour,
+          weekdays: monthPlanWeekdays(plan.routineDays),
+        ),
+    ];
+    final archived = [
+      for (final row in reportRows) DateTime(row.year, row.month),
+    ];
+    final selected =
+        widget.month ?? monthOnReview(sessions: sessionRows, now: now);
+    if (_elapsedPending(sessionRows, archived, now)) {
+      _closeElapsed(
+        sessions: sessionRows,
+        books: bookRows,
+        quotes: quoteRows,
+        plans: planRows,
+        now: now,
+      );
+    }
+    if (selected != null &&
+        monthSnapshotPending(
+          month: selected,
+          sessions: sessionRows,
+          archived: archived,
+          now: now,
+        )) {
+      return const Center(child: CircularProgressIndicator());
+    }
+    final report = _shown(
+      selected: selected,
+      reports: reportRows,
+      sessions: sessionRows,
+      books: bookRows,
+      quotes: quoteRows,
+      plans: planRows,
+      now: now,
     );
     return MonthReadingView(
       report: report,
+      links: _links(
+        selected: selected,
+        reports: reportRows,
+        sessions: sessionRows,
+        now: now,
+      ),
       sharing: _sharing,
       onRead: (bookId) =>
           context.push(readingRoute(bookId, readingSourceLibrary)),
+      onOpenMonth: (month) =>
+          context.replace('/profile/month/${month.year}/${month.month}'),
       onShare: (copy, origin) => _share(copy, origin),
     );
+  }
+
+  bool _elapsedPending(
+    List<ReadingSession> sessions,
+    List<DateTime> archived,
+    DateTime now,
+  ) {
+    final current = readingMonthOf(now);
+    final seen = <DateTime>{};
+    for (final session in sessions) {
+      final month = readingMonthOf(session.startedAt);
+      if (!month.isBefore(current) || !seen.add(month)) continue;
+      if (monthSnapshotPending(
+        month: month,
+        sessions: sessions,
+        archived: archived,
+        now: now,
+      )) {
+        return true;
+      }
+    }
+    return false;
+  }
+
+  void _closeElapsed({
+    required List<ReadingSession> sessions,
+    required List<Book> books,
+    required List<MonthQuoteInput> quotes,
+    required List<MonthPlanVersion> plans,
+    required DateTime now,
+  }) {
+    if (_closing) return;
+    _closing = true;
+    ref
+        .read(monthReportStoreProvider)
+        .closeElapsed(
+          sessions: sessions,
+          books: books,
+          quotes: quotes,
+          plans: plans,
+          now: now,
+        )
+        .whenComplete(() {
+          if (!mounted) return;
+          setState(() => _closing = false);
+        });
+  }
+
+  MonthReadingReport? _shown({
+    required DateTime? selected,
+    required List<MonthReport> reports,
+    required List<ReadingSession> sessions,
+    required List<Book> books,
+    required List<MonthQuoteInput> quotes,
+    required List<MonthPlanVersion> plans,
+    required DateTime now,
+  }) {
+    if (selected == null) return null;
+    final saved = _stored(reports, selected);
+    if (saved != null && monthIsClosed(selected, now)) {
+      return monthReportInLibrary(
+        decodeMonthReport(saved.document, month: selected),
+        books,
+      );
+    }
+    if (monthIsClosed(selected, now)) return null;
+    final previous = DateTime(selected.year, selected.month - 1);
+    final archivedPrevious = _stored(reports, previous);
+    return monthReadingReport(
+      sessions: sessions,
+      books: books,
+      quotes: quotes,
+      plans: plans,
+      now: now,
+      month: selected,
+      archivedPreviousSeconds: archivedPrevious == null
+          ? null
+          : decodeMonthReport(
+              archivedPrevious.document,
+              month: previous,
+            ).engagedSeconds,
+    );
+  }
+
+  List<MonthLink> _links({
+    required DateTime? selected,
+    required List<MonthReport> reports,
+    required List<ReadingSession> sessions,
+    required DateTime now,
+  }) {
+    final current = readingMonthOf(now);
+    final links = <MonthLink>[];
+    if (monthHasReading(sessions, current) && !_sameMonth(selected, current)) {
+      links.add(MonthLink(current, draft: true));
+    }
+    for (final row in reports) {
+      final month = DateTime(row.year, row.month);
+      if (_sameMonth(selected, month)) continue;
+      links.add(MonthLink(month));
+    }
+    return links;
+  }
+
+  MonthReport? _stored(List<MonthReport> reports, DateTime month) {
+    for (final row in reports) {
+      if (row.year == month.year && row.month == month.month) return row;
+    }
+    return null;
+  }
+
+  bool _sameMonth(DateTime? left, DateTime right) {
+    return left != null && left.year == right.year && left.month == right.month;
   }
 
   Future<void> _share(MonthCardCopy copy, Rect? origin) async {
@@ -129,9 +300,8 @@ class _MonthReadingPageState extends ConsumerState<MonthReadingPage> {
       await _export.share(file.path, origin: origin);
     } catch (_) {
       if (!mounted) return;
-      ScaffoldMessenger.of(
-        context,
-      ).showSnackBar(SnackBar(content: Text(l10n.monthShareFailed)));
+      ScaffoldMessenger.of(context)
+          .showSnackBar(SnackBar(content: Text(l10n.monthShareFailed)));
     } finally {
       if (mounted) setState(() => _sharing = false);
     }
@@ -143,6 +313,8 @@ class MonthReadingView extends StatelessWidget {
     required this.report,
     required this.onRead,
     required this.onShare,
+    this.links = const [],
+    this.onOpenMonth,
     this.sharing = false,
     super.key,
   });
@@ -150,6 +322,8 @@ class MonthReadingView extends StatelessWidget {
   final MonthReadingReport? report;
   final ValueChanged<int> onRead;
   final void Function(MonthCardCopy copy, Rect? origin) onShare;
+  final List<MonthLink> links;
+  final ValueChanged<DateTime>? onOpenMonth;
   final bool sharing;
 
   @override
@@ -159,12 +333,19 @@ class MonthReadingView extends StatelessWidget {
     final code = Localizations.localeOf(context).languageCode;
     if (report == null) {
       return ListView(
+        padding: const EdgeInsets.only(bottom: 24),
         children: [
           ScheduleHeader(title: l10n.monthReading),
           const ScheduleRule(),
           Padding(
             padding: const EdgeInsets.all(24),
             child: Text(l10n.monthReadingEmpty, textAlign: TextAlign.center),
+          ),
+          ..._monthLinks(
+            context,
+            links: links,
+            onOpenMonth: onOpenMonth,
+            selected: null,
           ),
         ],
       );
@@ -196,9 +377,8 @@ class MonthReadingView extends StatelessWidget {
                 const SizedBox(height: 8),
                 Text(
                   _comparison(l10n, report, code),
-                  style: Theme.of(context).textTheme.bodyMedium?.copyWith(
-                    color: ScheduleColors.of(context).muted,
-                  ),
+                  style: Theme.of(context).textTheme.bodyMedium
+                      ?.copyWith(color: ScheduleColors.of(context).muted),
                 ),
               ],
             ],
@@ -212,7 +392,7 @@ class MonthReadingView extends StatelessWidget {
             trailing: formatReadingDuration(book.engagedSeconds),
             cover: book.coverBytes,
             progress: book.progress,
-            onTap: () => onRead(book.bookId),
+            onTap: book.available ? () => onRead(book.bookId) : null,
           ),
         if (archetype != null) ...[
           if (report.books.isEmpty) const ScheduleRule(),
@@ -252,6 +432,12 @@ class MonthReadingView extends StatelessWidget {
             );
           },
         ),
+        ..._monthLinks(
+          context,
+          links: links,
+          onOpenMonth: onOpenMonth,
+          selected: report.month,
+        ),
       ],
     );
   }
@@ -283,9 +469,8 @@ class _ArchetypeBlock extends StatelessWidget {
           const SizedBox(height: 4),
           Text(
             _archetypeEvidence(l10n, report.evidence),
-            style: Theme.of(
-              context,
-            ).textTheme.bodyMedium?.copyWith(color: colors.muted),
+            style: Theme.of(context).textTheme.bodyMedium
+                ?.copyWith(color: colors.muted),
           ),
         ],
       ),
@@ -317,9 +502,8 @@ class _QuoteBlock extends StatelessWidget {
             const SizedBox(height: 4),
             Text(
               title,
-              style: Theme.of(
-                context,
-              ).textTheme.bodyMedium?.copyWith(color: colors.muted),
+              style: Theme.of(context).textTheme.bodyMedium
+                  ?.copyWith(color: colors.muted),
             ),
           ],
         ],
@@ -443,4 +627,38 @@ Rect? _shareOrigin(BuildContext context) {
   final box = context.findRenderObject() as RenderBox?;
   if (box == null || !box.hasSize) return null;
   return box.localToGlobal(Offset.zero) & box.size;
+}
+
+List<Widget> _monthLinks(
+  BuildContext context, {
+  required List<MonthLink> links,
+  required ValueChanged<DateTime>? onOpenMonth,
+  required DateTime? selected,
+}) {
+  final open = onOpenMonth;
+  if (links.isEmpty || open == null) return const [];
+  final l10n = AppLocalizations.of(context);
+  final code = Localizations.localeOf(context).languageCode;
+  final years = <int>{
+    if (selected != null) selected.year,
+    for (final link in links) link.month.year,
+  };
+  final withYear = years.length > 1;
+  return [
+    for (final link in links) ...[
+      const ScheduleRule(),
+      ListTile(
+        key: ValueKey('month-${link.month.year}-${link.month.month}'),
+        contentPadding: const EdgeInsets.symmetric(horizontal: 20),
+        title: Text(
+          withYear
+              ? '${scheduleMonthTitle(link.month.month, code)} ${link.month.year}'
+              : scheduleMonthTitle(link.month.month, code),
+        ),
+        subtitle: link.draft ? Text(l10n.monthInProgress) : null,
+        onTap: () => open(link.month),
+      ),
+    ],
+    const ScheduleRule(),
+  ];
 }

@@ -79,16 +79,40 @@ class MonthArchetypeReport {
   final MonthArchetypeEvidence evidence;
 }
 
-class MonthPlan {
-  const MonthPlan({
+class MonthPlanVersion {
+  const MonthPlanVersion({
+    required this.effectiveAt,
     required this.dailyGoalMinutes,
     required this.routineHour,
     required this.weekdays,
   });
 
+  /// Instant the reader saved this goal, these days, and this hour.
+  final DateTime effectiveAt;
   final int dailyGoalMinutes;
   final int? routineHour;
   final Set<ReadingWeekday> weekdays;
+}
+
+/// The plan in effect on [day]: the latest version whose local date is that
+/// day or earlier. A later save on the same day replaces the earlier one.
+MonthPlanVersion? monthPlanOn(DateTime day, Iterable<MonthPlanVersion> plans) {
+  MonthPlanVersion? chosen;
+  for (final plan in plans) {
+    final start = _localDate(plan.effectiveAt);
+    if (start.isAfter(day)) continue;
+    if (chosen == null) {
+      chosen = plan;
+      continue;
+    }
+    final chosenStart = _localDate(chosen.effectiveAt);
+    if (start.isAfter(chosenStart) ||
+        (start == chosenStart &&
+            plan.effectiveAt.isAfter(chosen.effectiveAt))) {
+      chosen = plan;
+    }
+  }
+  return chosen;
 }
 
 class MonthQuoteInput {
@@ -116,6 +140,7 @@ class MonthBookLine {
     required this.finished,
     this.coverBytes,
     this.horizon,
+    this.available = true,
   });
 
   final int bookId;
@@ -125,6 +150,9 @@ class MonthBookLine {
   final double progress;
   final bool finished;
   final ReadingHorizon? horizon;
+
+  /// False when the book is gone from the library. The line stays.
+  final bool available;
 }
 
 class MonthQuoteLine {
@@ -185,36 +213,41 @@ DateTime? monthOnReview({
   final today = _localDate(now);
   final current = DateTime(today.year, today.month);
   final previous = DateTime(today.year, today.month - 1);
-  if (_monthHasSession(sessions, previous)) return previous;
-  if (_monthHasSession(sessions, current)) return current;
+  if (monthHasReading(sessions, previous)) return previous;
+  if (monthHasReading(sessions, current)) return current;
   return null;
 }
 
-/// One month of reading, judged against the plan that is saved now.
+/// One month of reading.
 ///
-/// The days of the plan are every chosen weekday in the calendar month, or up
-/// to today when the month is still open. Saving the plan again does not drop
-/// the days already lived.
+/// Each day uses the plan version in effect that day. A version dated after
+/// the month stays out of it. Days before the first version are not planned.
+/// Pass [month] to build a month other than the one on review. Pass
+/// [archivedPreviousSeconds] when the previous month is already closed, so
+/// the comparison uses that record.
 MonthReadingReport? monthReadingReport({
   required Iterable<ReadingSession> sessions,
   required Iterable<Book> books,
   required Iterable<MonthQuoteInput> quotes,
-  required MonthPlan? plan,
+  required Iterable<MonthPlanVersion> plans,
   required DateTime now,
+  DateTime? month,
+  int? archivedPreviousSeconds,
 }) {
-  final month = monthOnReview(sessions: sessions, now: now);
-  if (month == null) return null;
-  final today = _localDate(now);
-  final closed = month.year != today.year || month.month != today.month;
+  final chosen = month ?? monthOnReview(sessions: sessions, now: now);
+  if (chosen == null) return null;
+  final closed = monthIsClosed(chosen, now);
   final monthSessions = [
     for (final session in sessions)
-      if (_inMonth(_localDate(session.startedAt), month)) session,
+      if (_inMonth(_localDate(session.startedAt), chosen)) session,
   ];
+  if (monthSessions.isEmpty) return null;
   final engagedSeconds = monthSessions.fold<int>(
     0,
     (total, session) => total + session.engagedSeconds,
   );
-  final window = _window(month: month, today: today, closed: closed);
+  final today = _localDate(now);
+  final window = _window(month: chosen, today: today, closed: closed);
   final windowSessions = [
     for (final session in monthSessions)
       if (!_localDate(session.startedAt).isBefore(window.start) &&
@@ -226,16 +259,12 @@ MonthReadingReport? monthReadingReport({
     final day = _localDate(session.startedAt);
     daySeconds[day] = (daySeconds[day] ?? 0) + session.engagedSeconds;
   }
-  final goalSeconds = (plan?.dailyGoalMinutes ?? 0) * 60;
-  final planned = plan == null
-      ? (planned: 0, met: 0)
-      : _plannedDays(
-          start: window.start,
-          end: window.end,
-          weekdays: plan.weekdays,
-          daySeconds: daySeconds,
-          goalSeconds: goalSeconds,
-        );
+  final planned = _plannedDays(
+    start: window.start,
+    end: window.end,
+    plans: plans,
+    daySeconds: daySeconds,
+  );
   final windowQuotes = [
     for (final quote in quotes)
       if (!_localDate(quote.savedAt).isBefore(window.start) &&
@@ -244,22 +273,22 @@ MonthReadingReport? monthReadingReport({
   ];
   final slice = _Slice(
     closed: closed,
-    plan: plan,
+    plans: plans,
     windowSessions: windowSessions,
     daySeconds: daySeconds,
     windowQuotes: windowQuotes,
     plannedDays: planned.planned,
     metDays: planned.met,
-    goalSeconds: goalSeconds,
   );
   final delta = _delta(
     closed: closed,
-    month: month,
+    month: chosen,
     engagedSeconds: engagedSeconds,
     sessions: sessions,
+    archivedPreviousSeconds: archivedPreviousSeconds,
   );
   return MonthReadingReport(
-    month: month,
+    month: chosen,
     closed: closed,
     engagedSeconds: engagedSeconds,
     metDays: planned.planned > 0 ? planned.met : null,
@@ -273,30 +302,28 @@ MonthReadingReport? monthReadingReport({
       now: now,
     ),
     archetype: _archetype(slice),
-    quote: _quote(quotes, month),
+    quote: _quote(quotes, chosen),
   );
 }
 
 class _Slice {
   const _Slice({
     required this.closed,
-    required this.plan,
+    required this.plans,
     required this.windowSessions,
     required this.daySeconds,
     required this.windowQuotes,
     required this.plannedDays,
     required this.metDays,
-    required this.goalSeconds,
   });
 
   final bool closed;
-  final MonthPlan? plan;
+  final Iterable<MonthPlanVersion> plans;
   final List<ReadingSession> windowSessions;
   final Map<DateTime, int> daySeconds;
   final List<MonthQuoteInput> windowQuotes;
   final int plannedDays;
   final int metDays;
-  final int goalSeconds;
 }
 
 class _Delta {
@@ -320,9 +347,8 @@ class _Delta {
 ({int planned, int met}) _plannedDays({
   required DateTime start,
   required DateTime end,
-  required Set<ReadingWeekday> weekdays,
+  required Iterable<MonthPlanVersion> plans,
   required Map<DateTime, int> daySeconds,
-  required int goalSeconds,
 }) {
   var planned = 0;
   var met = 0;
@@ -331,9 +357,11 @@ class _Delta {
     !day.isAfter(end);
     day = day.add(const Duration(days: 1))
   ) {
-    if (!weekdays.any((weekday) => weekday.id == day.weekday)) continue;
+    final plan = monthPlanOn(day, plans);
+    if (plan == null) continue;
+    if (!plan.weekdays.any((weekday) => weekday.id == day.weekday)) continue;
     planned++;
-    if (_dayMet(daySeconds[day] ?? 0, goalSeconds)) met++;
+    if (_dayMet(daySeconds[day] ?? 0, plan.dailyGoalMinutes * 60)) met++;
   }
   return (planned: planned, met: met);
 }
@@ -346,13 +374,16 @@ _Delta? _delta({
   required DateTime month,
   required int engagedSeconds,
   required Iterable<ReadingSession> sessions,
+  int? archivedPreviousSeconds,
 }) {
   if (!closed) return null;
   final previous = DateTime(month.year, month.month - 1);
-  final previousSeconds = sessions.fold<int>(0, (total, session) {
-    if (!_inMonth(_localDate(session.startedAt), previous)) return total;
-    return total + session.engagedSeconds;
-  });
+  final previousSeconds =
+      archivedPreviousSeconds ??
+      sessions.fold<int>(0, (total, session) {
+        if (!_inMonth(_localDate(session.startedAt), previous)) return total;
+        return total + session.engagedSeconds;
+      });
   if (previousSeconds <= 0 || previousSeconds == engagedSeconds) return null;
   return _Delta(previous, engagedSeconds - previousSeconds);
 }
@@ -469,40 +500,49 @@ MonthArchetypeReport? _archetype(_Slice slice) {
 }
 
 MonthArchetypeReport? _methodical(_Slice slice) {
-  final plan = slice.plan;
-  final hour = plan?.routineHour;
-  if (plan == null || hour == null) return null;
-  final planned = [
-    for (final session in slice.windowSessions)
-      if (plan.weekdays.any(
-        (day) => day.id == _localDate(session.startedAt).weekday,
-      ))
-        session,
-  ];
-  if (planned.length < _methodicalMinSessions) return null;
+  final planned = <ReadingSession>[];
+  int? hour;
+  for (final session in slice.windowSessions) {
+    final day = _localDate(session.startedAt);
+    final plan = monthPlanOn(day, slice.plans);
+    if (plan == null) continue;
+    final planHour = plan.routineHour;
+    if (planHour == null) continue;
+    if (!plan.weekdays.any((weekday) => weekday.id == day.weekday)) continue;
+    final seen = hour;
+    if (seen != null && seen != planHour) return null;
+    hour = planHour;
+    planned.add(session);
+  }
+  final keptHour = hour;
+  if (keptHour == null || planned.length < _methodicalMinSessions) {
+    return null;
+  }
   final onTime = planned
-      .where((session) => _nearHour(session.startedAt, hour))
+      .where((session) => _nearHour(session.startedAt, keptHour))
       .length;
   if (onTime * 10 < planned.length * 7) return null;
   final days = <DateTime>{
     for (final session in planned) _localDate(session.startedAt),
   };
-  final met = days
-      .where((day) => _dayMet(slice.daySeconds[day] ?? 0, slice.goalSeconds))
-      .length;
+  final met = days.where((day) {
+    final plan = monthPlanOn(day, slice.plans);
+    if (plan == null) return false;
+    return _dayMet(slice.daySeconds[day] ?? 0, plan.dailyGoalMinutes * 60);
+  }).length;
   if (met * 2 <= days.length) return null;
   return MonthArchetypeReport(
     kind: MonthArchetype.methodical,
     evidence: MethodicalEvidence(
       onTime: onTime,
       sessions: planned.length,
-      hour: hour,
+      hour: keptHour,
     ),
   );
 }
 
 MonthArchetypeReport? _ant(_Slice slice) {
-  if (slice.plan == null || slice.plannedDays == 0) return null;
+  if (slice.plans.isEmpty || slice.plannedDays == 0) return null;
   if (slice.metDays * 10 < slice.plannedDays * 8) return null;
   final reading = [
     for (final seconds in slice.daySeconds.values)
@@ -522,17 +562,20 @@ MonthArchetypeReport? _ant(_Slice slice) {
 }
 
 MonthArchetypeReport? _marathon(_Slice slice) {
-  final plan = slice.plan;
-  if (plan == null) return null;
-  final days = [
-    for (final seconds in slice.daySeconds.values)
-      if (seconds > 0) seconds,
-  ];
-  if (days.isEmpty) return null;
-  final average =
-      days.reduce((total, seconds) => total + seconds) ~/ days.length;
-  final goal = plan.dailyGoalMinutes * 60;
-  if (average < _marathonDay.inSeconds || average <= goal) return null;
+  var total = 0;
+  var goalTotal = 0;
+  var count = 0;
+  for (final entry in slice.daySeconds.entries) {
+    if (entry.value <= 0) continue;
+    final plan = monthPlanOn(entry.key, slice.plans);
+    if (plan == null) return null;
+    total += entry.value;
+    goalTotal += plan.dailyGoalMinutes * 60;
+    count++;
+  }
+  if (count == 0) return null;
+  final average = total ~/ count;
+  if (average < _marathonDay.inSeconds || total <= goalTotal) return null;
   return MonthArchetypeReport(
     kind: MonthArchetype.marathoner,
     evidence: MarathonerEvidence(averageSeconds: average),
@@ -621,11 +664,37 @@ _Band? _band(int hour) {
   return null;
 }
 
-bool _monthHasSession(Iterable<ReadingSession> sessions, DateTime month) {
+bool monthIsClosed(DateTime month, DateTime now) {
+  final today = _localDate(now);
+  return month.year != today.year || month.month != today.month;
+}
+
+/// First local day of the month that contains [instant].
+DateTime readingMonthOf(DateTime instant) {
+  final day = _localDate(instant);
+  return DateTime(day.year, day.month);
+}
+
+bool monthHasReading(Iterable<ReadingSession> sessions, DateTime month) {
   for (final session in sessions) {
     if (_inMonth(_localDate(session.startedAt), month)) return true;
   }
   return false;
+}
+
+/// A closed month that has reading and is not in [archived] yet.
+bool monthSnapshotPending({
+  required DateTime month,
+  required Iterable<ReadingSession> sessions,
+  required Iterable<DateTime> archived,
+  required DateTime now,
+}) {
+  if (!monthIsClosed(month, now)) return false;
+  if (!monthHasReading(sessions, month)) return false;
+  for (final saved in archived) {
+    if (saved.year == month.year && saved.month == month.month) return false;
+  }
+  return true;
 }
 
 bool _inMonth(DateTime day, DateTime month) =>

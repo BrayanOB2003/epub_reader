@@ -158,6 +158,10 @@ void main() {
       expect(kept.notificationsPrompted, isTrue);
       expect(kept.notificationPromptSkippedOn, '2026-10-09');
       expect(kept.focusMode, isTrue);
+      expect(
+        await database.select(database.readingPlanVersions).get(),
+        hasLength(1),
+      );
 
       await store.clear();
       expect(await store.exists(), isFalse);
@@ -177,6 +181,10 @@ void main() {
       expect(updated.routine, 'night');
       expect(updated.routineHour, 21);
       expect(updated.notificationsPrompted, isFalse);
+      expect(
+        await database.select(database.readingPlanVersions).get(),
+        hasLength(2),
+      );
       expect(updated.notificationPromptSkippedOn, isNull);
       expect(updated.focusMode, isFalse);
     },

@@ -1634,6 +1634,12 @@ abstract class AppLocalizations {
   /// **'El resumen aparece al cerrar un mes con lectura.'**
   String get monthReadingEmpty;
 
+  /// No description provided for @monthInProgress.
+  ///
+  /// In es, this message translates to:
+  /// **'En curso'**
+  String get monthInProgress;
+
   /// No description provided for @monthPlanDays.
   ///
   /// In es, this message translates to:

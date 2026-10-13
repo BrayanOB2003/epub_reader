@@ -310,6 +310,7 @@
   "monthReading": "Month in review",
   "monthReadingOf": "{month} in review",
   "monthReadingEmpty": "The review appears when a month with reading comes to a close.",
+  "monthInProgress": "In progress",
   "monthPlanDays": "In {month} you kept {met} of {planned} days in your plan.",
   "monthReadTime": "In {month} you read {duration}.",
   "monthMinutesMore": "{duration} more than in {month}",

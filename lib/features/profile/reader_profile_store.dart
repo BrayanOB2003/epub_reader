@@ -95,7 +95,49 @@ class ReaderProfileStore {
               focusMode: Value(focusMode),
             ),
           );
+      await _recordPlan(
+        dailyGoalMinutes: dailyGoalMinutes,
+        routineHour: routineHour,
+        routineDays: routineDays,
+      );
     });
+  }
+
+  /// Keeps the previous version when the goal, the days, and the hour are the
+  /// same. A real change starts a new version from now.
+  Future<void> _recordPlan({
+    required int dailyGoalMinutes,
+    required int routineHour,
+    required String routineDays,
+  }) async {
+    final latest =
+        await (_database.select(_database.readingPlanVersions)
+              ..orderBy([
+                (table) => OrderingTerm(
+                  expression: table.effectiveAt,
+                  mode: OrderingMode.desc,
+                ),
+                (table) =>
+                    OrderingTerm(expression: table.id, mode: OrderingMode.desc),
+              ])
+              ..limit(1))
+            .getSingleOrNull();
+    if (latest != null &&
+        latest.dailyGoalMinutes == dailyGoalMinutes &&
+        latest.routineHour == routineHour &&
+        latest.routineDays == routineDays) {
+      return;
+    }
+    await _database
+        .into(_database.readingPlanVersions)
+        .insert(
+          ReadingPlanVersionsCompanion.insert(
+            dailyGoalMinutes: dailyGoalMinutes,
+            routineHour: Value(routineHour),
+            routineDays: routineDays,
+            effectiveAt: DateTime.now().toUtc(),
+          ),
+        );
   }
 
   Future<void> markNotificationsPrompted() {

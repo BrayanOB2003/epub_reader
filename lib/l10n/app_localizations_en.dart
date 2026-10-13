@@ -874,6 +874,9 @@ class AppLocalizationsEn extends AppLocalizations {
       'The review appears when a month with reading comes to a close.';
 
   @override
+  String get monthInProgress => 'In progress';
+
+  @override
   String monthPlanDays(String month, int met, int planned) {
     return 'In $month you kept $met of $planned days in your plan.';
   }
