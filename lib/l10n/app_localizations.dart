@@ -350,6 +350,48 @@ abstract class AppLocalizations {
   /// **'Este libro no tiene índice.'**
   String get noContents;
 
+  /// No description provided for @contentsKeepReading.
+  ///
+  /// In es, this message translates to:
+  /// **'Puedes seguir pasando páginas.'**
+  String get contentsKeepReading;
+
+  /// No description provided for @contentsSearch.
+  ///
+  /// In es, this message translates to:
+  /// **'Buscar en el índice'**
+  String get contentsSearch;
+
+  /// No description provided for @contentsNoMatches.
+  ///
+  /// In es, this message translates to:
+  /// **'Ningún capítulo coincide.'**
+  String get contentsNoMatches;
+
+  /// No description provided for @chapterLabel.
+  ///
+  /// In es, this message translates to:
+  /// **'Capítulo {position}'**
+  String chapterLabel(int position);
+
+  /// No description provided for @chapterOpenFailed.
+  ///
+  /// In es, this message translates to:
+  /// **'No se pudo abrir «{title}».'**
+  String chapterOpenFailed(String title);
+
+  /// No description provided for @showChapters.
+  ///
+  /// In es, this message translates to:
+  /// **'Mostrar capítulos'**
+  String get showChapters;
+
+  /// No description provided for @hideChapters.
+  ///
+  /// In es, this message translates to:
+  /// **'Ocultar capítulos'**
+  String get hideChapters;
+
   /// No description provided for @copy.
   ///
   /// In es, this message translates to:
@@ -1453,6 +1495,54 @@ abstract class AppLocalizations {
   /// In es, this message translates to:
   /// **'No se pudo eliminar la cita.'**
   String get quoteDeleteFailed;
+
+  /// No description provided for @chapterMinuteLeft.
+  ///
+  /// In es, this message translates to:
+  /// **'Un minuto de capítulo'**
+  String get chapterMinuteLeft;
+
+  /// No description provided for @chapterMinutesLeft.
+  ///
+  /// In es, this message translates to:
+  /// **'Unos {minutes} min de capítulo'**
+  String chapterMinutesLeft(int minutes);
+
+  /// No description provided for @chapterMinuteAlmostDone.
+  ///
+  /// In es, this message translates to:
+  /// **'Te falta un minuto'**
+  String get chapterMinuteAlmostDone;
+
+  /// No description provided for @chapterMinutesAlmostDone.
+  ///
+  /// In es, this message translates to:
+  /// **'Te faltan unos {minutes} min'**
+  String chapterMinutesAlmostDone(int minutes);
+
+  /// No description provided for @chapterAlmostDoneBody.
+  ///
+  /// In es, this message translates to:
+  /// **'Para acabar el capítulo.'**
+  String get chapterAlmostDoneBody;
+
+  /// No description provided for @keepReading.
+  ///
+  /// In es, this message translates to:
+  /// **'Seguir'**
+  String get keepReading;
+
+  /// No description provided for @leaveReader.
+  ///
+  /// In es, this message translates to:
+  /// **'Salir'**
+  String get leaveReader;
+
+  /// No description provided for @tableView.
+  ///
+  /// In es, this message translates to:
+  /// **'Tabla'**
+  String get tableView;
 }
 
 class _AppLocalizationsDelegate

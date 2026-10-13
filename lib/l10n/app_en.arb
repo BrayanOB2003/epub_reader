@@ -42,6 +42,13 @@
   "close": "Close",
   "back": "Back",
   "noContents": "This book has no table of contents.",
+  "contentsKeepReading": "You can keep turning pages.",
+  "contentsSearch": "Search the contents",
+  "contentsNoMatches": "No chapter matches.",
+  "chapterLabel": "Chapter {position}",
+  "chapterOpenFailed": "“{title}” could not be opened.",
+  "showChapters": "Show chapters",
+  "hideChapters": "Hide chapters",
   "copy": "Copy",
   "share": "Share",
   "copied": "Copied",
@@ -274,5 +281,23 @@
   "deleteQuoteTitle": "Delete this quote?",
   "deleteQuoteBody": "It leaves your quotes and is no longer highlighted in the book.",
   "quoteDeleted": "Quote deleted.",
-  "quoteDeleteFailed": "The quote could not be deleted."
+  "quoteDeleteFailed": "The quote could not be deleted.",
+  "chapterMinuteLeft": "A minute left in the chapter",
+  "chapterMinutesLeft": "About {minutes} min left in the chapter",
+  "@chapterMinutesLeft": {
+    "placeholders": {
+      "minutes": {"type": "int"}
+    }
+  },
+  "chapterMinuteAlmostDone": "A minute left",
+  "chapterMinutesAlmostDone": "About {minutes} min left",
+  "@chapterMinutesAlmostDone": {
+    "placeholders": {
+      "minutes": {"type": "int"}
+    }
+  },
+  "chapterAlmostDoneBody": "To finish the chapter.",
+  "keepReading": "Keep reading",
+  "leaveReader": "Leave",
+  "tableView": "Table"
 }

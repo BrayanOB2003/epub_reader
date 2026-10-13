@@ -51,6 +51,9 @@ app.*.map.json
 # API key for the catalog
 .env/
 
+# Local dependency override (flutter_readium path fork). Do not commit.
+/pubspec_overrides.yaml
+
 # impeccable-ignore-start
 # Ephemeral output, runtime state, and per-dev overrides.
 # The **/ prefix covers .impeccable at the repo root or in a nested workspace.

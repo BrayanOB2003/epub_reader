@@ -48,13 +48,13 @@ double? readingProgress({
   if (locator == null) return null;
   final total = locator.locations?.totalProgression;
   if (total != null) return total.clamp(0.0, 1.0);
-  final index = _readingOrderIndex(hrefs, locator.href);
+  final index = readingResourceIndex(hrefs, locator.href);
   if (index == null) return null;
   final within = (locator.locations?.progression ?? 0).clamp(0.0, 1.0);
   return ((index + within) / hrefs.length).clamp(0.0, 1.0);
 }
 
-int? _readingOrderIndex(List<String> hrefs, String locatorHref) {
+int? readingResourceIndex(List<String> hrefs, String locatorHref) {
   if (hrefs.isEmpty) return null;
   final resource = _readingResource(locatorHref);
   final exact = hrefs.indexWhere((href) => _readingResource(href) == resource);

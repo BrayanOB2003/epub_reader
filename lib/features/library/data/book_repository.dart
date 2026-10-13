@@ -51,6 +51,24 @@ class BookRepository {
     return _database.select(_database.readingSessions).get();
   }
 
+  Future<int> engagedSecondsForBook(int bookId) async {
+    final rows = await (_database.select(
+      _database.readingSessions,
+    )..where((table) => table.bookId.equals(bookId))).get();
+    var total = 0;
+    for (final row in rows) {
+      total += row.engagedSeconds;
+    }
+    return total;
+  }
+
+  Future<int?> readingSessionSeconds(int id) async {
+    final row = await (_database.select(
+      _database.readingSessions,
+    )..where((table) => table.id.equals(id))).getSingleOrNull();
+    return row?.engagedSeconds;
+  }
+
   Stream<List<ReadingSession>> watchReadingSessions() {
     final query = _database.select(_database.readingSessions)
       ..orderBy([

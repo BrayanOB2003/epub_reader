@@ -57,6 +57,23 @@
   "close": "Cerrar",
   "back": "Atrás",
   "noContents": "Este libro no tiene índice.",
+  "contentsKeepReading": "Puedes seguir pasando páginas.",
+  "contentsSearch": "Buscar en el índice",
+  "contentsNoMatches": "Ningún capítulo coincide.",
+  "chapterLabel": "Capítulo {position}",
+  "@chapterLabel": {
+    "placeholders": {
+      "position": {"type": "int"}
+    }
+  },
+  "chapterOpenFailed": "No se pudo abrir «{title}».",
+  "@chapterOpenFailed": {
+    "placeholders": {
+      "title": {"type": "String"}
+    }
+  },
+  "showChapters": "Mostrar capítulos",
+  "hideChapters": "Ocultar capítulos",
   "copy": "Copiar",
   "share": "Compartir",
   "copied": "Copiado",
@@ -355,5 +372,23 @@
   "deleteQuoteTitle": "¿Eliminar esta cita?",
   "deleteQuoteBody": "Sale de tus citas y deja de estar resaltada en el libro.",
   "quoteDeleted": "Cita eliminada.",
-  "quoteDeleteFailed": "No se pudo eliminar la cita."
+  "quoteDeleteFailed": "No se pudo eliminar la cita.",
+  "chapterMinuteLeft": "Un minuto de capítulo",
+  "chapterMinutesLeft": "Unos {minutes} min de capítulo",
+  "@chapterMinutesLeft": {
+    "placeholders": {
+      "minutes": {"type": "int"}
+    }
+  },
+  "chapterMinuteAlmostDone": "Te falta un minuto",
+  "chapterMinutesAlmostDone": "Te faltan unos {minutes} min",
+  "@chapterMinutesAlmostDone": {
+    "placeholders": {
+      "minutes": {"type": "int"}
+    }
+  },
+  "chapterAlmostDoneBody": "Para acabar el capítulo.",
+  "keepReading": "Seguir",
+  "leaveReader": "Salir",
+  "tableView": "Tabla"
 }

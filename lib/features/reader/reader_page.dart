@@ -2,17 +2,22 @@ import 'dart:async';
 import 'dart:convert';
 
 import 'package:epub_reader/app/providers.dart';
+import 'package:epub_reader/app/schedule_theme.dart';
 import 'package:epub_reader/core/database/app_database.dart';
 import 'package:epub_reader/core/reading/readium_reading_engine.dart';
 import 'package:epub_reader/features/analytics/analytics_events.dart';
 import 'package:epub_reader/features/analytics/app_analytics.dart';
 import 'package:epub_reader/features/library/data/book_repository.dart';
 import 'package:epub_reader/features/habits/reading_engagement.dart';
+import 'package:epub_reader/features/habits/reading_estimate.dart';
 import 'package:epub_reader/features/notifications/reading_notifications.dart';
 import 'package:epub_reader/features/profile/reader_profile_store.dart';
+import 'package:epub_reader/features/reader/contents.dart';
+import 'package:epub_reader/features/reader/contents_dialog.dart';
 import 'package:epub_reader/features/reader/quote_highlight.dart';
 import 'package:epub_reader/features/reader/reader_gestures.dart';
 import 'package:epub_reader/features/reader/reader_preferences.dart';
+import 'package:epub_reader/features/reader/table_view_page.dart';
 import 'package:epub_reader/l10n/app_localizations.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter_readium/flutter_readium.dart';
@@ -52,6 +57,9 @@ class _ReaderPageState extends ConsumerState<ReaderPage>
   var _progress = 0.0;
   var _loading = true;
   var _chromeVisible = false;
+  int? _chapterMinutes;
+  var _leaving = false;
+  var _askingLeave = false;
   var _dark = false;
   var _scroll = false;
   var _fontSize = readerFontSizeDefault;
@@ -180,25 +188,28 @@ class _ReaderPageState extends ConsumerState<ReaderPage>
   Future<void> _openContents() async {
     final publication = _publication;
     if (publication == null || !mounted) return;
-    final entries = _contentsOf(publication);
-    final selected = await showDialog<Link>(
-      context: context,
-      builder: (context) => _ContentsDialog(entries: entries),
+    final roots = contentsTree(
+      tableOfContents: publication.tableOfContents,
+      readingOrder: publication.readingOrder,
     );
-    if (selected == null || !mounted) return;
-    final locator = publication.locatorFromLink(selected);
-    if (locator == null) {
-      _showMessage(AppLocalizations.of(context).chapterFailed);
-      return;
-    }
+    await showDialog<void>(
+      context: context,
+      builder: (context) => ContentsDialog(
+        roots: roots,
+        currentHref: _latestLocator?.href,
+        onOpen: (link) => _openChapter(publication, link),
+      ),
+    );
+  }
+
+  Future<bool> _openChapter(Publication publication, Link link) async {
+    final locator = publication.locatorFromLink(link);
+    if (locator == null || !mounted) return false;
     _textSelected = false;
     final moved = await _engine.goToLocator(locator);
-    if (!mounted) return;
-    if (!moved) {
-      _showMessage(AppLocalizations.of(context).chapterFailed);
-      return;
-    }
-    setState(() => _chromeVisible = false);
+    if (!mounted) return false;
+    if (moved) setState(() => _chromeVisible = false);
+    return moved;
   }
 
   void _showMessage(String message) {
@@ -293,7 +304,11 @@ class _ReaderPageState extends ConsumerState<ReaderPage>
       case ReaderZone.next:
         _turnPage(forward: true);
       case ReaderZone.menu:
-        setState(() => _chromeVisible = !_chromeVisible);
+        setState(() {
+          _chromeVisible = !_chromeVisible;
+          if (_chromeVisible) _chapterMinutes = null;
+        });
+        if (_chromeVisible) unawaited(_refreshChapterMinutes());
     }
   }
 
@@ -484,14 +499,99 @@ class _ReaderPageState extends ConsumerState<ReaderPage>
     }
   }
 
-  void _close() {
+  Future<void> _close() async {
+    if (_leaving || _askingLeave || !mounted) return;
+    _askingLeave = true;
+    final stay = await _offerToStay();
+    _askingLeave = false;
+    if (stay || !mounted) return;
+    setState(() => _leaving = true);
     _engagement?.close();
     _syncEngagement();
-    if (context.canPop()) {
-      context.pop();
-    } else {
-      context.go('/library');
+    WidgetsBinding.instance.addPostFrameCallback((_) {
+      if (!mounted) return;
+      if (context.canPop()) {
+        context.pop();
+      } else {
+        context.go('/library');
+      }
+    });
+  }
+
+  /// True when the reader stays open. Leaving is still one tap on Salir.
+  Future<bool> _offerToStay() async {
+    final minutes = (await _readingEstimate()).chapterMinutes;
+    if (!mounted || minutes == null || minutes > readingChapterFinishMinutes) {
+      return false;
     }
+    final l10n = AppLocalizations.of(context);
+    final leave = await showDialog<bool>(
+      context: context,
+      builder: (context) => AlertDialog(
+        title: Text(
+          minutes == 1
+              ? l10n.chapterMinuteAlmostDone
+              : l10n.chapterMinutesAlmostDone(minutes),
+        ),
+        content: Text(l10n.chapterAlmostDoneBody),
+        actions: [
+          TextButton(
+            onPressed: () => Navigator.pop(context, false),
+            child: Text(l10n.keepReading),
+          ),
+          TextButton(
+            onPressed: () => Navigator.pop(context, true),
+            child: Text(l10n.leaveReader),
+          ),
+        ],
+      ),
+    );
+    return leave != true;
+  }
+
+  Future<void> _refreshChapterMinutes() async {
+    final minutes = (await _readingEstimate()).chapterMinutes;
+    if (!mounted || !_chromeVisible || minutes == _chapterMinutes) return;
+    setState(() => _chapterMinutes = minutes);
+  }
+
+  Future<ReadingEstimate> _readingEstimate() async {
+    if (_fixedLayout) return ReadingEstimate.none;
+    final publication = _publication;
+    final locator = _latestLocator ?? _initialLocator;
+    if (publication == null || locator == null) return ReadingEstimate.none;
+    final hrefs = [for (final link in publication.readingOrder) link.href];
+    final progress = spineProgress(
+      hrefs: hrefs,
+      href: locator.href,
+      progression: locator.locations?.progression,
+    );
+    if (progress == null) return ReadingEstimate.none;
+    final span = chapterSpan(
+      hrefs: hrefs,
+      contents: publication.tableOfContents,
+      href: locator.href,
+    );
+    final seconds = await _secondsRead();
+    if (!mounted) return ReadingEstimate.none;
+    return estimateReading(
+      engagedSeconds: seconds,
+      progress: progress,
+      chapterStart: span?.start,
+      chapterEnd: span?.end,
+    );
+  }
+
+  Future<int> _secondsRead() async {
+    final stored = await _repository.engagedSecondsForBook(widget.bookId);
+    final openId = _readingSessionId;
+    return engagedSecondsNow(
+      storedSeconds: stored,
+      openSessionSeconds: openId == null
+          ? null
+          : await _repository.readingSessionSeconds(openId),
+      liveSeconds: _engagement?.engagedSeconds ?? 0,
+    );
   }
 
   void _syncEngagement() {
@@ -630,9 +730,16 @@ class _ReaderPageState extends ConsumerState<ReaderPage>
     final pageColor = _dark && !_fixedLayout
         ? readerDarkBackground
         : readerLightBackground;
-    return Scaffold(
-      backgroundColor: _loading || _error != null ? Colors.black : pageColor,
-      body: SafeArea(child: _buildBody()),
+    return PopScope(
+      canPop: _leaving,
+      onPopInvokedWithResult: (didPop, _) {
+        if (didPop) return;
+        unawaited(_close());
+      },
+      child: Scaffold(
+        backgroundColor: _loading || _error != null ? Colors.black : pageColor,
+        body: SafeArea(child: _buildBody()),
+      ),
     );
   }
 
@@ -680,6 +787,13 @@ class _ReaderPageState extends ConsumerState<ReaderPage>
             onDecorationInteraction: _onHighlightTap,
             onTap: (point) =>
                 _onZone(readerZoneAt(x: point.dx, width: 1, rtl: rtl)),
+            onTableOpen: (event) {
+              Navigator.of(context).push(
+                MaterialPageRoute<void>(
+                  builder: (_) => TableViewPage(event: event),
+                ),
+              );
+            },
           ),
         ),
         Positioned(
@@ -742,57 +856,83 @@ class _ReaderPageState extends ConsumerState<ReaderPage>
               color: const Color(0xF2F4F7FB),
               child: SafeArea(
                 bottom: false,
-                child: Row(
-                  children: [
-                    if (_publication != null) ...[
-                      IconButton(
-                        tooltip: l10n.contents,
-                        onPressed: _openContents,
-                        icon: const Icon(Icons.format_list_bulleted),
+                child: IconTheme(
+                  data: IconThemeData(color: ScheduleColors.light.ink),
+                  child: Column(
+                    mainAxisSize: MainAxisSize.min,
+                    crossAxisAlignment: CrossAxisAlignment.start,
+                    children: [
+                      Row(
+                        children: [
+                          if (_publication != null) ...[
+                            IconButton(
+                              tooltip: l10n.contents,
+                              onPressed: _openContents,
+                              icon: const Icon(Icons.format_list_bulleted),
+                            ),
+                            IconButton(
+                              tooltip: _fixedLayout
+                                  ? l10n.fixedColorShort
+                                  : (_dark ? l10n.lightMode : l10n.darkMode),
+                              onPressed: _toggleDark,
+                              icon: Icon(
+                                _dark ? Icons.light_mode : Icons.dark_mode,
+                              ),
+                            ),
+                            IconButton(
+                              tooltip: _fixedLayout
+                                  ? l10n.fixedPagesShort
+                                  : (_scroll ? l10n.pageMode : l10n.scrollMode),
+                              onPressed: _toggleScroll,
+                              icon: Icon(
+                                _scroll ? Icons.menu_book : Icons.swap_vert,
+                              ),
+                            ),
+                            IconButton(
+                              tooltip: _fixedLayout
+                                  ? l10n.fixedSizeShort
+                                  : l10n.smallerText,
+                              onPressed: () => _changeFontSize(larger: false),
+                              icon: const Icon(Icons.text_decrease),
+                            ),
+                            IconButton(
+                              tooltip: _fixedLayout
+                                  ? l10n.fixedSizeShort
+                                  : l10n.originalSize,
+                              onPressed: _resetFontSize,
+                              icon: const _OriginalFontMark(),
+                            ),
+                            IconButton(
+                              tooltip: _fixedLayout
+                                  ? l10n.fixedSizeShort
+                                  : l10n.largerText,
+                              onPressed: () => _changeFontSize(larger: true),
+                              icon: const Icon(Icons.text_increase),
+                            ),
+                          ],
+                          const Spacer(),
+                          IconButton(
+                            tooltip: l10n.close,
+                            onPressed: () => unawaited(_close()),
+                            icon: const Icon(Icons.close),
+                          ),
+                        ],
                       ),
-                      IconButton(
-                        tooltip: _fixedLayout
-                            ? l10n.fixedColorShort
-                            : (_dark ? l10n.lightMode : l10n.darkMode),
-                        onPressed: _toggleDark,
-                        icon: Icon(_dark ? Icons.light_mode : Icons.dark_mode),
-                      ),
-                      IconButton(
-                        tooltip: _fixedLayout
-                            ? l10n.fixedPagesShort
-                            : (_scroll ? l10n.pageMode : l10n.scrollMode),
-                        onPressed: _toggleScroll,
-                        icon: Icon(_scroll ? Icons.menu_book : Icons.swap_vert),
-                      ),
-                      IconButton(
-                        tooltip: _fixedLayout
-                            ? l10n.fixedSizeShort
-                            : l10n.smallerText,
-                        onPressed: () => _changeFontSize(larger: false),
-                        icon: const Icon(Icons.text_decrease),
-                      ),
-                      IconButton(
-                        tooltip: _fixedLayout
-                            ? l10n.fixedSizeShort
-                            : l10n.originalSize,
-                        onPressed: _resetFontSize,
-                        icon: const _OriginalFontMark(),
-                      ),
-                      IconButton(
-                        tooltip: _fixedLayout
-                            ? l10n.fixedSizeShort
-                            : l10n.largerText,
-                        onPressed: () => _changeFontSize(larger: true),
-                        icon: const Icon(Icons.text_increase),
-                      ),
+                      if (_chapterMinutes != null)
+                        Padding(
+                          padding: const EdgeInsets.fromLTRB(20, 0, 20, 12),
+                          child: Text(
+                            _chapterMinutes == 1
+                                ? l10n.chapterMinuteLeft
+                                : l10n.chapterMinutesLeft(_chapterMinutes!),
+                            style: TextStyle(
+                              color: ScheduleColors.light.muted,
+                              fontSize: 13,
+                            ),
+                          ),
+                        ),
                     ],
-                    const Spacer(),
-                    IconButton(
-                      tooltip: l10n.close,
-                      onPressed: _close,
-                      icon: const Icon(Icons.close),
-                    ),
-                  ],
+                  ),
                 ),
               ),
             ),
@@ -816,76 +956,6 @@ class _OriginalFontMark extends StatelessWidget {
         fontWeight: FontWeight.w600,
         height: 1,
       ),
-    );
-  }
-}
-
-class _TocEntry {
-  const _TocEntry({required this.link, required this.depth});
-
-  final Link link;
-  final int depth;
-
-  String title(String untitled) {
-    final title = link.title?.trim();
-    if (title != null && title.isNotEmpty) return title;
-    return untitled;
-  }
-}
-
-List<_TocEntry> _contentsOf(Publication publication) {
-  final source = publication.tableOfContents.isNotEmpty
-      ? publication.tableOfContents
-      : publication.readingOrder;
-  final entries = <_TocEntry>[];
-  void walk(List<Link> links, int depth) {
-    for (final link in links) {
-      entries.add(_TocEntry(link: link, depth: depth));
-      walk(link.children, depth + 1);
-    }
-  }
-
-  walk(source, 0);
-  return entries;
-}
-
-class _ContentsDialog extends StatelessWidget {
-  const _ContentsDialog({required this.entries});
-
-  final List<_TocEntry> entries;
-
-  @override
-  Widget build(BuildContext context) {
-    final l10n = AppLocalizations.of(context);
-    final height = MediaQuery.sizeOf(context).height * 0.6;
-    return AlertDialog(
-      title: Text(l10n.contents),
-      content: SizedBox(
-        width: double.maxFinite,
-        height: height,
-        child: entries.isEmpty
-            ? Text(l10n.noContents)
-            : ListView.builder(
-                itemCount: entries.length,
-                itemBuilder: (context, index) {
-                  final entry = entries[index];
-                  return ListTile(
-                    contentPadding: EdgeInsets.only(
-                      left: 16 + entry.depth * 16,
-                      right: 16,
-                    ),
-                    title: Text(entry.title(l10n.untitled)),
-                    onTap: () => Navigator.pop(context, entry.link),
-                  );
-                },
-              ),
-      ),
-      actions: [
-        TextButton(
-          onPressed: () => Navigator.pop(context),
-          child: Text(l10n.close),
-        ),
-      ],
     );
   }
 }

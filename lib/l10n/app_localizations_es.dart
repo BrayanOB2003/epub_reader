@@ -143,6 +143,31 @@ class AppLocalizationsEs extends AppLocalizations {
   String get noContents => 'Este libro no tiene índice.';
 
   @override
+  String get contentsKeepReading => 'Puedes seguir pasando páginas.';
+
+  @override
+  String get contentsSearch => 'Buscar en el índice';
+
+  @override
+  String get contentsNoMatches => 'Ningún capítulo coincide.';
+
+  @override
+  String chapterLabel(int position) {
+    return 'Capítulo $position';
+  }
+
+  @override
+  String chapterOpenFailed(String title) {
+    return 'No se pudo abrir «$title».';
+  }
+
+  @override
+  String get showChapters => 'Mostrar capítulos';
+
+  @override
+  String get hideChapters => 'Ocultar capítulos';
+
+  @override
   String get copy => 'Copiar';
 
   @override
@@ -763,4 +788,32 @@ class AppLocalizationsEs extends AppLocalizations {
 
   @override
   String get quoteDeleteFailed => 'No se pudo eliminar la cita.';
+
+  @override
+  String get chapterMinuteLeft => 'Un minuto de capítulo';
+
+  @override
+  String chapterMinutesLeft(int minutes) {
+    return 'Unos $minutes min de capítulo';
+  }
+
+  @override
+  String get chapterMinuteAlmostDone => 'Te falta un minuto';
+
+  @override
+  String chapterMinutesAlmostDone(int minutes) {
+    return 'Te faltan unos $minutes min';
+  }
+
+  @override
+  String get chapterAlmostDoneBody => 'Para acabar el capítulo.';
+
+  @override
+  String get keepReading => 'Seguir';
+
+  @override
+  String get leaveReader => 'Salir';
+
+  @override
+  String get tableView => 'Tabla';
 }
