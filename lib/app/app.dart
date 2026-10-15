@@ -3,6 +3,7 @@ import 'package:epub_reader/app/app_theme_store.dart';
 import 'package:epub_reader/app/router.dart';
 import 'package:epub_reader/app/schedule_theme.dart';
 import 'package:epub_reader/features/focus/focus_binding.dart';
+import 'package:epub_reader/features/library/opened_epub.dart';
 import 'package:epub_reader/features/notifications/notification_binding.dart';
 import 'package:epub_reader/l10n/app_localizations.dart';
 import 'package:flutter/cupertino.dart';
@@ -28,25 +29,27 @@ class EpubReaderApp extends ConsumerWidget {
       routerConfig: ref.watch(appRouterProvider),
       builder: (context, child) {
         final colors = ScheduleColors.of(context);
-        return NotificationBinding(
-          child: FocusBinding(
-            child: CupertinoTheme(
-              data: CupertinoThemeData(
-                brightness: Theme.of(context).brightness,
-                primaryColor: colors.station,
-                scaffoldBackgroundColor: colors.paper,
-                barBackgroundColor: colors.paper,
-                textTheme: CupertinoTextThemeData(
+        return OpenedEpubBinding(
+          child: NotificationBinding(
+            child: FocusBinding(
+              child: CupertinoTheme(
+                data: CupertinoThemeData(
+                  brightness: Theme.of(context).brightness,
                   primaryColor: colors.station,
-                  textStyle: TextStyle(color: colors.ink, fontSize: 17),
-                  navLargeTitleTextStyle: TextStyle(
-                    color: colors.ink,
-                    fontSize: 34,
-                    fontWeight: FontWeight.w700,
+                  scaffoldBackgroundColor: colors.paper,
+                  barBackgroundColor: colors.paper,
+                  textTheme: CupertinoTextThemeData(
+                    primaryColor: colors.station,
+                    textStyle: TextStyle(color: colors.ink, fontSize: 17),
+                    navLargeTitleTextStyle: TextStyle(
+                      color: colors.ink,
+                      fontSize: 34,
+                      fontWeight: FontWeight.w700,
+                    ),
                   ),
                 ),
+                child: child ?? const SizedBox.shrink(),
               ),
-              child: child ?? const SizedBox.shrink(),
             ),
           ),
         );

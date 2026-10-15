@@ -464,7 +464,7 @@ packages:
     description:
       path: flutter_readium
       ref: prod
-      resolved-ref: f3525f29c1d8f7f3c9bd272a4fce4a8b77b106c7
+      resolved-ref: "68145399bba657ad6338e9fdca7020f8f7e6d735"
       url: "https://github.com/BrayanOB2003/flutter_readium.git"
     source: git
     version: "0.6.1"
@@ -472,8 +472,8 @@ packages:
     dependency: transitive
     description:
       path: flutter_readium_platform_interface
-      ref: f3525f29c1d8f7f3c9bd272a4fce4a8b77b106c7
-      resolved-ref: f3525f29c1d8f7f3c9bd272a4fce4a8b77b106c7
+      ref: "68145399bba657ad6338e9fdca7020f8f7e6d735"
+      resolved-ref: "68145399bba657ad6338e9fdca7020f8f7e6d735"
       url: "https://github.com/BrayanOB2003/flutter_readium.git"
     source: git
     version: "0.6.1"

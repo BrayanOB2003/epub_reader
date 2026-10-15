@@ -34,5 +34,8 @@ import UIKit
       }
     }
     focusChannel = channel
+    OpenedEpubRelay.shared.register(
+      messenger: engineBridge.applicationRegistrar.messenger()
+    )
   }
 }
