@@ -11,6 +11,7 @@ const notificationOpenEvent = 'notification_open';
 
 const bookSourceImport = 'import';
 const bookSourceCatalog = 'catalog';
+const bookSourceOpened = 'opened';
 const bookResultImported = 'imported';
 const bookResultAlreadyInLibrary = 'already_in_library';
 const bookResultInvalid = 'invalid';
@@ -19,6 +20,7 @@ const readingSourceLibrary = 'library';
 const readingSourceCatalog = 'catalog';
 const readingSourceNotification = 'notification';
 const readingSourceQuote = 'quote';
+const readingSourceOpened = 'opened';
 
 const notificationResultGranted = 'granted';
 const notificationResultDenied = 'denied';
@@ -29,6 +31,7 @@ const _readingSources = {
   readingSourceCatalog,
   readingSourceNotification,
   readingSourceQuote,
+  readingSourceOpened,
 };
 
 String readingSessionSource(String? value) {
