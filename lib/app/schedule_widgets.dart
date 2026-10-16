@@ -413,6 +413,7 @@ class ScheduleListing extends StatelessWidget {
     this.onAir = false,
     this.rule = true,
     this.titleSize = 22,
+    this.programTrailing = false,
     super.key,
   });
 
@@ -434,6 +435,9 @@ class ScheduleListing extends StatelessWidget {
   final bool onAir;
   final bool rule;
   final double titleSize;
+
+  /// The trailing figure is a program title. Used on the time log row.
+  final bool programTrailing;
 
   @override
   Widget build(BuildContext context) {
@@ -530,9 +534,16 @@ class ScheduleListing extends StatelessWidget {
                   if (trailing != null)
                     Text(
                       trailing!,
-                      style: Theme.of(
-                        context,
-                      ).textTheme.labelLarge?.copyWith(color: ink),
+                      textAlign: TextAlign.end,
+                      style: programTrailing
+                          ? programTitle(context, ink, size: 22).copyWith(
+                              fontFeatures: const [
+                                FontFeature.tabularFigures(),
+                              ],
+                            )
+                          : Theme.of(
+                              context,
+                            ).textTheme.labelLarge?.copyWith(color: ink),
                     ),
                   if (onDelete != null)
                     TextButton(

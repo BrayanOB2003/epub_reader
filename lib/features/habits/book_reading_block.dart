@@ -8,11 +8,15 @@ class BookReadingBlock extends StatelessWidget {
   const BookReadingBlock({
     required this.report,
     required this.onRead,
+    this.logRow = false,
     super.key,
   });
 
   final BookReadingReport report;
   final VoidCallback onRead;
+
+  /// The time screen's book: cover, title, author, and one duration.
+  final bool logRow;
 
   @override
   Widget build(BuildContext context) {
@@ -61,10 +65,11 @@ class BookReadingBlock extends StatelessWidget {
           cover: book.coverBytes,
           progress: book.progress,
           trailing: formatReadingDuration(report.engagedSeconds),
+          programTrailing: logRow,
           onTap: onRead,
           rule: false,
         ),
-        if (lines.isNotEmpty)
+        if (!logRow && lines.isNotEmpty)
           Padding(
             padding: const EdgeInsets.fromLTRB(68, 4, 20, 16),
             child: Column(

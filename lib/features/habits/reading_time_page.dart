@@ -1,4 +1,5 @@
 import 'package:epub_reader/app/providers.dart';
+import 'package:epub_reader/core/database/app_database.dart';
 import 'package:epub_reader/app/schedule_theme.dart';
 import 'package:epub_reader/app/schedule_widgets.dart';
 import 'package:epub_reader/features/analytics/analytics_events.dart';
@@ -68,36 +69,106 @@ class ReadingTimePage extends ConsumerWidget {
                     ],
                   );
             final report = reports.isEmpty ? null : reports.first;
-            return ListView(
-              padding: const EdgeInsets.only(bottom: 24),
-              children: [
-                ScheduleHeader(title: l10n.time),
-                const ScheduleRule(),
-                WeeklyReadingChart(
-                  days: weeklyReading(sessions: sessionList, now: now),
-                  goalSeconds: goalMinutes == null ? null : goalMinutes * 60,
-                  today: now,
-                ),
-                const SizedBox(height: 12),
-                ReadingCalendar(
-                  sessions: sessionList,
-                  plans: plans,
-                  today: now,
-                ),
-                if (report != null)
-                  BookReadingBlock(
-                    report: report,
-                    onRead: () => context.push(
+            return _HabitLog(
+              title: l10n.time,
+              days: weeklyReading(sessions: sessionList, now: now),
+              goalSeconds: goalMinutes == null ? null : goalMinutes * 60,
+              today: now,
+              sessions: sessionList,
+              plans: plans,
+              report: report,
+              showAllBooks: reports.length > 1,
+              onRead: report == null
+                  ? null
+                  : () => context.push(
                       readingRoute(report.book.id, readingSourceLibrary),
                     ),
-                  ),
-                if (reports.length > 1)
-                  _AllBooks(onTap: () => context.push('/time/books')),
-              ],
+              onAllBooks: () => context.push('/time/books'),
             );
           },
         ),
       ),
+    );
+  }
+}
+
+class _HabitLog extends StatefulWidget {
+  const _HabitLog({
+    required this.title,
+    required this.days,
+    required this.goalSeconds,
+    required this.today,
+    required this.sessions,
+    required this.plans,
+    required this.report,
+    required this.showAllBooks,
+    required this.onRead,
+    required this.onAllBooks,
+  });
+
+  final String title;
+  final List<DailyReading> days;
+  final int? goalSeconds;
+  final DateTime today;
+  final List<ReadingSession> sessions;
+  final List<MonthPlanVersion> plans;
+  final BookReadingReport? report;
+  final bool showAllBooks;
+  final VoidCallback? onRead;
+  final VoidCallback onAllBooks;
+
+  @override
+  State<_HabitLog> createState() => _HabitLogState();
+}
+
+class _HabitLogState extends State<_HabitLog> {
+  late DateTime _selected;
+
+  @override
+  void initState() {
+    super.initState();
+    _selected = widget.today;
+  }
+
+  void _select(DateTime day) {
+    final current = _selected.toLocal();
+    final next = day.toLocal();
+    if (current.year == next.year &&
+        current.month == next.month &&
+        current.day == next.day) {
+      return;
+    }
+    setState(() => _selected = day);
+  }
+
+  @override
+  Widget build(BuildContext context) {
+    final report = widget.report;
+    final onRead = widget.onRead;
+    return ListView(
+      padding: const EdgeInsets.only(bottom: 24),
+      children: [
+        ScheduleHeader(title: widget.title),
+        const ScheduleRule(),
+        WeeklyReadingChart(
+          days: widget.days,
+          goalSeconds: widget.goalSeconds,
+          today: widget.today,
+          selectedDay: _selected,
+          onDaySelected: _select,
+        ),
+        const ScheduleRule(),
+        ReadingCalendar(
+          sessions: widget.sessions,
+          plans: widget.plans,
+          today: widget.today,
+          selectedDate: _selected,
+          onDaySelected: _select,
+        ),
+        if (report != null && onRead != null)
+          BookReadingBlock(report: report, logRow: true, onRead: onRead),
+        if (widget.showAllBooks) _AllBooks(onTap: widget.onAllBooks),
+      ],
     );
   }
 }
