@@ -55,12 +55,17 @@ class ReadingTimePage extends ConsumerWidget {
             ];
             final now = DateTime.now();
             final books = ref.watch(booksProvider).asData?.value;
+            final quotes = ref.watch(savedQuotesProvider).asData?.value;
             final reports = books == null
                 ? const <BookReadingReport>[]
                 : bookReadingReports(
                     books: books,
                     sessions: sessionList,
                     now: now,
+                    quoteBookIds: [
+                      if (quotes != null)
+                        for (final quote in quotes) quote.bookId,
+                    ],
                   );
             final report = reports.isEmpty ? null : reports.first;
             return ListView(

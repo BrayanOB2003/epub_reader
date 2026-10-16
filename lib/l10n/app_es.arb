@@ -434,6 +434,20 @@
       "count": {"type": "int"}
     }
   },
+  "bookSession": "1 sesión",
+  "bookSessions": "{count} sesiones",
+  "@bookSessions": {
+    "placeholders": {
+      "count": {"type": "int"}
+    }
+  },
+  "bookQuote": "1 cita",
+  "bookQuotes": "{count} citas",
+  "@bookQuotes": {
+    "placeholders": {
+      "count": {"type": "int"}
+    }
+  },
   "monthReading": "Resumen del mes",
   "monthReadingOf": "Resumen de {month}",
   "@monthReadingOf": {

@@ -16,6 +16,7 @@ class BookReadingsPage extends ConsumerWidget {
     final l10n = AppLocalizations.of(context);
     final sessions = ref.watch(readingSessionsProvider);
     final books = ref.watch(booksProvider);
+    final quotes = ref.watch(savedQuotesProvider).asData?.value;
     return Scaffold(
       body: SafeArea(
         bottom: false,
@@ -42,6 +43,10 @@ class BookReadingsPage extends ConsumerWidget {
                       books: bookList,
                       sessions: sessionList,
                       now: DateTime.now(),
+                      quoteBookIds: [
+                        if (quotes != null)
+                          for (final quote in quotes) quote.bookId,
+                      ],
                     ),
                     onRead: (report) => context.push(
                       readingRoute(report.book.id, readingSourceLibrary),

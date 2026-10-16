@@ -40,7 +40,48 @@ void main() {
 
     expect(reports.map((report) => report.book.title), ['Dos', 'Uno']);
     expect(reports.first.engagedSeconds, 10 * 60);
+    expect(reports.first.sessions, 1);
     expect(reports.last.engagedSeconds, 20 * 60);
+    expect(reports.last.sessions, 1);
+    expect(reports.first.quotes, 0);
+  });
+
+  test('quotes stay with the book they were taken from', () {
+    final reports = bookReadingReports(
+      books: [
+        _book(id: 1, title: 'Uno', progress: 0.5),
+        _book(id: 2, title: 'Dos', progress: 0.2),
+      ],
+      sessions: [
+        _session(
+          id: 1,
+          bookId: 1,
+          startedAt: DateTime(2026, 10, 10, 20),
+          seconds: 20 * 60,
+        ),
+        _session(
+          id: 2,
+          bookId: 1,
+          startedAt: DateTime(2026, 10, 12, 20),
+          seconds: 15 * 60,
+        ),
+        _session(
+          id: 3,
+          bookId: 2,
+          startedAt: DateTime(2026, 10, 13, 12),
+          seconds: 10 * 60,
+        ),
+      ],
+      quoteBookIds: const [1, 9, 1, 1],
+      now: DateTime(2026, 10, 13, 18),
+    );
+
+    final uno = reports.firstWhere((report) => report.book.id == 1);
+    final dos = reports.firstWhere((report) => report.book.id == 2);
+    expect(uno.sessions, 2);
+    expect(uno.quotes, 3);
+    expect(dos.sessions, 1);
+    expect(dos.quotes, 0);
   });
 
   test('the current book is the latest session still in the library', () {
@@ -233,11 +274,14 @@ void main() {
             BookReadingReport(
               book: _book(id: 1, title: 'Dos', progress: 0.2),
               engagedSeconds: 10 * 60,
+              sessions: 1,
               pace: const BookReadingPace(),
             ),
             BookReadingReport(
               book: _book(id: 2, title: 'Uno', progress: 0.5),
               engagedSeconds: 20 * 60,
+              sessions: 4,
+              quotes: 2,
               pace: const BookReadingPace(
                 remainingMinutes: 40,
                 minutesPerTenPercent: 10,
@@ -256,6 +300,9 @@ void main() {
     expect(find.text('20 min'), findsOneWidget);
     expect(find.text('Faltan ~40 min'), findsOneWidget);
     expect(find.text('~10 min por cada 10 %'), findsOneWidget);
+    expect(find.text('1 sesión'), findsOneWidget);
+    expect(find.text('4 sesiones'), findsOneWidget);
+    expect(find.text('2 citas'), findsOneWidget);
   });
 
   testWidgets('the book block shows the pace lines under the title', (
@@ -272,6 +319,8 @@ void main() {
               progress: 0.4,
             ),
             engagedSeconds: 3 * 3600 + 45 * 60,
+            sessions: 6,
+            quotes: 1,
             pace: const BookReadingPace(
               remainingMinutes: 75,
               minutesPerTenPercent: 10,
@@ -289,15 +338,20 @@ void main() {
     expect(find.text('Faltan ~1 h 15 min'), findsOneWidget);
     expect(find.text('~10 min por cada 10 %'), findsOneWidget);
     expect(find.text('A este ritmo, unas 3 semanas'), findsOneWidget);
+    expect(find.text('6 sesiones'), findsOneWidget);
+    expect(find.text('1 cita'), findsOneWidget);
   });
 
-  testWidgets('without a pace the block is only the time read', (tester) async {
+  testWidgets('without a pace the block shows the session and no quotes', (
+    tester,
+  ) async {
     await tester.pumpWidget(
       _app(
         BookReadingBlock(
           report: BookReadingReport(
             book: _book(id: 1, title: 'Uno', progress: 0.01),
             engagedSeconds: 90,
+            sessions: 1,
             pace: const BookReadingPace(),
           ),
           onRead: () {},
@@ -307,6 +361,8 @@ void main() {
 
     expect(find.text('Uno'), findsOneWidget);
     expect(find.text('1 min 30 s'), findsOneWidget);
+    expect(find.text('1 sesión'), findsOneWidget);
+    expect(find.textContaining('cita'), findsNothing);
     expect(find.textContaining('Faltan'), findsNothing);
     expect(find.textContaining('ritmo'), findsNothing);
   });

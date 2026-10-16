@@ -82,20 +82,32 @@ class BookReadingReport {
     required this.book,
     required this.engagedSeconds,
     required this.pace,
+    required this.sessions,
+    this.quotes = 0,
   });
 
   final Book book;
   final int engagedSeconds;
   final BookReadingPace pace;
+  final int sessions;
+  final int quotes;
 }
 
 /// Every library book that has a session, newest visit first.
+///
+/// [quoteBookIds] is one entry per saved quote. Quotes on a book with no
+/// session stay off the list.
 List<BookReadingReport> bookReadingReports({
   required List<Book> books,
   required List<ReadingSession> sessions,
   required DateTime now,
+  Iterable<int> quoteBookIds = const [],
 }) {
   final byId = {for (final book in books) book.id: book};
+  final quotes = <int, int>{};
+  for (final bookId in quoteBookIds) {
+    quotes[bookId] = (quotes[bookId] ?? 0) + 1;
+  }
   final grouped = readingTimeByBook(
     titles: {for (final book in books) book.id: book.title},
     sessions: sessions,
@@ -108,6 +120,8 @@ List<BookReadingReport> bookReadingReports({
       BookReadingReport(
         book: book,
         engagedSeconds: record.engagedSeconds,
+        sessions: record.sessions.length,
+        quotes: quotes[record.bookId] ?? 0,
         pace: bookReadingPace(
           engagedSeconds: record.engagedSeconds,
           progress: book.progress,
@@ -125,11 +139,13 @@ BookReadingReport? currentBookReading({
   required List<Book> books,
   required List<ReadingSession> sessions,
   required DateTime now,
+  Iterable<int> quoteBookIds = const [],
 }) {
   final reports = bookReadingReports(
     books: books,
     sessions: sessions,
     now: now,
+    quoteBookIds: quoteBookIds,
   );
   if (reports.isEmpty) return null;
   return reports.first;

@@ -23,8 +23,33 @@ class BookReadingBlock extends StatelessWidget {
     final remaining = pace.remainingMinutes;
     final perTen = pace.minutesPerTenPercent;
     final horizon = pace.horizon;
-    final hasLines = remaining != null || perTen != null || horizon != null;
+    final lines = <_MetricLine>[
+      if (remaining != null)
+        _MetricLine(
+          l10n.bookTimeLeft(formatReadingDuration(remaining * 60)),
+          prominent: true,
+        ),
+      if (perTen != null)
+        _MetricLine(l10n.bookPacePerTen(formatReadingDuration(perTen * 60))),
+      if (horizon != null) _MetricLine(readingHorizonLabel(l10n, horizon)),
+      if (report.sessions > 0)
+        _MetricLine(
+          report.sessions == 1
+              ? l10n.bookSession
+              : l10n.bookSessions(report.sessions),
+        ),
+      if (report.quotes > 0)
+        _MetricLine(
+          report.quotes == 1 ? l10n.bookQuote : l10n.bookQuotes(report.quotes),
+        ),
+    ];
     final author = book.author?.trim();
+    final prominent = Theme.of(
+      context,
+    ).textTheme.bodyMedium?.copyWith(color: colors.ink);
+    final quiet = Theme.of(
+      context,
+    ).textTheme.labelLarge?.copyWith(color: colors.muted);
 
     return Column(
       crossAxisAlignment: CrossAxisAlignment.start,
@@ -39,39 +64,18 @@ class BookReadingBlock extends StatelessWidget {
           onTap: onRead,
           rule: false,
         ),
-        if (hasLines)
+        if (lines.isNotEmpty)
           Padding(
             padding: const EdgeInsets.fromLTRB(68, 4, 20, 16),
             child: Column(
               crossAxisAlignment: CrossAxisAlignment.start,
               children: [
-                if (remaining != null)
-                  Text(
-                    l10n.bookTimeLeft(formatReadingDuration(remaining * 60)),
-                    style: Theme.of(
-                      context,
-                    ).textTheme.bodyMedium?.copyWith(color: colors.ink),
-                  ),
-                if (perTen != null)
+                for (var index = 0; index < lines.length; index++)
                   Padding(
-                    padding: EdgeInsets.only(top: remaining == null ? 0 : 4),
+                    padding: EdgeInsets.only(top: index == 0 ? 0 : 4),
                     child: Text(
-                      l10n.bookPacePerTen(formatReadingDuration(perTen * 60)),
-                      style: Theme.of(
-                        context,
-                      ).textTheme.labelLarge?.copyWith(color: colors.muted),
-                    ),
-                  ),
-                if (horizon != null)
-                  Padding(
-                    padding: EdgeInsets.only(
-                      top: remaining == null && perTen == null ? 0 : 4,
-                    ),
-                    child: Text(
-                      readingHorizonLabel(l10n, horizon),
-                      style: Theme.of(
-                        context,
-                      ).textTheme.labelLarge?.copyWith(color: colors.muted),
+                      lines[index].text,
+                      style: lines[index].prominent ? prominent : quiet,
                     ),
                   ),
               ],
@@ -80,6 +84,13 @@ class BookReadingBlock extends StatelessWidget {
       ],
     );
   }
+}
+
+class _MetricLine {
+  const _MetricLine(this.text, {this.prominent = false});
+
+  final String text;
+  final bool prominent;
 }
 
 String _shownTitle(String title, AppLocalizations l10n) {
