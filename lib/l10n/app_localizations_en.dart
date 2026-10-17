@@ -862,6 +862,22 @@ class AppLocalizationsEn extends AppLocalizations {
   }
 
   @override
+  String get bookSession => '1 session';
+
+  @override
+  String bookSessions(int count) {
+    return '$count sessions';
+  }
+
+  @override
+  String get bookQuote => '1 quote';
+
+  @override
+  String bookQuotes(int count) {
+    return '$count quotes';
+  }
+
+  @override
   String get monthReading => 'Month in review';
 
   @override

@@ -1616,6 +1616,30 @@ abstract class AppLocalizations {
   /// **'Unas {count} lecturas como las últimas'**
   String bookSittingsLeft(int count);
 
+  /// No description provided for @bookSession.
+  ///
+  /// In es, this message translates to:
+  /// **'1 sesión'**
+  String get bookSession;
+
+  /// No description provided for @bookSessions.
+  ///
+  /// In es, this message translates to:
+  /// **'{count} sesiones'**
+  String bookSessions(int count);
+
+  /// No description provided for @bookQuote.
+  ///
+  /// In es, this message translates to:
+  /// **'1 cita'**
+  String get bookQuote;
+
+  /// No description provided for @bookQuotes.
+  ///
+  /// In es, this message translates to:
+  /// **'{count} citas'**
+  String bookQuotes(int count);
+
   /// No description provided for @monthReading.
   ///
   /// In es, this message translates to:

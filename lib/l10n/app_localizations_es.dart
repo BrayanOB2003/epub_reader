@@ -868,6 +868,22 @@ class AppLocalizationsEs extends AppLocalizations {
   }
 
   @override
+  String get bookSession => '1 sesión';
+
+  @override
+  String bookSessions(int count) {
+    return '$count sesiones';
+  }
+
+  @override
+  String get bookQuote => '1 cita';
+
+  @override
+  String bookQuotes(int count) {
+    return '$count citas';
+  }
+
+  @override
   String get monthReading => 'Resumen del mes';
 
   @override

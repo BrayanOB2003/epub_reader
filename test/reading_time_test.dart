@@ -257,13 +257,15 @@ void main() {
         find.bySemanticsLabel('10 de septiembre, 10 min, meta cumplida'),
       );
       await tester.pump();
-      expect(find.text('10 de septiembre · 10 min'), findsOneWidget);
+      expect(find.text('10 de septiembre'), findsOneWidget);
+      expect(find.text('10 min'), findsOneWidget);
 
       await tester.tap(
         find.bySemanticsLabel('12 de septiembre, 0 s, sin lectura'),
       );
       await tester.pump();
-      expect(find.text('12 de septiembre · 0 s'), findsOneWidget);
+      expect(find.text('12 de septiembre'), findsOneWidget);
+      expect(find.text('0 s'), findsOneWidget);
       expect(
         tester
             .widget<IconButton>(
@@ -319,11 +321,27 @@ void main() {
 
       await tester.tap(find.bySemanticsLabel('Lunes · 12 min'));
       await tester.pump();
-      expect(find.text('Lunes · 12 min'), findsOneWidget);
+      expect(find.text('Lunes'), findsOneWidget);
+      expect(find.text('12 min'), findsOneWidget);
+      final day = tester.getTopLeft(find.text('Lunes'));
+      final duration = tester.getRect(
+        find.byWidgetPredicate(
+          (widget) =>
+              widget is Text &&
+              widget.data == '12 min' &&
+              widget.style?.fontSize == 28,
+        ),
+      );
+      expect(duration.left, greaterThan(day.dx));
+      expect(
+        duration.right,
+        closeTo(tester.getSize(find.byType(WeeklyReadingChart)).width - 20, 1),
+      );
 
       await tester.tap(find.bySemanticsLabel('Martes · 0 s'));
       await tester.pump();
-      expect(find.text('Martes · 0 s'), findsOneWidget);
+      expect(find.text('Martes'), findsOneWidget);
+      expect(find.text('0 s'), findsOneWidget);
     } finally {
       semantics.dispose();
     }

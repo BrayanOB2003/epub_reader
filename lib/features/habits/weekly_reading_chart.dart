@@ -1,3 +1,4 @@
+import 'package:epub_reader/app/schedule_theme.dart';
 import 'package:epub_reader/features/habits/reading_time.dart';
 import 'package:epub_reader/l10n/app_localizations.dart';
 import 'package:flutter/material.dart';
@@ -27,11 +28,17 @@ class WeeklyReadingChart extends StatefulWidget {
     required this.days,
     required this.goalSeconds,
     required this.today,
+    this.selectedDay,
+    this.onDaySelected,
   });
 
   final List<DailyReading> days;
   final int? goalSeconds;
   final DateTime today;
+
+  /// When set, the chart highlights this day if it falls in [days].
+  final DateTime? selectedDay;
+  final ValueChanged<DateTime>? onDaySelected;
 
   @override
   State<WeeklyReadingChart> createState() => _WeeklyReadingChartState();
@@ -41,12 +48,35 @@ class _WeeklyReadingChartState extends State<WeeklyReadingChart> {
   int? _selected;
 
   @override
+  void initState() {
+    super.initState();
+    _selected = _todayIndex(widget.days, widget.today);
+  }
+
+  void _select(int index) {
+    final day = widget.days[index].day;
+    widget.onDaySelected?.call(day);
+    if (widget.selectedDay != null) return;
+    if (_selected == index) return;
+    setState(() => _selected = index);
+  }
+
+  int? _resolvedIndex() {
+    final external = widget.selectedDay;
+    if (external == null) return _selected;
+    for (var index = 0; index < widget.days.length; index++) {
+      if (_sameDay(widget.days[index].day, external)) return index;
+    }
+    return null;
+  }
+
+  @override
   Widget build(BuildContext context) {
     final theme = Theme.of(context);
     final l10n = AppLocalizations.of(context);
+    final colors = ScheduleColors.of(context);
     final days = widget.days;
     final labels = weekdayLabels(Localizations.localeOf(context).languageCode);
-    final color = theme.colorScheme;
     final peak = days.fold<int>(
       0,
       (highest, day) =>
@@ -55,15 +85,14 @@ class _WeeklyReadingChartState extends State<WeeklyReadingChart> {
     final goal = widget.goalSeconds;
     final scale = _chartScale(goalSeconds: goal ?? 0, peakSeconds: peak);
     final goalFraction = goal == null || goal <= 0 ? null : goal / scale;
-    final lineColor = color.onSurface;
-    final selected = _selected;
+    final selected = _resolvedIndex();
     final selectedDay =
         selected == null || selected < 0 || selected >= days.length
         ? null
         : days[selected];
 
     return Padding(
-      padding: const EdgeInsets.fromLTRB(16, 16, 16, 12),
+      padding: const EdgeInsets.fromLTRB(20, 16, 20, 20),
       child: Column(
         crossAxisAlignment: CrossAxisAlignment.start,
         children: [
@@ -71,19 +100,13 @@ class _WeeklyReadingChartState extends State<WeeklyReadingChart> {
             children: [
               Text(l10n.thisWeek, style: theme.textTheme.titleMedium),
               const Spacer(),
-              if (goalFraction != null) ...[
-                CustomPaint(
-                  size: const Size(22, 10),
-                  painter: _DashedGoalPainter(color: lineColor),
-                ),
-                const SizedBox(width: 6),
+              if (goalFraction != null)
                 Text(
                   l10n.goalLine(formatReadingDuration(goal!)),
-                  style: theme.textTheme.bodySmall?.copyWith(
-                    color: color.onSurfaceVariant,
+                  style: theme.textTheme.bodyMedium?.copyWith(
+                    color: colors.muted,
                   ),
                 ),
-              ],
             ],
           ),
           const SizedBox(height: 16),
@@ -104,10 +127,13 @@ class _WeeklyReadingChartState extends State<WeeklyReadingChart> {
                               weekdayName(l10n, days[index].day.weekday),
                               formatReadingDuration(days[index].engagedSeconds),
                             ),
-                            filled: days[index].engagedSeconds > 0,
-                            isToday: _sameDay(days[index].day, widget.today),
+                            fill: _barFill(
+                              seconds: days[index].engagedSeconds,
+                              goalSeconds: goal,
+                              station: colors.station,
+                            ),
                             selected: selected == index,
-                            onTap: () => setState(() => _selected = index),
+                            onTap: () => _select(index),
                           ),
                         ),
                       ),
@@ -120,7 +146,7 @@ class _WeeklyReadingChartState extends State<WeeklyReadingChart> {
                     bottom: 96 * goalFraction - 1,
                     height: 2,
                     child: CustomPaint(
-                      painter: _DashedGoalPainter(color: lineColor),
+                      painter: _DashedGoalPainter(color: colors.ink),
                     ),
                   ),
               ],
@@ -132,55 +158,59 @@ class _WeeklyReadingChartState extends State<WeeklyReadingChart> {
                 Expanded(
                   child: _WeekdayLabel(
                     label: labels[days[index].day.weekday - 1],
-                    emphasized:
-                        selected == index ||
-                        _sameDay(days[index].day, widget.today),
-                    onTap: () => setState(() => _selected = index),
+                    isToday: _sameDay(days[index].day, widget.today),
+                    selected: selected == index,
+                    onTap: () => _select(index),
                   ),
                 ),
             ],
           ),
-          DayReadingReadout(
-            text: selectedDay == null
-                ? null
-                : l10n.dayReading(
-                    weekdayName(l10n, selectedDay.day.weekday),
-                    formatReadingDuration(selectedDay.engagedSeconds),
-                  ),
-          ),
+          if (selectedDay != null)
+            DayProgramReadout(
+              day: weekdayName(l10n, selectedDay.day.weekday),
+              duration: formatReadingDuration(selectedDay.engagedSeconds),
+            ),
         ],
       ),
     );
   }
 }
 
-class DayReadingReadout extends StatelessWidget {
-  const DayReadingReadout({super.key, required this.text});
+class DayProgramReadout extends StatelessWidget {
+  const DayProgramReadout({
+    super.key,
+    required this.day,
+    required this.duration,
+  });
 
-  final String? text;
+  final String day;
+  final String duration;
 
   @override
   Widget build(BuildContext context) {
-    final message = text;
-    final reduceMotion = MediaQuery.disableAnimationsOf(context);
-    return AnimatedSize(
-      duration: reduceMotion
-          ? Duration.zero
-          : const Duration(milliseconds: 180),
-      curve: Curves.easeOutCubic,
-      alignment: Alignment.topCenter,
-      child: message == null
-          ? const SizedBox(width: double.infinity)
-          : Semantics(
-              liveRegion: true,
-              child: Padding(
-                padding: const EdgeInsets.only(top: 12),
-                child: Text(
-                  message,
-                  style: Theme.of(context).textTheme.bodyLarge,
-                ),
-              ),
-            ),
+    final colors = ScheduleColors.of(context);
+    final l10n = AppLocalizations.of(context);
+    final figure = programTitle(
+      context,
+      colors.station,
+      size: 28,
+    ).copyWith(fontFeatures: const [FontFeature.tabularFigures()]);
+    return Semantics(
+      liveRegion: true,
+      label: l10n.dayReading(day, duration),
+      excludeSemantics: true,
+      child: Padding(
+        padding: const EdgeInsets.only(top: 12),
+        child: Row(
+          crossAxisAlignment: CrossAxisAlignment.baseline,
+          textBaseline: TextBaseline.alphabetic,
+          children: [
+            Text(day, style: programTitle(context, colors.ink, size: 22)),
+            const Spacer(),
+            Text(duration, style: figure),
+          ],
+        ),
+      ),
     );
   }
 }
@@ -188,29 +218,43 @@ class DayReadingReadout extends StatelessWidget {
 class _WeekdayLabel extends StatelessWidget {
   const _WeekdayLabel({
     required this.label,
-    required this.emphasized,
+    required this.isToday,
+    required this.selected,
     required this.onTap,
   });
 
   final String label;
-  final bool emphasized;
+  final bool isToday;
+  final bool selected;
   final VoidCallback onTap;
 
   @override
   Widget build(BuildContext context) {
-    final color = Theme.of(context).colorScheme;
+    final colors = ScheduleColors.of(context);
+    final emphasized = isToday || selected;
     return GestureDetector(
       behavior: HitTestBehavior.opaque,
       onTap: onTap,
       child: Padding(
         padding: const EdgeInsets.only(top: 8, bottom: 4),
-        child: Text(
-          label,
-          textAlign: TextAlign.center,
-          style: Theme.of(context).textTheme.labelMedium?.copyWith(
-            color: emphasized ? color.primary : color.onSurfaceVariant,
-            fontWeight: emphasized ? FontWeight.w700 : FontWeight.w500,
-          ),
+        child: Column(
+          children: [
+            Text(
+              label,
+              textAlign: TextAlign.center,
+              style: Theme.of(context).textTheme.labelMedium?.copyWith(
+                color: selected
+                    ? colors.station
+                    : (isToday ? colors.ink : colors.muted),
+                fontWeight: emphasized ? FontWeight.w700 : FontWeight.w500,
+              ),
+            ),
+            const SizedBox(height: 2),
+            ColoredBox(
+              color: isToday ? colors.station : Colors.transparent,
+              child: const SizedBox(width: 10, height: 2),
+            ),
+          ],
         ),
       ),
     );
@@ -221,23 +265,21 @@ class _DayBar extends StatelessWidget {
   const _DayBar({
     required this.fraction,
     required this.label,
-    required this.filled,
-    required this.isToday,
+    required this.fill,
     required this.selected,
     required this.onTap,
   });
 
   final double fraction;
   final String label;
-  final bool filled;
-  final bool isToday;
+  final Color? fill;
   final bool selected;
   final VoidCallback onTap;
 
   @override
   Widget build(BuildContext context) {
-    final color = Theme.of(context).colorScheme;
     final height = fraction.clamp(0.0, 1.0);
+    final color = fill;
     return Semantics(
       button: true,
       selected: selected,
@@ -246,27 +288,19 @@ class _DayBar extends StatelessWidget {
       child: GestureDetector(
         behavior: HitTestBehavior.opaque,
         onTap: onTap,
-        child: DecoratedBox(
-          decoration: BoxDecoration(
-            color: isToday ? color.primary.withValues(alpha: 0.12) : null,
-            border: selected
-                ? Border.all(color: color.primary, width: 2)
-                : null,
-          ),
-          child: filled
-              ? Align(
-                  alignment: Alignment.bottomCenter,
-                  child: FractionallySizedBox(
-                    heightFactor: height == 0 ? 0.02 : height,
-                    widthFactor: 1,
-                    child: DecoratedBox(
-                      decoration: BoxDecoration(color: color.primary),
-                      child: const SizedBox.expand(),
-                    ),
+        child: color == null
+            ? const SizedBox.expand()
+            : Align(
+                alignment: Alignment.bottomCenter,
+                child: FractionallySizedBox(
+                  heightFactor: height == 0 ? 0.02 : height,
+                  widthFactor: 1,
+                  child: ColoredBox(
+                    color: color,
+                    child: const SizedBox.expand(),
                   ),
-                )
-              : const SizedBox.expand(),
-        ),
+                ),
+              ),
       ),
     );
   }
@@ -297,6 +331,26 @@ class _DashedGoalPainter extends CustomPainter {
   @override
   bool shouldRepaint(_DashedGoalPainter oldDelegate) =>
       oldDelegate.color != color;
+}
+
+/// A met day is solid station. Reading under the goal is station at 28%.
+/// An empty day, including today, stays paper. Today is marked on its label.
+Color? _barFill({
+  required int seconds,
+  required int? goalSeconds,
+  required Color station,
+}) {
+  if (seconds <= 0) return null;
+  final met = goalSeconds != null && goalSeconds > 0 && seconds >= goalSeconds;
+  if (met) return station;
+  return station.withValues(alpha: 0.28);
+}
+
+int? _todayIndex(List<DailyReading> days, DateTime today) {
+  for (var index = 0; index < days.length; index++) {
+    if (_sameDay(days[index].day, today)) return index;
+  }
+  return null;
 }
 
 double _chartScale({required int goalSeconds, required int peakSeconds}) {

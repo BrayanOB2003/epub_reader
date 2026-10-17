@@ -11,6 +11,8 @@ class ReadingCalendar extends StatefulWidget {
     required this.sessions,
     required this.plans,
     required this.today,
+    this.selectedDate,
+    this.onDaySelected,
   });
 
   final List<ReadingSession> sessions;
@@ -18,6 +20,10 @@ class ReadingCalendar extends StatefulWidget {
   /// Goal in effect on each day. A later change does not recolor earlier days.
   final List<MonthPlanVersion> plans;
   final DateTime today;
+
+  /// When set, this day is selected if it belongs to the visible month.
+  final DateTime? selectedDate;
+  final ValueChanged<DateTime>? onDaySelected;
 
   @override
   State<ReadingCalendar> createState() => _ReadingCalendarState();
@@ -41,6 +47,14 @@ class _ReadingCalendarState extends State<ReadingCalendar> {
 
   void _shift(int months) {
     setState(() => _month = DateTime(_month.year, _month.month + months));
+  }
+
+  DateTime? get _activeSelection => widget.selectedDate ?? _selectedDate;
+
+  void _choose(DateTime day) {
+    widget.onDaySelected?.call(day);
+    if (widget.selectedDate != null) return;
+    setState(() => _selectedDate = day);
   }
 
   @override
@@ -67,9 +81,9 @@ class _ReadingCalendarState extends State<ReadingCalendar> {
     final l10n = AppLocalizations.of(context);
     final languageCode = Localizations.localeOf(context).languageCode;
     final labels = weekdayLabels(languageCode);
-    final selected = _selectedDay(month, _selectedDate);
+    final selected = _selectedDay(month, _activeSelection);
     return Padding(
-      padding: const EdgeInsets.fromLTRB(8, 8, 8, 12),
+      padding: const EdgeInsets.fromLTRB(8, 20, 8, 20),
       child: Column(
         children: [
           Row(
@@ -92,17 +106,6 @@ class _ReadingCalendarState extends State<ReadingCalendar> {
                 icon: const Icon(Icons.chevron_right),
               ),
             ],
-          ),
-          DayReadingReadout(
-            text: selected == null
-                ? null
-                : l10n.dayReading(
-                    l10n.calendarDate(
-                      selected.day.day,
-                      readingMonthName(selected.day, languageCode),
-                    ),
-                    formatReadingDuration(selected.engagedSeconds),
-                  ),
           ),
           const SizedBox(height: 4),
           Row(
@@ -131,17 +134,27 @@ class _ReadingCalendarState extends State<ReadingCalendar> {
                             day: day,
                             isToday: _sameDay(day.day, widget.today),
                             selected:
-                                _selectedDate != null &&
-                                _sameDay(day.day, _selectedDate!),
+                                _activeSelection != null &&
+                                _sameDay(day.day, _activeSelection!),
                             label: _dayLabel(day, l10n, languageCode),
-                            onTap: () =>
-                                setState(() => _selectedDate = day.day),
+                            onTap: () => _choose(day.day),
                           ),
                   ),
               ],
             ),
             const SizedBox(height: 4),
           ],
+          if (selected != null)
+            Padding(
+              padding: const EdgeInsets.symmetric(horizontal: 12),
+              child: DayProgramReadout(
+                day: l10n.calendarDate(
+                  selected.day.day,
+                  readingMonthName(selected.day, languageCode),
+                ),
+                duration: formatReadingDuration(selected.engagedSeconds),
+              ),
+            ),
         ],
       ),
     );
@@ -186,7 +199,7 @@ class _DayCell extends StatelessWidget {
       button: true,
       selected: selected,
       container: true,
-      label: label,
+      label: isToday ? '$label, ${AppLocalizations.of(context).today}' : label,
       excludeSemantics: true,
       child: GestureDetector(
         behavior: HitTestBehavior.opaque,
@@ -194,20 +207,38 @@ class _DayCell extends StatelessWidget {
         child: SizedBox(
           height: 48,
           child: Center(
-            child: Container(
+            child: SizedBox(
               width: 32,
               height: 32,
-              alignment: Alignment.center,
-              decoration: BoxDecoration(
-                color: background,
-                border: Border.all(color: borderColor, width: selected ? 2 : 1),
-              ),
-              child: Text(
-                '${day.day.day}',
-                style: Theme.of(context).textTheme.bodyMedium?.copyWith(
-                  color: foreground,
-                  fontWeight: isToday ? FontWeight.w700 : FontWeight.w500,
-                ),
+              child: Stack(
+                alignment: Alignment.center,
+                children: [
+                  Positioned.fill(
+                    child: DecoratedBox(
+                      decoration: BoxDecoration(
+                        color: background,
+                        border: Border.all(color: borderColor),
+                      ),
+                    ),
+                  ),
+                  Text(
+                    '${day.day.day}',
+                    style: Theme.of(context).textTheme.bodyMedium?.copyWith(
+                      color: foreground,
+                      fontWeight: isToday ? FontWeight.w700 : FontWeight.w500,
+                    ),
+                  ),
+                  if (isToday)
+                    Positioned(
+                      bottom: 3,
+                      child: ColoredBox(
+                        color: day.mark == ReadingDayMark.met
+                            ? color.onPrimary
+                            : color.primary,
+                        child: const SizedBox(width: 10, height: 2),
+                      ),
+                    ),
+                ],
               ),
             ),
           ),
