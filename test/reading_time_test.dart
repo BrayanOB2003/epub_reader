@@ -323,6 +323,20 @@ void main() {
       await tester.pump();
       expect(find.text('Lunes'), findsOneWidget);
       expect(find.text('12 min'), findsOneWidget);
+      final day = tester.getTopLeft(find.text('Lunes'));
+      final duration = tester.getRect(
+        find.byWidgetPredicate(
+          (widget) =>
+              widget is Text &&
+              widget.data == '12 min' &&
+              widget.style?.fontSize == 28,
+        ),
+      );
+      expect(duration.left, greaterThan(day.dx));
+      expect(
+        duration.right,
+        closeTo(tester.getSize(find.byType(WeeklyReadingChart)).width - 20, 1),
+      );
 
       await tester.tap(find.bySemanticsLabel('Martes · 0 s'));
       await tester.pump();

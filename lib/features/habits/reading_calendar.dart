@@ -83,7 +83,7 @@ class _ReadingCalendarState extends State<ReadingCalendar> {
     final labels = weekdayLabels(languageCode);
     final selected = _selectedDay(month, _activeSelection);
     return Padding(
-      padding: const EdgeInsets.fromLTRB(8, 12, 8, 12),
+      padding: const EdgeInsets.fromLTRB(8, 20, 8, 20),
       child: Column(
         children: [
           Row(

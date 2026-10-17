@@ -92,7 +92,7 @@ class _WeeklyReadingChartState extends State<WeeklyReadingChart> {
         : days[selected];
 
     return Padding(
-      padding: const EdgeInsets.fromLTRB(20, 16, 20, 12),
+      padding: const EdgeInsets.fromLTRB(20, 16, 20, 20),
       child: Column(
         crossAxisAlignment: CrossAxisAlignment.start,
         children: [
@@ -193,7 +193,7 @@ class DayProgramReadout extends StatelessWidget {
     final figure = programTitle(
       context,
       colors.station,
-      size: 22,
+      size: 28,
     ).copyWith(fontFeatures: const [FontFeature.tabularFigures()]);
     return Semantics(
       liveRegion: true,
@@ -206,7 +206,7 @@ class DayProgramReadout extends StatelessWidget {
           textBaseline: TextBaseline.alphabetic,
           children: [
             Text(day, style: programTitle(context, colors.ink, size: 22)),
-            const SizedBox(width: 8),
+            const Spacer(),
             Text(duration, style: figure),
           ],
         ),

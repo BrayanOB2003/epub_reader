@@ -132,7 +132,9 @@ class _MonthReadingPageState extends ConsumerState<MonthReadingPage> {
       for (final row in reportRows) DateTime(row.year, row.month),
     ];
     final selected =
-        widget.month ?? monthOnReview(sessions: sessionRows, now: now);
+        widget.month ??
+        monthOnReview(sessions: sessionRows, now: now) ??
+        _latestMonth(reportRows, sessionRows, now);
     if (_elapsedPending(sessionRows, archived, now)) {
       _closeElapsed(
         sessions: sessionRows,
@@ -278,6 +280,25 @@ class _MonthReadingPageState extends ConsumerState<MonthReadingPage> {
     return links;
   }
 
+  DateTime? _latestMonth(
+    List<MonthReport> reports,
+    List<ReadingSession> sessions,
+    DateTime now,
+  ) {
+    final current = readingMonthOf(now);
+    DateTime? latest;
+    if (monthHasReading(sessions, current)) latest = current;
+    for (final row in reports) {
+      final month = DateTime(row.year, row.month);
+      if (latest == null ||
+          month.year > latest.year ||
+          (month.year == latest.year && month.month > latest.month)) {
+        latest = month;
+      }
+    }
+    return latest;
+  }
+
   MonthReport? _stored(List<MonthReport> reports, DateTime month) {
     for (final row in reports) {
       if (row.year == month.year && row.month == month.month) return row;
@@ -346,12 +367,6 @@ class MonthReadingView extends StatelessWidget {
             padding: const EdgeInsets.all(24),
             child: Text(l10n.monthReadingEmpty, textAlign: TextAlign.center),
           ),
-          ..._monthLinks(
-            context,
-            links: links,
-            onOpenMonth: onOpenMonth,
-            selected: null,
-          ),
         ],
       );
     }
@@ -359,98 +374,177 @@ class MonthReadingView extends StatelessWidget {
     final minutes = formatReadingDuration(report.engagedSeconds);
     final archetype = report.archetype;
     final quote = report.quote;
-    return ListView(
-      padding: const EdgeInsets.only(bottom: 24),
-      children: [
-        ScheduleHeader(title: scheduleMonthTitle(report.month.month, code)),
-        const ScheduleRule(),
-        Padding(
-          padding: const EdgeInsets.fromLTRB(20, 16, 20, 16),
-          child: Column(
-            crossAxisAlignment: CrossAxisAlignment.start,
-            children: [
-              Text(headline, style: Theme.of(context).textTheme.bodyLarge),
-              if (report.metDays != null) ...[
-                const SizedBox(height: 12),
-                Text(
-                  minutes,
-                  style: programTitle(
-                    context,
-                    ScheduleColors.of(context).ink,
-                    size: 28,
-                  ),
-                ),
-              ],
-              if (report.minuteDeltaSeconds != null &&
-                  report.comparedMonth != null) ...[
-                const SizedBox(height: 8),
-                Text(
-                  _comparison(l10n, report, code),
-                  style: Theme.of(context).textTheme.bodyMedium?.copyWith(
-                    color: ScheduleColors.of(context).muted,
-                  ),
-                ),
-              ],
-            ],
+    final older = _monthNeighbor(report.month, links, newer: false);
+    final newer = _monthNeighbor(report.month, links, newer: true);
+    final open = onOpenMonth;
+    return GestureDetector(
+      onHorizontalDragEnd: (details) {
+        if (open == null) return;
+        final velocity = details.primaryVelocity ?? 0;
+        final month = velocity <= -500
+            ? newer
+            : velocity >= 500
+            ? older
+            : null;
+        if (month != null) open(month);
+      },
+      child: ListView(
+        padding: const EdgeInsets.only(bottom: 24),
+        children: [
+          _MonthTitle(
+            title: scheduleMonthTitle(report.month.month, code),
+            onPrevious: older == null || open == null
+                ? null
+                : () => open(older),
+            onNext: newer == null || open == null ? null : () => open(newer),
           ),
-        ),
-        for (final book in report.books)
-          ScheduleListing(
-            key: ValueKey(book.bookId),
-            title: _title(book.title, l10n),
-            subtitle: _bookSubtitle(l10n, book),
-            trailing: formatReadingDuration(book.engagedSeconds),
-            cover: book.coverBytes,
-            progress: book.progress,
-            onTap: book.available ? () => onRead(book.bookId) : null,
-          ),
-        if (archetype != null) ...[
-          if (report.books.isEmpty) const ScheduleRule(),
-          _ArchetypeBlock(report: archetype),
-        ],
-        if (quote != null) ...[
-          if (report.books.isEmpty || archetype != null) const ScheduleRule(),
-          _QuoteBlock(quote: quote),
-        ],
-        if (report.books.isEmpty || archetype != null || quote != null)
           const ScheduleRule(),
-        Builder(
-          builder: (context) {
-            return Align(
-              alignment: Alignment.centerLeft,
-              child: TextButton(
-                style: TextButton.styleFrom(
-                  minimumSize: const Size(48, 48),
-                  padding: const EdgeInsets.symmetric(horizontal: 20),
-                  alignment: Alignment.centerLeft,
-                ),
-                onPressed: sharing
-                    ? null
-                    : () => onShare(
-                        MonthCardCopy(
-                          month: scheduleMonthTitle(report.month.month, code),
-                          headline: headline,
-                          minutes: minutes,
-                          archetype: archetype == null
-                              ? null
-                              : _archetypeName(l10n, archetype.kind),
+          Padding(
+            padding: const EdgeInsets.fromLTRB(20, 16, 20, 16),
+            child: Column(
+              crossAxisAlignment: CrossAxisAlignment.start,
+              children: [
+                Text(headline, style: Theme.of(context).textTheme.bodyLarge),
+                if (report.metDays != null) ...[
+                  const SizedBox(height: 12),
+                  Text(
+                    minutes,
+                    style: programTitle(
+                      context,
+                      ScheduleColors.of(context).ink,
+                      size: 28,
+                    ),
+                  ),
+                ],
+                if (report.minuteDeltaSeconds != null &&
+                    report.comparedMonth != null) ...[
+                  const SizedBox(height: 8),
+                  Text(
+                    _comparison(l10n, report, code),
+                    style: Theme.of(context).textTheme.bodyMedium?.copyWith(
+                      color: ScheduleColors.of(context).muted,
+                    ),
+                  ),
+                ],
+              ],
+            ),
+          ),
+          for (final book in report.books)
+            ScheduleListing(
+              key: ValueKey(book.bookId),
+              title: _title(book.title, l10n),
+              subtitle: _bookSubtitle(l10n, book),
+              trailing: formatReadingDuration(book.engagedSeconds),
+              cover: book.coverBytes,
+              progress: book.progress,
+              onTap: book.available ? () => onRead(book.bookId) : null,
+            ),
+          if (archetype != null) ...[
+            if (report.books.isEmpty) const ScheduleRule(),
+            _ArchetypeBlock(report: archetype),
+          ],
+          if (quote != null) ...[
+            if (report.books.isEmpty || archetype != null) const ScheduleRule(),
+            _QuoteBlock(quote: quote),
+          ],
+          if (report.books.isEmpty || archetype != null || quote != null)
+            const ScheduleRule(),
+          Builder(
+            builder: (context) {
+              return Align(
+                alignment: Alignment.centerLeft,
+                child: TextButton(
+                  style: TextButton.styleFrom(
+                    minimumSize: const Size(48, 48),
+                    padding: const EdgeInsets.symmetric(horizontal: 20),
+                    alignment: Alignment.centerLeft,
+                  ),
+                  onPressed: sharing
+                      ? null
+                      : () => onShare(
+                          MonthCardCopy(
+                            month: scheduleMonthTitle(report.month.month, code),
+                            headline: headline,
+                            minutes: minutes,
+                            archetype: archetype == null
+                                ? null
+                                : _archetypeName(l10n, archetype.kind),
+                          ),
+                          _shareOrigin(context),
                         ),
-                        _shareOrigin(context),
-                      ),
-                child: Text(l10n.share),
-              ),
-            );
-          },
+                  child: Text(l10n.share),
+                ),
+              );
+            },
+          ),
+        ],
+      ),
+    );
+  }
+}
+
+class _MonthTitle extends StatelessWidget {
+  const _MonthTitle({
+    required this.title,
+    required this.onPrevious,
+    required this.onNext,
+  });
+
+  final String title;
+  final VoidCallback? onPrevious;
+  final VoidCallback? onNext;
+
+  @override
+  Widget build(BuildContext context) {
+    final colors = ScheduleColors.of(context);
+    final l10n = AppLocalizations.of(context);
+    final ios = Theme.of(context).platform == TargetPlatform.iOS;
+    return Row(
+      children: [
+        IconButton(
+          tooltip: l10n.previousMonth,
+          onPressed: onPrevious,
+          icon: const Icon(Icons.chevron_left),
         ),
-        ..._monthLinks(
-          context,
-          links: links,
-          onOpenMonth: onOpenMonth,
-          selected: report.month,
+        Expanded(
+          child: Text(
+            title,
+            maxLines: 1,
+            overflow: TextOverflow.ellipsis,
+            style: Theme.of(context).textTheme.headlineMedium?.copyWith(
+              fontSize: ios ? 34 : 28,
+              fontWeight: FontWeight.w700,
+              height: 1.05,
+              color: colors.ink,
+            ),
+          ),
+        ),
+        IconButton(
+          tooltip: l10n.nextMonth,
+          onPressed: onNext,
+          icon: const Icon(Icons.chevron_right),
         ),
       ],
     );
   }
+}
+
+DateTime? _monthNeighbor(
+  DateTime selected,
+  List<MonthLink> links, {
+  required bool newer,
+}) {
+  final months = [selected, for (final link in links) link.month]
+    ..sort((a, b) {
+      final year = a.year.compareTo(b.year);
+      return year != 0 ? year : a.month.compareTo(b.month);
+    });
+  final index = months.indexWhere(
+    (month) => month.year == selected.year && month.month == selected.month,
+  );
+  final next = newer ? index + 1 : index - 1;
+  if (next < 0 || next >= months.length) return null;
+  return months[next];
 }
 
 class _ArchetypeBlock extends StatelessWidget {
@@ -639,38 +733,4 @@ Rect? _shareOrigin(BuildContext context) {
   final box = context.findRenderObject() as RenderBox?;
   if (box == null || !box.hasSize) return null;
   return box.localToGlobal(Offset.zero) & box.size;
-}
-
-List<Widget> _monthLinks(
-  BuildContext context, {
-  required List<MonthLink> links,
-  required ValueChanged<DateTime>? onOpenMonth,
-  required DateTime? selected,
-}) {
-  final open = onOpenMonth;
-  if (links.isEmpty || open == null) return const [];
-  final l10n = AppLocalizations.of(context);
-  final code = Localizations.localeOf(context).languageCode;
-  final years = <int>{
-    if (selected != null) selected.year,
-    for (final link in links) link.month.year,
-  };
-  final withYear = years.length > 1;
-  return [
-    for (final link in links) ...[
-      const ScheduleRule(),
-      ListTile(
-        key: ValueKey('month-${link.month.year}-${link.month.month}'),
-        contentPadding: const EdgeInsets.symmetric(horizontal: 20),
-        title: Text(
-          withYear
-              ? '${scheduleMonthTitle(link.month.month, code)} ${link.month.year}'
-              : scheduleMonthTitle(link.month.month, code),
-        ),
-        subtitle: link.draft ? Text(l10n.monthInProgress) : null,
-        onTap: () => open(link.month),
-      ),
-    ],
-    const ScheduleRule(),
-  ];
 }

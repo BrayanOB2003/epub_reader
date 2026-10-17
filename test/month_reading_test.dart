@@ -512,7 +512,7 @@ void main() {
     expect(find.text('Compartir'), findsOneWidget);
   });
 
-  testWidgets('other months are listed under the review', (tester) async {
+  testWidgets('other months stay off the bottom of the review', (tester) async {
     await tester.pumpWidget(
       _app(
         MonthReadingView(
@@ -533,9 +533,79 @@ void main() {
       ),
     );
 
-    expect(find.text('Octubre'), findsOneWidget);
-    expect(find.text('En curso'), findsOneWidget);
-    expect(find.text('Agosto'), findsOneWidget);
+    expect(find.text('Septiembre'), findsOneWidget);
+    expect(find.text('Octubre'), findsNothing);
+    expect(find.text('En curso'), findsNothing);
+    expect(find.text('Agosto'), findsNothing);
+  });
+
+  testWidgets('the month title steps to the neighboring months', (
+    tester,
+  ) async {
+    DateTime? opened;
+    await tester.pumpWidget(
+      _app(
+        MonthReadingView(
+          report: MonthReadingReport(
+            month: DateTime(2026, 9),
+            closed: true,
+            engagedSeconds: 60,
+            books: const [],
+          ),
+          links: [
+            MonthLink(DateTime(2026, 10), draft: true),
+            MonthLink(DateTime(2026, 8)),
+          ],
+          onRead: (_) {},
+          onOpenMonth: (month) => opened = month,
+          onShare: (_, _) {},
+        ),
+      ),
+    );
+
+    await tester.tap(find.byTooltip('Mes anterior'));
+    await tester.pump();
+    expect(opened, DateTime(2026, 8));
+
+    await tester.fling(find.text('Septiembre'), const Offset(-500, 0), 2000);
+    await tester.pump();
+    expect(opened, DateTime(2026, 10));
+  });
+
+  testWidgets('the newest month does not step forward', (tester) async {
+    DateTime? opened;
+    await tester.pumpWidget(
+      _app(
+        MonthReadingView(
+          report: MonthReadingReport(
+            month: DateTime(2026, 10),
+            closed: false,
+            engagedSeconds: 60,
+            books: const [],
+          ),
+          links: [MonthLink(DateTime(2026, 8))],
+          onRead: (_) {},
+          onOpenMonth: (month) => opened = month,
+          onShare: (_, _) {},
+        ),
+      ),
+    );
+
+    expect(
+      tester
+          .widget<IconButton>(
+            find.ancestor(
+              of: find.byTooltip('Mes siguiente'),
+              matching: find.byType(IconButton),
+            ),
+          )
+          .onPressed,
+      isNull,
+    );
+
+    await tester.tap(find.byTooltip('Mes anterior'));
+    await tester.pump();
+    expect(opened, DateTime(2026, 8));
   });
 
   test('a closed report keeps its facts when encoded', () {

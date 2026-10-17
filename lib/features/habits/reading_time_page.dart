@@ -181,25 +181,19 @@ class _AllBooks extends StatelessWidget {
   @override
   Widget build(BuildContext context) {
     final colors = ScheduleColors.of(context);
-    return Column(
-      crossAxisAlignment: CrossAxisAlignment.start,
-      children: [
-        const ScheduleRule(),
-        SizedBox(
-          width: double.infinity,
-          child: TextButton(
-            onPressed: onTap,
-            style: TextButton.styleFrom(
-              foregroundColor: colors.station,
-              minimumSize: const Size(48, 48),
-              padding: const EdgeInsets.symmetric(horizontal: 20),
-              tapTargetSize: MaterialTapTargetSize.shrinkWrap,
-              alignment: Alignment.centerLeft,
-            ),
-            child: Text(AppLocalizations.of(context).allReadingBooks),
-          ),
+    return SizedBox(
+      width: double.infinity,
+      child: TextButton(
+        onPressed: onTap,
+        style: TextButton.styleFrom(
+          foregroundColor: colors.station,
+          minimumSize: const Size(48, 48),
+          padding: const EdgeInsets.symmetric(horizontal: 20),
+          tapTargetSize: MaterialTapTargetSize.shrinkWrap,
+          alignment: Alignment.centerLeft,
         ),
-      ],
+        child: Text(AppLocalizations.of(context).allReadingBooks),
+      ),
     );
   }
 }

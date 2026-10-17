@@ -1,4 +1,5 @@
 import 'package:epub_reader/app/schedule_theme.dart';
+import 'package:epub_reader/app/schedule_widgets.dart';
 import 'package:epub_reader/core/database/app_database.dart';
 import 'package:epub_reader/features/habits/book_reading_block.dart';
 import 'package:epub_reader/features/habits/book_readings_page.dart';
@@ -298,16 +299,23 @@ void main() {
     expect(find.text('10 min'), findsOneWidget);
     expect(find.text('Uno'), findsOneWidget);
     expect(find.text('20 min'), findsOneWidget);
+    expect(find.text('Faltan ~40 min'), findsNothing);
+    expect(find.textContaining('sesión'), findsNothing);
+
+    await tester.tap(find.text('Uno'));
+    await tester.pumpAndSettle();
+
     expect(find.text('Faltan ~40 min'), findsOneWidget);
     expect(find.text('~10 min por cada 10 %'), findsOneWidget);
-    expect(find.text('1 sesión'), findsOneWidget);
-    expect(find.text('4 sesiones'), findsOneWidget);
-    expect(find.text('2 citas'), findsOneWidget);
+    expect(find.text('4 sesiones · 2 citas'), findsOneWidget);
+    expect(find.text('1 sesión'), findsNothing);
   });
 
-  testWidgets('the book block shows the pace lines under the title', (
-    tester,
-  ) async {
+  testWidgets('tapping a book opens its pace in a dialog', (tester) async {
+    tester.view.physicalSize = const Size(390, 844);
+    tester.view.devicePixelRatio = 1;
+    addTearDown(tester.view.resetPhysicalSize);
+    var opened = false;
     await tester.pumpWidget(
       _app(
         BookReadingBlock(
@@ -327,7 +335,7 @@ void main() {
               horizon: ReadingHorizon.weeks(3),
             ),
           ),
-          onRead: () {},
+          onRead: () => opened = true,
         ),
       ),
     );
@@ -335,14 +343,71 @@ void main() {
     expect(find.text('Los días del faro'), findsOneWidget);
     expect(find.text('Marina Soler'), findsOneWidget);
     expect(find.text('3 h 45 min'), findsOneWidget);
+    expect(find.text('Faltan ~1 h 15 min'), findsNothing);
+
+    await tester.tap(find.text('Los días del faro'));
+    await tester.pumpAndSettle();
+
     expect(find.text('Faltan ~1 h 15 min'), findsOneWidget);
     expect(find.text('~10 min por cada 10 %'), findsOneWidget);
     expect(find.text('A este ritmo, unas 3 semanas'), findsOneWidget);
-    expect(find.text('6 sesiones'), findsOneWidget);
-    expect(find.text('1 cita'), findsOneWidget);
+    expect(find.text('6 sesiones · 1 cita'), findsOneWidget);
+    expect(find.byType(ScheduleRule), findsOneWidget);
+
+    final dialog = find.byType(AlertDialog);
+    expect(
+      tester.widget<AlertDialog>(dialog).backgroundColor,
+      ScheduleColors.light.paper,
+    );
+    final cover = tester.getRect(
+      find.descendant(
+        of: dialog,
+        matching: find.byType(ScheduleCoverPlaceholder),
+      ),
+    );
+    final figure = tester.getRect(
+      find.descendant(
+        of: dialog,
+        matching: find.byWidgetPredicate(
+          (widget) =>
+              widget is Text &&
+              widget.data == '3 h 45 min' &&
+              widget.style?.fontSize == 28,
+        ),
+      ),
+    );
+    final title = tester.getTopLeft(
+      find.descendant(of: dialog, matching: find.text('Los días del faro')),
+    );
+    final left = tester.getRect(
+      find.descendant(of: dialog, matching: find.text('Faltan ~1 h 15 min')),
+    );
+    final pace = tester.getRect(
+      find.descendant(of: dialog, matching: find.text('~10 min por cada 10 %')),
+    );
+    final horizon = tester.getRect(
+      find.descendant(
+        of: dialog,
+        matching: find.text('A este ritmo, unas 3 semanas'),
+      ),
+    );
+    expect(figure.left, closeTo(cover.left, 1));
+    expect(figure.left, lessThan(title.dx));
+    expect(figure.top, greaterThan(cover.bottom));
+    expect(left.top - figure.bottom, greaterThan(4));
+    expect(left.top - figure.bottom, lessThan(16));
+    expect(pace.top - left.bottom, greaterThan(left.top - figure.bottom));
+    expect(horizon.top - pace.bottom, greaterThan(4));
+    expect(horizon.top - pace.bottom, lessThan(16));
+
+    await tester.tap(find.text('Leer'));
+    await tester.pumpAndSettle();
+
+    expect(opened, isTrue);
+    expect(find.text('Faltan ~1 h 15 min'), findsNothing);
   });
 
-  testWidgets('without a pace the block shows the session and no quotes', (
+  testWidgets('without a pace the dialog shows the session and no quotes', (
     tester,
   ) async {
     await tester.pumpWidget(
@@ -361,7 +426,36 @@ void main() {
 
     expect(find.text('Uno'), findsOneWidget);
     expect(find.text('1 min 30 s'), findsOneWidget);
+    expect(find.text('1 sesión'), findsNothing);
+
+    await tester.tap(find.text('Uno'));
+    await tester.pumpAndSettle();
+
     expect(find.text('1 sesión'), findsOneWidget);
+    expect(find.byType(ScheduleRule), findsOneWidget);
+    final dialog = find.byType(AlertDialog);
+    final cover = tester.getTopLeft(
+      find.descendant(
+        of: dialog,
+        matching: find.byType(ScheduleCoverPlaceholder),
+      ),
+    );
+    final figure = tester.getTopLeft(
+      find.descendant(
+        of: dialog,
+        matching: find.byWidgetPredicate(
+          (widget) =>
+              widget is Text &&
+              widget.data == '1 min 30 s' &&
+              widget.style?.fontSize == 28,
+        ),
+      ),
+    );
+    final sessions = tester.getTopLeft(
+      find.descendant(of: dialog, matching: find.text('1 sesión')),
+    );
+    expect(figure.dx, closeTo(cover.dx, 1));
+    expect(sessions.dy, greaterThan(figure.dy + 28));
     expect(find.textContaining('cita'), findsNothing);
     expect(find.textContaining('Faltan'), findsNothing);
     expect(find.textContaining('ritmo'), findsNothing);
