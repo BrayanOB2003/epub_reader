@@ -284,6 +284,12 @@ abstract class AppLocalizations {
   /// **'Cuando haya libros disponibles, aparecerán aquí.'**
   String get catalogEmptyBody;
 
+  /// No description provided for @catalogLoading.
+  ///
+  /// In es, this message translates to:
+  /// **'Cargando el catálogo'**
+  String get catalogLoading;
+
   /// No description provided for @retry.
   ///
   /// In es, this message translates to:

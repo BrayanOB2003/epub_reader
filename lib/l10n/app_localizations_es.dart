@@ -106,6 +106,9 @@ class AppLocalizationsEs extends AppLocalizations {
       'Cuando haya libros disponibles, aparecerán aquí.';
 
   @override
+  String get catalogLoading => 'Cargando el catálogo';
+
+  @override
   String get retry => 'Reintentar';
 
   @override

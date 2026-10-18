@@ -36,6 +36,7 @@
   "english": "Inglés",
   "catalogEmpty": "El catálogo está vacío",
   "catalogEmptyBody": "Cuando haya libros disponibles, aparecerán aquí.",
+  "catalogLoading": "Cargando el catálogo",
   "retry": "Reintentar",
   "catalogLoadFailed": "No se pudo cargar el catálogo.",
   "catalogLoadFailedStatus": "No se pudo cargar el catálogo ({status}).",

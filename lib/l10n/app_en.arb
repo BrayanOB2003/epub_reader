@@ -31,6 +31,7 @@
   "english": "English",
   "catalogEmpty": "The catalog is empty",
   "catalogEmptyBody": "Books will show up here when some are available.",
+  "catalogLoading": "Loading the catalog",
   "retry": "Retry",
   "catalogLoadFailed": "The catalog could not be loaded.",
   "catalogLoadFailedStatus": "The catalog could not be loaded ({status}).",
