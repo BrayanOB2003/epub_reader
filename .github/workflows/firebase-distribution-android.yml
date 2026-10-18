@@ -63,8 +63,10 @@ jobs:
           test -s .env/.env
           grep -qE '^X_EPUB_KEY[:=]' .env/.env
 
-      - name: Install Dependencies
-        run: flutter pub get
+      # El lock fija un commit del fork. Este upgrade toma el ultimo commit
+      # de la rama prod antes de compilar, sin tocar el resto de dependencias.
+      - name: Instalar dependencias y sincronizar flutter_readium
+        run: flutter pub upgrade flutter_readium
 
       - name: Run Build Runner
         run: dart run build_runner build --delete-conflicting-outputs
