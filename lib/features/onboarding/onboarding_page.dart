@@ -7,6 +7,7 @@ import 'package:epub_reader/features/notifications/local_notifications.dart';
 import 'package:epub_reader/features/notifications/notification_destination.dart';
 import 'package:epub_reader/features/onboarding/onboarding_answers.dart';
 import 'package:epub_reader/features/profile/reader_profile_store.dart';
+import 'package:epub_reader/features/profile/reading_day_row.dart';
 import 'package:epub_reader/features/profile/reading_goal.dart';
 import 'package:epub_reader/features/profile/reading_routine.dart';
 import 'package:epub_reader/features/onboarding/onboarding_controller.dart';
@@ -30,7 +31,7 @@ class OnboardingRoute extends ConsumerWidget {
       error: (error, _) => Scaffold(
         body: Center(
           child: Text(
-            AppLocalizations.of(context).profileLoadFailed('$error'),
+            AppLocalizations.of(context).profileLoadFailed,
             textAlign: TextAlign.center,
           ),
         ),
@@ -124,11 +125,21 @@ class _OnboardingPageState extends ConsumerState<OnboardingPage> {
       if (widget.editing) {
         final pending = ref.read(pendingNotificationLocationProvider);
         ref.read(pendingNotificationLocationProvider.notifier).clear();
-        context.go(
-          routeOpenedFromNotification(
-            notificationLanding(editing: true, pendingLocation: pending),
-          ),
-        );
+        if (pending != null) {
+          context.go(
+            routeOpenedFromNotification(
+              notificationLanding(editing: true, pendingLocation: pending),
+            ),
+          );
+          return;
+        }
+        final messenger = ScaffoldMessenger.of(context);
+        messenger.showSnackBar(SnackBar(content: Text(l10n.habitSaved)));
+        if (context.canPop()) {
+          context.pop();
+        } else {
+          context.go('/profile');
+        }
         return;
       }
       final granted = await _notificationsGranted();
@@ -197,7 +208,11 @@ class _OnboardingPageState extends ConsumerState<OnboardingPage> {
                     child: Text(
                       _step == 0
                           ? l10n.start
-                          : (_step == 3 ? l10n.startReading : l10n.next),
+                          : (_step == 3
+                                ? (widget.editing
+                                      ? l10n.save
+                                      : l10n.startReading)
+                                : l10n.next),
                     ),
                   ),
                 ),
@@ -258,44 +273,23 @@ class _OnboardingPageState extends ConsumerState<OnboardingPage> {
             const SizedBox(height: 16),
             Text(l10n.whichDays, style: theme.textTheme.titleMedium),
             const SizedBox(height: 12),
-            Row(
-              children: [
-                for (final day in ReadingWeekday.values)
-                  Expanded(
-                    child: Padding(
-                      padding: const EdgeInsets.symmetric(horizontal: 3),
-                      child: _DayLetter(
-                        letter: day.letter(l10n),
-                        label: day.label(l10n),
-                        selected: _answers.weekdays.contains(day),
-                        onTap: () {
-                          final next = {..._answers.weekdays};
-                          if (!next.add(day)) next.remove(day);
-                          setState(
-                            () => _answers = _answers.copyWith(weekdays: next),
-                          );
-                        },
-                      ),
-                    ),
-                  ),
-              ],
+            ReadingDayRow(
+              selected: _answers.weekdays,
+              onToggle: (day) {
+                final next = {..._answers.weekdays};
+                if (!next.add(day)) next.remove(day);
+                setState(() => _answers = _answers.copyWith(weekdays: next));
+              },
             ),
             const SizedBox(height: 16),
             Text(l10n.whatTime, style: theme.textTheme.titleMedium),
             const SizedBox(height: 12),
-            Wrap(
-              spacing: 8,
-              runSpacing: 8,
-              children: [
-                for (final hour in _answers.routine!.hours)
-                  _HourChip(
-                    label: readingHourLabel(hour),
-                    selected: _answers.routineHour == hour,
-                    onTap: () => setState(
-                      () => _answers = _answers.copyWith(routineHour: hour),
-                    ),
-                  ),
-              ],
+            ReadingHourWrap(
+              hours: _answers.routine!.hours,
+              selected: _answers.routineHour,
+              onSelected: (hour) => setState(
+                () => _answers = _answers.copyWith(routineHour: hour),
+              ),
             ),
           ],
         ],
@@ -365,90 +359,6 @@ class _Question extends StatelessWidget {
   }
 }
 
-class _DayLetter extends StatelessWidget {
-  const _DayLetter({
-    required this.letter,
-    required this.label,
-    required this.selected,
-    required this.onTap,
-  });
-
-  final String letter;
-  final String label;
-  final bool selected;
-  final VoidCallback onTap;
-
-  @override
-  Widget build(BuildContext context) {
-    final colors = ScheduleColors.of(context);
-    final theme = Theme.of(context);
-    final ink = selected ? colors.onStation : colors.ink;
-    return Semantics(
-      button: true,
-      selected: selected,
-      label: label,
-      child: Padding(
-        padding: const EdgeInsets.symmetric(horizontal: 3),
-        child: Material(
-          color: selected ? colors.station : colors.paper,
-          shape: RoundedRectangleBorder(
-            borderRadius: scheduleRadius(context),
-            side: BorderSide(color: selected ? colors.station : colors.rule),
-          ),
-          child: InkWell(
-            onTap: onTap,
-            child: SizedBox(
-              height: 44,
-              child: Center(
-                child: Text(
-                  letter,
-                  style: theme.textTheme.titleMedium?.copyWith(color: ink),
-                ),
-              ),
-            ),
-          ),
-        ),
-      ),
-    );
-  }
-}
-
-class _HourChip extends StatelessWidget {
-  const _HourChip({
-    required this.label,
-    required this.selected,
-    required this.onTap,
-  });
-
-  final String label;
-  final bool selected;
-  final VoidCallback onTap;
-
-  @override
-  Widget build(BuildContext context) {
-    final colors = ScheduleColors.of(context);
-    final theme = Theme.of(context);
-    final ink = selected ? colors.onStation : colors.ink;
-    return Material(
-      color: selected ? colors.station : colors.paper,
-      shape: RoundedRectangleBorder(
-        borderRadius: scheduleRadius(context),
-        side: BorderSide(color: selected ? colors.station : colors.rule),
-      ),
-      child: InkWell(
-        onTap: onTap,
-        child: Padding(
-          padding: const EdgeInsets.symmetric(horizontal: 14, vertical: 12),
-          child: Text(
-            label,
-            style: theme.textTheme.bodyLarge?.copyWith(color: ink),
-          ),
-        ),
-      ),
-    );
-  }
-}
-
 class _ChoiceTile extends StatelessWidget {
   const _ChoiceTile({
     required this.label,
@@ -464,7 +374,7 @@ class _ChoiceTile extends StatelessWidget {
   Widget build(BuildContext context) {
     final colors = ScheduleColors.of(context);
     final theme = Theme.of(context);
-    final ink = selected ? colors.onStation : colors.ink;
+    final ink = selected ? typeOnStation(context) : colors.ink;
     return Padding(
       padding: const EdgeInsets.only(bottom: 8),
       child: Material(
@@ -487,7 +397,7 @@ class _ChoiceTile extends StatelessWidget {
                       style: theme.textTheme.bodyLarge?.copyWith(color: ink),
                     ),
                   ),
-                  if (selected) Icon(Icons.check, color: colors.onStation),
+                  if (selected) Icon(Icons.check, color: typeOnStation(context)),
                 ],
               ),
             ),

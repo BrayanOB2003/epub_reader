@@ -81,6 +81,16 @@ class ScheduleColors extends ThemeExtension<ScheduleColors> {
   }
 }
 
+/// Type that sits on the station band. Night station needs white to clear
+/// 4.5:1; the paper tone used in the day falls short on the night band.
+Color typeOnStation(BuildContext context) {
+  final colors = ScheduleColors.of(context);
+  if (Theme.of(context).brightness == Brightness.dark) {
+    return colors.onStationMuted;
+  }
+  return colors.onStation;
+}
+
 const programFace = 'BarlowCondensed';
 
 /// The five appearances. [programa] is the printed log the app shipped with.

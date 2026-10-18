@@ -1,5 +1,7 @@
 import 'dart:math';
 
+const sampleBookFilePath = 'sample/lectura-de-ejemplo.epub';
+
 class SampleReading {
   const SampleReading({
     required this.startedAt,

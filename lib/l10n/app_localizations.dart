@@ -473,8 +473,8 @@ abstract class AppLocalizations {
   /// No description provided for @quotesLoadFailed.
   ///
   /// In es, this message translates to:
-  /// **'No se pudieron cargar las citas.\n{error}'**
-  String quotesLoadFailed(String error);
+  /// **'No se pudieron cargar las citas. Inténtalo de nuevo.'**
+  String get quotesLoadFailed;
 
   /// No description provided for @bookGone.
   ///
@@ -662,6 +662,18 @@ abstract class AppLocalizations {
   /// **'Quiero empezar a leer'**
   String get startReading;
 
+  /// No description provided for @save.
+  ///
+  /// In es, this message translates to:
+  /// **'Guardar'**
+  String get save;
+
+  /// No description provided for @habitSaved.
+  ///
+  /// In es, this message translates to:
+  /// **'Hábito guardado.'**
+  String get habitSaved;
+
   /// No description provided for @next.
   ///
   /// In es, this message translates to:
@@ -677,8 +689,8 @@ abstract class AppLocalizations {
   /// No description provided for @profileLoadFailed.
   ///
   /// In es, this message translates to:
-  /// **'No se pudo cargar el perfil.\n{error}'**
-  String profileLoadFailed(String error);
+  /// **'No se pudo cargar el perfil. Inténtalo de nuevo.'**
+  String get profileLoadFailed;
 
   /// No description provided for @motivationQuestion.
   ///
@@ -806,6 +818,12 @@ abstract class AppLocalizations {
   /// **'D'**
   String get sundayLetter;
 
+  /// No description provided for @everyDay.
+  ///
+  /// In es, this message translates to:
+  /// **'Todos los días'**
+  String get everyDay;
+
   /// No description provided for @monday.
   ///
   /// In es, this message translates to:
@@ -860,23 +878,101 @@ abstract class AppLocalizations {
   /// **'Hábito de lectura'**
   String get readingHabit;
 
+  /// No description provided for @profileRecords.
+  ///
+  /// In es, this message translates to:
+  /// **'Registros'**
+  String get profileRecords;
+
+  /// No description provided for @profileDevice.
+  ///
+  /// In es, this message translates to:
+  /// **'Dispositivo'**
+  String get profileDevice;
+
+  /// No description provided for @profileSampleData.
+  ///
+  /// In es, this message translates to:
+  /// **'Datos de muestra'**
+  String get profileSampleData;
+
   /// No description provided for @sampleReadings.
   ///
   /// In es, this message translates to:
-  /// **'Generar lecturas de ejemplo'**
+  /// **'Lecturas de ejemplo'**
   String get sampleReadings;
 
   /// No description provided for @sampleReadingsSubtitle.
   ///
   /// In es, this message translates to:
-  /// **'Desde hoy, un mes y medio atrás, de 0 a 15 minutos.'**
+  /// **'Se agregan al registro de lectura de este dispositivo.'**
   String get sampleReadingsSubtitle;
 
   /// No description provided for @sampleReadingsBody.
   ///
   /// In es, this message translates to:
-  /// **'Se agregará una lectura al azar por cada día, desde hoy hasta un mes y medio atrás. Cada una dura entre 0 y 15 minutos.'**
+  /// **'Se agrega una lectura al azar por cada día, desde hoy hasta un mes y medio atrás. Cada una dura entre 0 y 15 minutos.'**
   String get sampleReadingsBody;
+
+  /// No description provided for @sampleReadingsContinue.
+  ///
+  /// In es, this message translates to:
+  /// **'Continuar'**
+  String get sampleReadingsContinue;
+
+  /// No description provided for @sampleReadingsConfirmTitle.
+  ///
+  /// In es, this message translates to:
+  /// **'Escribir en el registro'**
+  String get sampleReadingsConfirmTitle;
+
+  /// No description provided for @sampleReadingsConfirmBody.
+  ///
+  /// In es, this message translates to:
+  /// **'Estas lecturas se agregan a tu historial en este dispositivo. Puedes quitarlas después desde Perfil.'**
+  String get sampleReadingsConfirmBody;
+
+  /// No description provided for @sampleReadingsWrite.
+  ///
+  /// In es, this message translates to:
+  /// **'Escribirlas'**
+  String get sampleReadingsWrite;
+
+  /// No description provided for @sampleReadingsPresent.
+  ///
+  /// In es, this message translates to:
+  /// **'{count} en el registro de este dispositivo.'**
+  String sampleReadingsPresent(int count);
+
+  /// No description provided for @removeSampleReadings.
+  ///
+  /// In es, this message translates to:
+  /// **'Quitar lecturas de ejemplo'**
+  String get removeSampleReadings;
+
+  /// No description provided for @removeSampleReadingsBody.
+  ///
+  /// In es, this message translates to:
+  /// **'Se quitan del registro las lecturas de ejemplo. Las que leíste tú se quedan.'**
+  String get removeSampleReadingsBody;
+
+  /// No description provided for @removeSampleReadingsAction.
+  ///
+  /// In es, this message translates to:
+  /// **'Quitar'**
+  String get removeSampleReadingsAction;
+
+  /// No description provided for @sampleReadingsRemoved.
+  ///
+  /// In es, this message translates to:
+  /// **'Se quitaron las lecturas de ejemplo.'**
+  String get sampleReadingsRemoved;
+
+  /// No description provided for @sampleReadingsRemoveFailed.
+  ///
+  /// In es, this message translates to:
+  /// **'No se pudieron quitar las lecturas de ejemplo.'**
+  String get sampleReadingsRemoveFailed;
 
   /// No description provided for @generate.
   ///
@@ -1921,6 +2017,240 @@ abstract class AppLocalizations {
   /// In es, this message translates to:
   /// **'No se pudo cambiar la fuente.'**
   String get fontChangeFailed;
+
+  /// No description provided for @appearanceRestore.
+  ///
+  /// In es, this message translates to:
+  /// **'Restaurar'**
+  String get appearanceRestore;
+
+  /// No description provided for @appearanceRestoreFailed.
+  ///
+  /// In es, this message translates to:
+  /// **'No se pudo restaurar la apariencia.'**
+  String get appearanceRestoreFailed;
+
+  /// No description provided for @pqrs.
+  ///
+  /// In es, this message translates to:
+  /// **'Ayuda'**
+  String get pqrs;
+
+  /// No description provided for @pqrsMessageCount.
+  ///
+  /// In es, this message translates to:
+  /// **'{count} / {limit}'**
+  String pqrsMessageCount(int count, int limit);
+
+  /// No description provided for @pqrsIntro.
+  ///
+  /// In es, this message translates to:
+  /// **'Peticiones, quejas, reclamos y sugerencias sobre Liora.'**
+  String get pqrsIntro;
+
+  /// No description provided for @pqrsQuestions.
+  ///
+  /// In es, this message translates to:
+  /// **'Preguntas frecuentes'**
+  String get pqrsQuestions;
+
+  /// No description provided for @pqrsWrite.
+  ///
+  /// In es, this message translates to:
+  /// **'Escribir'**
+  String get pqrsWrite;
+
+  /// No description provided for @pqrsKindPetition.
+  ///
+  /// In es, this message translates to:
+  /// **'Petición'**
+  String get pqrsKindPetition;
+
+  /// No description provided for @pqrsKindComplaint.
+  ///
+  /// In es, this message translates to:
+  /// **'Queja'**
+  String get pqrsKindComplaint;
+
+  /// No description provided for @pqrsKindClaim.
+  ///
+  /// In es, this message translates to:
+  /// **'Reclamo'**
+  String get pqrsKindClaim;
+
+  /// No description provided for @pqrsKindSuggestion.
+  ///
+  /// In es, this message translates to:
+  /// **'Sugerencia'**
+  String get pqrsKindSuggestion;
+
+  /// No description provided for @pqrsKindRequired.
+  ///
+  /// In es, this message translates to:
+  /// **'Elige petición, queja, reclamo o sugerencia.'**
+  String get pqrsKindRequired;
+
+  /// No description provided for @pqrsMessage.
+  ///
+  /// In es, this message translates to:
+  /// **'Mensaje'**
+  String get pqrsMessage;
+
+  /// No description provided for @pqrsMessageHint.
+  ///
+  /// In es, this message translates to:
+  /// **'Qué pasó, o qué te gustaría.'**
+  String get pqrsMessageHint;
+
+  /// No description provided for @pqrsMessageRequired.
+  ///
+  /// In es, this message translates to:
+  /// **'Escribe el mensaje.'**
+  String get pqrsMessageRequired;
+
+  /// No description provided for @pqrsMessageTooLong.
+  ///
+  /// In es, this message translates to:
+  /// **'El mensaje es demasiado largo.'**
+  String get pqrsMessageTooLong;
+
+  /// No description provided for @pqrsEmail.
+  ///
+  /// In es, this message translates to:
+  /// **'Correo'**
+  String get pqrsEmail;
+
+  /// No description provided for @pqrsEmailHint.
+  ///
+  /// In es, this message translates to:
+  /// **'Opcional, si quieres una respuesta'**
+  String get pqrsEmailHint;
+
+  /// No description provided for @pqrsEmailInvalid.
+  ///
+  /// In es, this message translates to:
+  /// **'Ese correo no es válido.'**
+  String get pqrsEmailInvalid;
+
+  /// No description provided for @pqrsSend.
+  ///
+  /// In es, this message translates to:
+  /// **'Enviar'**
+  String get pqrsSend;
+
+  /// No description provided for @pqrsSending.
+  ///
+  /// In es, this message translates to:
+  /// **'Enviando'**
+  String get pqrsSending;
+
+  /// No description provided for @pqrsSendFailed.
+  ///
+  /// In es, this message translates to:
+  /// **'No se pudo enviar. Inténtalo de nuevo.'**
+  String get pqrsSendFailed;
+
+  /// No description provided for @pqrsHeldTitle.
+  ///
+  /// In es, this message translates to:
+  /// **'Enviada'**
+  String get pqrsHeldTitle;
+
+  /// No description provided for @pqrsHeldBody.
+  ///
+  /// In es, this message translates to:
+  /// **'Recibimos tu {kind}.'**
+  String pqrsHeldBody(String kind);
+
+  /// No description provided for @pqrsAnother.
+  ///
+  /// In es, this message translates to:
+  /// **'Escribir otra'**
+  String get pqrsAnother;
+
+  /// No description provided for @pqrsFaqAccount.
+  ///
+  /// In es, this message translates to:
+  /// **'¿Necesito una cuenta?'**
+  String get pqrsFaqAccount;
+
+  /// No description provided for @pqrsFaqAccountAnswer.
+  ///
+  /// In es, this message translates to:
+  /// **'No. Tus libros y tu progreso se guardan en este dispositivo.'**
+  String get pqrsFaqAccountAnswer;
+
+  /// No description provided for @pqrsFaqAdd.
+  ///
+  /// In es, this message translates to:
+  /// **'¿Cómo añado un libro?'**
+  String get pqrsFaqAdd;
+
+  /// No description provided for @pqrsFaqAddAnswer.
+  ///
+  /// In es, this message translates to:
+  /// **'En Biblioteca, Importar abre un EPUB de este dispositivo. En Descubrimiento puedes bajar uno del catálogo.'**
+  String get pqrsFaqAddAnswer;
+
+  /// No description provided for @pqrsFaqOffline.
+  ///
+  /// In es, this message translates to:
+  /// **'¿Puedo leer sin internet?'**
+  String get pqrsFaqOffline;
+
+  /// No description provided for @pqrsFaqOfflineAnswer.
+  ///
+  /// In es, this message translates to:
+  /// **'Un libro que ya está en la biblioteca se abre sin conexión. El catálogo necesita red para cargar y para descargar.'**
+  String get pqrsFaqOfflineAnswer;
+
+  /// No description provided for @pqrsFaqHabit.
+  ///
+  /// In es, this message translates to:
+  /// **'¿Cómo cambio la meta o la hora?'**
+  String get pqrsFaqHabit;
+
+  /// No description provided for @pqrsFaqHabitAnswer.
+  ///
+  /// In es, this message translates to:
+  /// **'En Perfil, Hábito de lectura.'**
+  String get pqrsFaqHabitAnswer;
+
+  /// No description provided for @pqrsFaqTime.
+  ///
+  /// In es, this message translates to:
+  /// **'¿Dónde veo cuánto he leído?'**
+  String get pqrsFaqTime;
+
+  /// No description provided for @pqrsFaqTimeAnswer.
+  ///
+  /// In es, this message translates to:
+  /// **'En Tiempo están la semana, el calendario y el tiempo de cada libro.'**
+  String get pqrsFaqTimeAnswer;
+
+  /// No description provided for @pqrsFaqReader.
+  ///
+  /// In es, this message translates to:
+  /// **'¿Cómo cambio el tamaño o el modo?'**
+  String get pqrsFaqReader;
+
+  /// No description provided for @pqrsFaqReaderAnswer.
+  ///
+  /// In es, this message translates to:
+  /// **'Dentro del libro: texto más grande o más pequeño, modo claro u oscuro, y páginas o scroll.'**
+  String get pqrsFaqReaderAnswer;
+
+  /// No description provided for @pqrsFaqDelete.
+  ///
+  /// In es, this message translates to:
+  /// **'¿Qué pasa si elimino un libro?'**
+  String get pqrsFaqDelete;
+
+  /// No description provided for @pqrsFaqDeleteAnswer.
+  ///
+  /// In es, this message translates to:
+  /// **'Sale de la biblioteca de este dispositivo, con su progreso y sus citas.'**
+  String get pqrsFaqDeleteAnswer;
 }
 
 class _AppLocalizationsDelegate

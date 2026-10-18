@@ -361,5 +361,6 @@ ReadingSession _session({
     startedAt: startedAt ?? endedAt.subtract(Duration(seconds: seconds)),
     endedAt: endedAt,
     engagedSeconds: seconds,
+    sample: false,
   );
 }

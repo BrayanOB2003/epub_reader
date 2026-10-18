@@ -207,9 +207,8 @@ class AppLocalizationsEs extends AppLocalizations {
   String get quoteShareFailed => 'No se pudo compartir la cita.';
 
   @override
-  String quotesLoadFailed(String error) {
-    return 'No se pudieron cargar las citas.\n$error';
-  }
+  String get quotesLoadFailed =>
+      'No se pudieron cargar las citas. Inténtalo de nuevo.';
 
   @override
   String get bookGone => 'Este libro ya no está en la biblioteca.';
@@ -315,15 +314,20 @@ class AppLocalizationsEs extends AppLocalizations {
   String get startReading => 'Quiero empezar a leer';
 
   @override
+  String get save => 'Guardar';
+
+  @override
+  String get habitSaved => 'Hábito guardado.';
+
+  @override
   String get next => 'Siguiente';
 
   @override
   String get answersSaveFailed => 'No se pudieron guardar tus respuestas.';
 
   @override
-  String profileLoadFailed(String error) {
-    return 'No se pudo cargar el perfil.\n$error';
-  }
+  String get profileLoadFailed =>
+      'No se pudo cargar el perfil. Inténtalo de nuevo.';
 
   @override
   String get motivationQuestion => '¿Qué quieres conseguir con la lectura?';
@@ -391,6 +395,9 @@ class AppLocalizationsEs extends AppLocalizations {
   String get sundayLetter => 'D';
 
   @override
+  String get everyDay => 'Todos los días';
+
+  @override
   String get monday => 'Lunes';
 
   @override
@@ -418,15 +425,59 @@ class AppLocalizationsEs extends AppLocalizations {
   String get readingHabit => 'Hábito de lectura';
 
   @override
-  String get sampleReadings => 'Generar lecturas de ejemplo';
+  String get profileRecords => 'Registros';
+
+  @override
+  String get profileDevice => 'Dispositivo';
+
+  @override
+  String get profileSampleData => 'Datos de muestra';
+
+  @override
+  String get sampleReadings => 'Lecturas de ejemplo';
 
   @override
   String get sampleReadingsSubtitle =>
-      'Desde hoy, un mes y medio atrás, de 0 a 15 minutos.';
+      'Se agregan al registro de lectura de este dispositivo.';
 
   @override
   String get sampleReadingsBody =>
-      'Se agregará una lectura al azar por cada día, desde hoy hasta un mes y medio atrás. Cada una dura entre 0 y 15 minutos.';
+      'Se agrega una lectura al azar por cada día, desde hoy hasta un mes y medio atrás. Cada una dura entre 0 y 15 minutos.';
+
+  @override
+  String get sampleReadingsContinue => 'Continuar';
+
+  @override
+  String get sampleReadingsConfirmTitle => 'Escribir en el registro';
+
+  @override
+  String get sampleReadingsConfirmBody =>
+      'Estas lecturas se agregan a tu historial en este dispositivo. Puedes quitarlas después desde Perfil.';
+
+  @override
+  String get sampleReadingsWrite => 'Escribirlas';
+
+  @override
+  String sampleReadingsPresent(int count) {
+    return '$count en el registro de este dispositivo.';
+  }
+
+  @override
+  String get removeSampleReadings => 'Quitar lecturas de ejemplo';
+
+  @override
+  String get removeSampleReadingsBody =>
+      'Se quitan del registro las lecturas de ejemplo. Las que leíste tú se quedan.';
+
+  @override
+  String get removeSampleReadingsAction => 'Quitar';
+
+  @override
+  String get sampleReadingsRemoved => 'Se quitaron las lecturas de ejemplo.';
+
+  @override
+  String get sampleReadingsRemoveFailed =>
+      'No se pudieron quitar las lecturas de ejemplo.';
 
   @override
   String get generate => 'Generar';
@@ -1051,4 +1102,132 @@ class AppLocalizationsEs extends AppLocalizations {
 
   @override
   String get fontChangeFailed => 'No se pudo cambiar la fuente.';
+
+  @override
+  String get appearanceRestore => 'Restaurar';
+
+  @override
+  String get appearanceRestoreFailed => 'No se pudo restaurar la apariencia.';
+
+  @override
+  String get pqrs => 'Ayuda';
+
+  @override
+  String pqrsMessageCount(int count, int limit) {
+    return '$count / $limit';
+  }
+
+  @override
+  String get pqrsIntro =>
+      'Peticiones, quejas, reclamos y sugerencias sobre Liora.';
+
+  @override
+  String get pqrsQuestions => 'Preguntas frecuentes';
+
+  @override
+  String get pqrsWrite => 'Escribir';
+
+  @override
+  String get pqrsKindPetition => 'Petición';
+
+  @override
+  String get pqrsKindComplaint => 'Queja';
+
+  @override
+  String get pqrsKindClaim => 'Reclamo';
+
+  @override
+  String get pqrsKindSuggestion => 'Sugerencia';
+
+  @override
+  String get pqrsKindRequired => 'Elige petición, queja, reclamo o sugerencia.';
+
+  @override
+  String get pqrsMessage => 'Mensaje';
+
+  @override
+  String get pqrsMessageHint => 'Qué pasó, o qué te gustaría.';
+
+  @override
+  String get pqrsMessageRequired => 'Escribe el mensaje.';
+
+  @override
+  String get pqrsMessageTooLong => 'El mensaje es demasiado largo.';
+
+  @override
+  String get pqrsEmail => 'Correo';
+
+  @override
+  String get pqrsEmailHint => 'Opcional, si quieres una respuesta';
+
+  @override
+  String get pqrsEmailInvalid => 'Ese correo no es válido.';
+
+  @override
+  String get pqrsSend => 'Enviar';
+
+  @override
+  String get pqrsSending => 'Enviando';
+
+  @override
+  String get pqrsSendFailed => 'No se pudo enviar. Inténtalo de nuevo.';
+
+  @override
+  String get pqrsHeldTitle => 'Enviada';
+
+  @override
+  String pqrsHeldBody(String kind) {
+    return 'Recibimos tu $kind.';
+  }
+
+  @override
+  String get pqrsAnother => 'Escribir otra';
+
+  @override
+  String get pqrsFaqAccount => '¿Necesito una cuenta?';
+
+  @override
+  String get pqrsFaqAccountAnswer =>
+      'No. Tus libros y tu progreso se guardan en este dispositivo.';
+
+  @override
+  String get pqrsFaqAdd => '¿Cómo añado un libro?';
+
+  @override
+  String get pqrsFaqAddAnswer =>
+      'En Biblioteca, Importar abre un EPUB de este dispositivo. En Descubrimiento puedes bajar uno del catálogo.';
+
+  @override
+  String get pqrsFaqOffline => '¿Puedo leer sin internet?';
+
+  @override
+  String get pqrsFaqOfflineAnswer =>
+      'Un libro que ya está en la biblioteca se abre sin conexión. El catálogo necesita red para cargar y para descargar.';
+
+  @override
+  String get pqrsFaqHabit => '¿Cómo cambio la meta o la hora?';
+
+  @override
+  String get pqrsFaqHabitAnswer => 'En Perfil, Hábito de lectura.';
+
+  @override
+  String get pqrsFaqTime => '¿Dónde veo cuánto he leído?';
+
+  @override
+  String get pqrsFaqTimeAnswer =>
+      'En Tiempo están la semana, el calendario y el tiempo de cada libro.';
+
+  @override
+  String get pqrsFaqReader => '¿Cómo cambio el tamaño o el modo?';
+
+  @override
+  String get pqrsFaqReaderAnswer =>
+      'Dentro del libro: texto más grande o más pequeño, modo claro u oscuro, y páginas o scroll.';
+
+  @override
+  String get pqrsFaqDelete => '¿Qué pasa si elimino un libro?';
+
+  @override
+  String get pqrsFaqDeleteAnswer =>
+      'Sale de la biblioteca de este dispositivo, con su progreso y sus citas.';
 }

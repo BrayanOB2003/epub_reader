@@ -262,6 +262,8 @@ void main() {
       await tester.pumpAndSettle();
       expect(find.text('3 de 3'), findsOneWidget);
 
+      await tester.ensureVisible(find.text('21:00'));
+      await tester.pumpAndSettle();
       await tester.tap(find.text('21:00'));
       await tester.pump();
       await tester.tap(find.text('Quiero empezar a leer'));

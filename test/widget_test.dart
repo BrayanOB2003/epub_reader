@@ -95,38 +95,56 @@ void main() {
     expect(find.text('Dom'), findsNWidgets(2));
     expect(find.text(formatReadingMonth(DateTime.now())), findsOneWidget);
     expect(find.text('Meta · 10 min'), findsOneWidget);
-    await tester.scrollUntilVisible(find.text('Todavía no hay registros'), 200);
-    expect(find.text('Todavía no hay registros'), findsOneWidget);
-    await tester.scrollUntilVisible(find.text('Esta semana'), -200);
 
     await tester.tap(find.text('Perfil'));
     await tester.pumpAndSettle();
 
     expect(find.text('Hábito de lectura'), findsOneWidget);
-    expect(find.text('Generar lecturas de ejemplo'), findsOneWidget);
+    expect(find.text('Registros'), findsOneWidget);
+    expect(find.text('Dispositivo'), findsOneWidget);
+    await tester.scrollUntilVisible(
+      find.text('Lecturas de ejemplo'),
+      200,
+    );
+    expect(find.text('Lecturas de ejemplo'), findsOneWidget);
+    expect(find.text('Datos de muestra'), findsOneWidget);
+    expect(find.text('Ayuda'), findsOneWidget);
     expect(find.text('Resetear onboarding'), findsNothing);
 
+    await tester.scrollUntilVisible(find.text('Hábito de lectura'), -300);
     await tester.tap(find.text('Hábito de lectura'));
     await tester.pumpAndSettle();
     expect(find.text('Crea el hábito de leer'), findsNothing);
-    expect(find.text('¿Qué quieres conseguir con la lectura?'), findsOneWidget);
-    await tester.tap(find.text('Siguiente'));
-    await tester.pumpAndSettle();
-    expect(find.text('2 de 3'), findsOneWidget);
-    await tester.tap(find.text('30 minutos'));
-    await tester.pump();
-    await tester.tap(find.text('Siguiente'));
-    await tester.pumpAndSettle();
+    expect(find.text('¿Qué quieres conseguir con la lectura?'), findsNothing);
+    expect(find.text('1 de 3'), findsNothing);
+    expect(find.text('¿Cuánto quieres leer?'), findsOneWidget);
+    await tester.scrollUntilVisible(find.text('21:00'), 200);
     expect(find.text('Noche'), findsOneWidget);
     expect(find.text('21:00'), findsOneWidget);
-    await tester.tap(find.text('Quiero empezar a leer'));
+    await tester.scrollUntilVisible(find.text('30 minutos'), -200);
+    await tester.tap(find.text('30 minutos'));
+    await tester.pump();
+    await tester.tap(find.text('Guardar'));
     await tester.pumpAndSettle();
+    expect(find.text('Hábito guardado.'), findsOneWidget);
     expect(find.text('Hábito de lectura'), findsOneWidget);
     final saved = await database.select(database.readerProfiles).getSingle();
     expect(saved.dailyGoalMinutes, 30);
     expect(saved.motivations, 'habit');
     expect(saved.routine, 'night');
     expect(saved.routineHour, 21);
+
+    await tester.scrollUntilVisible(find.text('Citas'), 200);
+    await tester.tap(find.text('Citas'));
+    await tester.pumpAndSettle();
+    expect(find.text('Todavía no hay citas'), findsOneWidget);
+    expect(find.text('Perfil'), findsWidgets);
+    await tester.tap(find.widgetWithText(FilledButton, 'Biblioteca'));
+    await tester.pumpAndSettle();
+    expect(find.text('Todavía no hay libros'), findsOneWidget);
+    await tester.binding.handlePopRoute();
+    await tester.pumpAndSettle();
+    expect(find.text('Todavía no hay citas'), findsOneWidget);
 
     await tester.pumpWidget(const SizedBox.shrink());
     await tester.pump(Duration.zero);

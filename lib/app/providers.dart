@@ -35,6 +35,10 @@ final readingSessionsProvider = StreamProvider<List<ReadingSession>>((ref) {
   return ref.watch(bookRepositoryProvider).watchReadingSessions();
 });
 
+final sampleSessionCountProvider = StreamProvider<int>((ref) {
+  return ref.watch(bookRepositoryProvider).watchSampleSessionCount();
+});
+
 final savedQuotesProvider = StreamProvider<List<ReadingQuote>>((ref) {
   return ref.watch(bookRepositoryProvider).watchQuotes();
 });

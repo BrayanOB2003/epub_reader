@@ -135,13 +135,16 @@ class ScheduleHeader extends StatelessWidget {
       child: Column(
         crossAxisAlignment: CrossAxisAlignment.start,
         children: [
-          Text(
-            title,
-            style: Theme.of(context).textTheme.headlineMedium?.copyWith(
-              fontSize: ios ? 34 : 28,
-              fontWeight: FontWeight.w700,
-              height: 1.05,
-              color: colors.ink,
+          Semantics(
+            header: true,
+            child: Text(
+              title,
+              style: Theme.of(context).textTheme.headlineMedium?.copyWith(
+                fontSize: ios ? 34 : 28,
+                fontWeight: FontWeight.w700,
+                height: 1.05,
+                color: colors.ink,
+              ),
             ),
           ),
           if (date != null) ...[
@@ -376,6 +379,103 @@ class ScheduleProgress extends StatelessWidget {
                 child: ColoredBox(color: fill),
               ),
             ),
+        ],
+      ),
+    );
+  }
+}
+
+/// Inline title for a screen pushed from a root. The large title stays on the root.
+class ScheduleDetailTitle extends StatelessWidget {
+  const ScheduleDetailTitle({
+    required this.title,
+    required this.onBack,
+    super.key,
+  });
+
+  final String title;
+  final VoidCallback? onBack;
+
+  @override
+  Widget build(BuildContext context) {
+    final colors = ScheduleColors.of(context);
+    final ios = Theme.of(context).platform == TargetPlatform.iOS;
+    return SizedBox(
+      height: 56,
+      child: Row(
+        children: [
+          IconButton(
+            tooltip: AppLocalizations.of(context).back,
+            onPressed: onBack,
+            icon: Icon(ios ? CupertinoIcons.back : Icons.arrow_back),
+          ),
+          Expanded(
+            child: Semantics(
+              header: true,
+              child: Text(
+                title,
+                maxLines: 1,
+                overflow: TextOverflow.ellipsis,
+                style: Theme.of(context).textTheme.titleLarge?.copyWith(
+                  fontSize: ios ? 17 : 22,
+                  fontWeight: ios ? FontWeight.w600 : FontWeight.w500,
+                  letterSpacing: ios ? -0.41 : 0,
+                  color: colors.ink,
+                ),
+              ),
+            ),
+          ),
+        ],
+      ),
+    );
+  }
+}
+
+class ScheduleDisclosure extends StatelessWidget {
+  const ScheduleDisclosure({super.key});
+
+  @override
+  Widget build(BuildContext context) {
+    final ios = Theme.of(context).platform == TargetPlatform.iOS;
+    return Icon(
+      ios ? CupertinoIcons.chevron_forward : Icons.chevron_right,
+      color: ScheduleColors.of(context).muted,
+      size: ios ? 18 : 24,
+    );
+  }
+}
+
+/// A problem named in ink, with an icon, so it is not the station band.
+class ScheduleIssue extends StatelessWidget {
+  const ScheduleIssue({required this.message, super.key});
+
+  final String message;
+
+  @override
+  Widget build(BuildContext context) {
+    final colors = ScheduleColors.of(context);
+    final ios = Theme.of(context).platform == TargetPlatform.iOS;
+    return Semantics(
+      container: true,
+      liveRegion: true,
+      child: Row(
+        crossAxisAlignment: CrossAxisAlignment.start,
+        children: [
+          Icon(
+            ios ? CupertinoIcons.exclamationmark_circle : Icons.error_outline,
+            size: 20,
+            color: colors.ink,
+          ),
+          const SizedBox(width: 8),
+          Expanded(
+            child: Text(
+              message,
+              style: Theme.of(context).textTheme.bodyMedium?.copyWith(
+                color: colors.ink,
+                height: 1.4,
+              ),
+            ),
+          ),
         ],
       ),
     );

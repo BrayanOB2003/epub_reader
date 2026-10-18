@@ -229,7 +229,7 @@ class BookRepository {
             .insert(
               BooksCompanion.insert(
                 title: sampleTitle,
-                filePath: 'sample/lectura-de-ejemplo.epub',
+                filePath: sampleBookFilePath,
                 addedAt: moment.toUtc(),
               ),
             ),
@@ -244,10 +244,48 @@ class BookRepository {
           startedAt: reading.startedAt,
           endedAt: reading.endedAt,
           engagedSeconds: reading.engagedSeconds,
+          sample: true,
         );
       }
     });
     return readings.length;
+  }
+
+  Stream<int> watchSampleSessionCount() {
+    final query = _database.select(_database.readingSessions)
+      ..where((table) => table.sample.equals(true));
+    return query.watch().map((rows) => rows.length);
+  }
+
+  /// Removes sessions written as sample data. The placeholder book goes with
+  /// them when nothing else still points at it.
+  Future<int> removeSampleReadings() async {
+    final rows = await (_database.select(_database.readingSessions)
+          ..where((table) => table.sample.equals(true)))
+        .get();
+    if (rows.isEmpty) return 0;
+    await _database.transaction(() async {
+      await (_database.delete(_database.readingSessions)
+            ..where((table) => table.sample.equals(true)))
+          .go();
+      final placeholders = await (_database.select(_database.books)
+            ..where((table) => table.filePath.equals(sampleBookFilePath)))
+          .get();
+      for (final book in placeholders) {
+        final sessions = await (_database.select(_database.readingSessions)
+              ..where((table) => table.bookId.equals(book.id)))
+            .get();
+        final quotes = await (_database.select(_database.savedQuotes)
+              ..where((table) => table.bookId.equals(book.id)))
+            .get();
+        if (sessions.isEmpty && quotes.isEmpty) {
+          await (_database.delete(
+            _database.books,
+          )..where((table) => table.id.equals(book.id))).go();
+        }
+      }
+    });
+    return rows.length;
   }
 
   Future<int> insertReadingSession({
@@ -255,6 +293,7 @@ class BookRepository {
     required DateTime startedAt,
     required DateTime endedAt,
     required int engagedSeconds,
+    bool sample = false,
   }) {
     return _database
         .into(_database.readingSessions)
@@ -264,6 +303,7 @@ class BookRepository {
             startedAt: startedAt,
             endedAt: endedAt,
             engagedSeconds: engagedSeconds,
+            sample: Value(sample),
           ),
         );
   }

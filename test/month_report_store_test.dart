@@ -136,6 +136,7 @@ ReadingSession _session({
     startedAt: at,
     endedAt: at.add(Duration(seconds: seconds)),
     engagedSeconds: seconds,
+    sample: false,
   );
 }
 
