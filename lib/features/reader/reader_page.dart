@@ -342,6 +342,7 @@ class _ReaderPageState extends ConsumerState<ReaderPage>
       );
       if (saved.created) unawaited(_applyQuoteHighlights());
       if (!mounted) return;
+      _clearSelection();
       _showMessage(saved.created ? l10n.quoteSaved : l10n.quoteAlreadySaved);
     } catch (_) {
       if (!mounted) return;
