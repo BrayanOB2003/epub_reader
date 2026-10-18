@@ -102,8 +102,42 @@ flutter:
       fonts:
         - asset: assets/fonts/SourceSerif4-Regular.ttf
           weight: 400
+        - asset: assets/fonts/SourceSerif4-Medium.ttf
+          weight: 500
         - asset: assets/fonts/SourceSerif4-SemiBold.ttf
           weight: 600
+        - asset: assets/fonts/SourceSerif4-Bold.ttf
+          weight: 700
+    - family: SourceSans3
+      fonts:
+        - asset: assets/fonts/SourceSans3-Regular.ttf
+          weight: 400
+        - asset: assets/fonts/SourceSans3-Medium.ttf
+          weight: 500
+        - asset: assets/fonts/SourceSans3-SemiBold.ttf
+          weight: 600
+        - asset: assets/fonts/SourceSans3-Bold.ttf
+          weight: 700
+    - family: LibreFranklin
+      fonts:
+        - asset: assets/fonts/LibreFranklin-Regular.ttf
+          weight: 400
+        - asset: assets/fonts/LibreFranklin-Medium.ttf
+          weight: 500
+        - asset: assets/fonts/LibreFranklin-SemiBold.ttf
+          weight: 600
+        - asset: assets/fonts/LibreFranklin-Bold.ttf
+          weight: 700
+    - family: Newsreader
+      fonts:
+        - asset: assets/fonts/Newsreader-Regular.ttf
+          weight: 400
+        - asset: assets/fonts/Newsreader-Medium.ttf
+          weight: 500
+        - asset: assets/fonts/Newsreader-SemiBold.ttf
+          weight: 600
+        - asset: assets/fonts/Newsreader-Bold.ttf
+          weight: 700
     - family: RobotoSlab
       fonts:
         - asset: assets/fonts/RobotoSlab-SemiBold.ttf

@@ -1030,4 +1030,25 @@ class AppLocalizationsEs extends AppLocalizations {
 
   @override
   String get themeChangeFailed => 'No se pudo cambiar la apariencia.';
+
+  @override
+  String get appFont => 'Fuente';
+
+  @override
+  String get fontSystem => 'Sistema';
+
+  @override
+  String get fontSourceSans => 'Source Sans';
+
+  @override
+  String get fontLibreFranklin => 'Libre Franklin';
+
+  @override
+  String get fontSourceSerif => 'Source Serif';
+
+  @override
+  String get fontNewsreader => 'Newsreader';
+
+  @override
+  String get fontChangeFailed => 'No se pudo cambiar la fuente.';
 }

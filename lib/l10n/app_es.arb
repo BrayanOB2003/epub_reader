@@ -546,5 +546,12 @@
   "themeCuaderno": "Cuaderno",
   "themePeriodico": "Periódico",
   "themeFicha": "Ficha",
-  "themeChangeFailed": "No se pudo cambiar la apariencia."
+  "themeChangeFailed": "No se pudo cambiar la apariencia.",
+  "appFont": "Fuente",
+  "fontSystem": "Sistema",
+  "fontSourceSans": "Source Sans",
+  "fontLibreFranklin": "Libre Franklin",
+  "fontSourceSerif": "Source Serif",
+  "fontNewsreader": "Newsreader",
+  "fontChangeFailed": "No se pudo cambiar la fuente."
 }

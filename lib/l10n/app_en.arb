@@ -350,5 +350,12 @@
   "themeCuaderno": "Notebook",
   "themePeriodico": "Newspaper",
   "themeFicha": "Card",
-  "themeChangeFailed": "The appearance could not be changed."
+  "themeChangeFailed": "The appearance could not be changed.",
+  "appFont": "Font",
+  "fontSystem": "System",
+  "fontSourceSans": "Source Sans",
+  "fontLibreFranklin": "Libre Franklin",
+  "fontSourceSerif": "Source Serif",
+  "fontNewsreader": "Newsreader",
+  "fontChangeFailed": "The font could not be changed."
 }

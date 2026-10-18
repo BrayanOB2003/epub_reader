@@ -1879,6 +1879,48 @@ abstract class AppLocalizations {
   /// In es, this message translates to:
   /// **'No se pudo cambiar la apariencia.'**
   String get themeChangeFailed;
+
+  /// No description provided for @appFont.
+  ///
+  /// In es, this message translates to:
+  /// **'Fuente'**
+  String get appFont;
+
+  /// No description provided for @fontSystem.
+  ///
+  /// In es, this message translates to:
+  /// **'Sistema'**
+  String get fontSystem;
+
+  /// No description provided for @fontSourceSans.
+  ///
+  /// In es, this message translates to:
+  /// **'Source Sans'**
+  String get fontSourceSans;
+
+  /// No description provided for @fontLibreFranklin.
+  ///
+  /// In es, this message translates to:
+  /// **'Libre Franklin'**
+  String get fontLibreFranklin;
+
+  /// No description provided for @fontSourceSerif.
+  ///
+  /// In es, this message translates to:
+  /// **'Source Serif'**
+  String get fontSourceSerif;
+
+  /// No description provided for @fontNewsreader.
+  ///
+  /// In es, this message translates to:
+  /// **'Newsreader'**
+  String get fontNewsreader;
+
+  /// No description provided for @fontChangeFailed.
+  ///
+  /// In es, this message translates to:
+  /// **'No se pudo cambiar la fuente.'**
+  String get fontChangeFailed;
 }
 
 class _AppLocalizationsDelegate

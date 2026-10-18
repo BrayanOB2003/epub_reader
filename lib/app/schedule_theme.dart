@@ -100,6 +100,44 @@ enum AppThemeId {
   }
 }
 
+/// The interface face. Program titles stay on the appearance.
+enum AppFontId {
+  sistema,
+  sourceSans,
+  libreFranklin,
+  sourceSerif,
+  newsreader;
+
+  static AppFontId byId(String? raw) {
+    final name = raw?.trim();
+    for (final id in values) {
+      if (id.name == name) return id;
+    }
+    return sistema;
+  }
+
+  /// Null keeps the platform face.
+  String? get family {
+    return switch (this) {
+      AppFontId.sistema => null,
+      AppFontId.sourceSans => 'SourceSans3',
+      AppFontId.libreFranklin => 'LibreFranklin',
+      AppFontId.sourceSerif => 'SourceSerif4',
+      AppFontId.newsreader => 'Newsreader',
+    };
+  }
+
+  /// The face of this row. Sistema stays on the platform face.
+  String previewFamily(TargetPlatform platform) {
+    final chosen = family;
+    if (chosen != null) return chosen;
+    return switch (platform) {
+      TargetPlatform.iOS || TargetPlatform.macOS => 'CupertinoSystemText',
+      _ => 'Roboto',
+    };
+  }
+}
+
 /// Title face, scale, and the radius of controls and covers.
 ///
 /// Bands stay edge to edge. [radius] is only for buttons, choices, the minute
@@ -316,9 +354,14 @@ TextStyle programTitle(BuildContext context, Color color, {double size = 40}) {
 ThemeData scheduleTheme(
   Brightness brightness, [
   AppThemeId id = AppThemeId.programa,
+  AppFontId font = AppFontId.sistema,
 ]) {
   final colors = scheduleColors(id, brightness);
   final look = ScheduleLook.forTheme(id);
+  final family = font.family;
+  final fallback = family == null
+      ? null
+      : const <String>['CupertinoSystemText', 'Roboto'];
   final scheme =
       ColorScheme.fromSeed(
         seedColor: colors.station,
@@ -345,6 +388,8 @@ ThemeData scheduleTheme(
     textTheme: base.textTheme.apply(
       bodyColor: colors.ink,
       displayColor: colors.ink,
+      fontFamily: family,
+      fontFamilyFallback: fallback,
     ),
     appBarTheme: AppBarTheme(
       backgroundColor: colors.paper,
@@ -357,7 +402,12 @@ ThemeData scheduleTheme(
       backgroundColor: colors.paper,
       indicatorColor: colors.station.withValues(alpha: 0.16),
       labelTextStyle: WidgetStateProperty.all(
-        TextStyle(fontSize: 12, color: colors.ink),
+        TextStyle(
+          fontSize: 12,
+          color: colors.ink,
+          fontFamily: family,
+          fontFamilyFallback: fallback,
+        ),
       ),
       iconTheme: WidgetStateProperty.resolveWith((states) {
         final selected = states.contains(WidgetState.selected);
@@ -379,7 +429,11 @@ ThemeData scheduleTheme(
     ),
     snackBarTheme: SnackBarThemeData(
       backgroundColor: colors.ink,
-      contentTextStyle: TextStyle(color: colors.paper),
+      contentTextStyle: TextStyle(
+        color: colors.paper,
+        fontFamily: family,
+        fontFamilyFallback: fallback,
+      ),
     ),
   );
 }
