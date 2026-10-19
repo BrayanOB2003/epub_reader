@@ -1,5 +1,6 @@
 import 'package:epub_reader/app/providers.dart';
 import 'package:epub_reader/app/schedule_theme.dart';
+import 'package:epub_reader/app/schedule_widgets.dart';
 import 'package:epub_reader/features/reader/quote_highlight.dart';
 import 'package:epub_reader/l10n/app_localizations.dart';
 import 'package:flutter/material.dart';
@@ -18,15 +19,26 @@ class QuoteHighlightDefaultTile extends ConsumerWidget {
         ref.watch(quoteHighlightDefaultProvider).asData?.value ??
         quoteHighlightDefaultId;
     return ListTile(
+      contentPadding: const EdgeInsets.symmetric(horizontal: 20),
       title: Text(l10n.quoteHighlightDefault),
       subtitle: Text(l10n.quoteHighlightDefaultSubtitle),
-      trailing: DecoratedBox(
-        decoration: BoxDecoration(
-          color: quoteHighlightById(selectedId).tint(dark: dark),
-          shape: BoxShape.circle,
-          border: Border.all(color: colors.rule),
-        ),
-        child: const SizedBox(width: 24, height: 24),
+      trailing: Row(
+        mainAxisSize: MainAxisSize.min,
+        children: [
+          Semantics(
+            label: quoteHighlightLabel(l10n, selectedId),
+            child: DecoratedBox(
+              decoration: BoxDecoration(
+                color: quoteHighlightById(selectedId).tint(dark: dark),
+                shape: BoxShape.circle,
+                border: Border.all(color: colors.rule),
+              ),
+              child: const SizedBox(width: 24, height: 24),
+            ),
+          ),
+          const SizedBox(width: 4),
+          const ScheduleDisclosure(),
+        ],
       ),
       onTap: () => _pick(context, ref, selectedId: selectedId, dark: dark),
     );

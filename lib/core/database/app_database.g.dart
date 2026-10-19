@@ -871,6 +871,19 @@ class $ReadingSessionsTable extends ReadingSessions
     type: DriftSqlType.int,
     requiredDuringInsert: true,
   );
+  static const VerificationMeta _sampleMeta = const VerificationMeta('sample');
+  @override
+  late final GeneratedColumn<bool> sample = GeneratedColumn<bool>(
+    'sample',
+    aliasedName,
+    false,
+    type: DriftSqlType.bool,
+    requiredDuringInsert: false,
+    defaultConstraints: GeneratedColumn.constraintIsAlways(
+      'CHECK ("sample" IN (0, 1))',
+    ),
+    defaultValue: const Constant(false),
+  );
   @override
   List<GeneratedColumn> get $columns => [
     id,
@@ -878,6 +891,7 @@ class $ReadingSessionsTable extends ReadingSessions
     startedAt,
     endedAt,
     engagedSeconds,
+    sample,
   ];
   @override
   String get aliasedName => _alias ?? actualTableName;
@@ -929,6 +943,12 @@ class $ReadingSessionsTable extends ReadingSessions
     } else if (isInserting) {
       context.missing(_engagedSecondsMeta);
     }
+    if (data.containsKey('sample')) {
+      context.handle(
+        _sampleMeta,
+        sample.isAcceptableOrUnknown(data['sample']!, _sampleMeta),
+      );
+    }
     return context;
   }
 
@@ -958,6 +978,10 @@ class $ReadingSessionsTable extends ReadingSessions
         DriftSqlType.int,
         data['${effectivePrefix}engaged_seconds'],
       )!,
+      sample: attachedDatabase.typeMapping.read(
+        DriftSqlType.bool,
+        data['${effectivePrefix}sample'],
+      )!,
     );
   }
 
@@ -973,12 +997,16 @@ class ReadingSession extends DataClass implements Insertable<ReadingSession> {
   final DateTime startedAt;
   final DateTime endedAt;
   final int engagedSeconds;
+
+  /// True when the session was written by "Lecturas de ejemplo".
+  final bool sample;
   const ReadingSession({
     required this.id,
     required this.bookId,
     required this.startedAt,
     required this.endedAt,
     required this.engagedSeconds,
+    required this.sample,
   });
   @override
   Map<String, Expression> toColumns(bool nullToAbsent) {
@@ -988,6 +1016,7 @@ class ReadingSession extends DataClass implements Insertable<ReadingSession> {
     map['started_at'] = Variable<DateTime>(startedAt);
     map['ended_at'] = Variable<DateTime>(endedAt);
     map['engaged_seconds'] = Variable<int>(engagedSeconds);
+    map['sample'] = Variable<bool>(sample);
     return map;
   }
 
@@ -998,6 +1027,7 @@ class ReadingSession extends DataClass implements Insertable<ReadingSession> {
       startedAt: Value(startedAt),
       endedAt: Value(endedAt),
       engagedSeconds: Value(engagedSeconds),
+      sample: Value(sample),
     );
   }
 
@@ -1012,6 +1042,7 @@ class ReadingSession extends DataClass implements Insertable<ReadingSession> {
       startedAt: serializer.fromJson<DateTime>(json['startedAt']),
       endedAt: serializer.fromJson<DateTime>(json['endedAt']),
       engagedSeconds: serializer.fromJson<int>(json['engagedSeconds']),
+      sample: serializer.fromJson<bool>(json['sample']),
     );
   }
   @override
@@ -1023,6 +1054,7 @@ class ReadingSession extends DataClass implements Insertable<ReadingSession> {
       'startedAt': serializer.toJson<DateTime>(startedAt),
       'endedAt': serializer.toJson<DateTime>(endedAt),
       'engagedSeconds': serializer.toJson<int>(engagedSeconds),
+      'sample': serializer.toJson<bool>(sample),
     };
   }
 
@@ -1032,12 +1064,14 @@ class ReadingSession extends DataClass implements Insertable<ReadingSession> {
     DateTime? startedAt,
     DateTime? endedAt,
     int? engagedSeconds,
+    bool? sample,
   }) => ReadingSession(
     id: id ?? this.id,
     bookId: bookId ?? this.bookId,
     startedAt: startedAt ?? this.startedAt,
     endedAt: endedAt ?? this.endedAt,
     engagedSeconds: engagedSeconds ?? this.engagedSeconds,
+    sample: sample ?? this.sample,
   );
   ReadingSession copyWithCompanion(ReadingSessionsCompanion data) {
     return ReadingSession(
@@ -1048,6 +1082,7 @@ class ReadingSession extends DataClass implements Insertable<ReadingSession> {
       engagedSeconds: data.engagedSeconds.present
           ? data.engagedSeconds.value
           : this.engagedSeconds,
+      sample: data.sample.present ? data.sample.value : this.sample,
     );
   }
 
@@ -1058,14 +1093,15 @@ class ReadingSession extends DataClass implements Insertable<ReadingSession> {
           ..write('bookId: $bookId, ')
           ..write('startedAt: $startedAt, ')
           ..write('endedAt: $endedAt, ')
-          ..write('engagedSeconds: $engagedSeconds')
+          ..write('engagedSeconds: $engagedSeconds, ')
+          ..write('sample: $sample')
           ..write(')'))
         .toString();
   }
 
   @override
   int get hashCode =>
-      Object.hash(id, bookId, startedAt, endedAt, engagedSeconds);
+      Object.hash(id, bookId, startedAt, endedAt, engagedSeconds, sample);
   @override
   bool operator ==(Object other) =>
       identical(this, other) ||
@@ -1074,7 +1110,8 @@ class ReadingSession extends DataClass implements Insertable<ReadingSession> {
           other.bookId == this.bookId &&
           other.startedAt == this.startedAt &&
           other.endedAt == this.endedAt &&
-          other.engagedSeconds == this.engagedSeconds);
+          other.engagedSeconds == this.engagedSeconds &&
+          other.sample == this.sample);
 }
 
 class ReadingSessionsCompanion extends UpdateCompanion<ReadingSession> {
@@ -1083,12 +1120,14 @@ class ReadingSessionsCompanion extends UpdateCompanion<ReadingSession> {
   final Value<DateTime> startedAt;
   final Value<DateTime> endedAt;
   final Value<int> engagedSeconds;
+  final Value<bool> sample;
   const ReadingSessionsCompanion({
     this.id = const Value.absent(),
     this.bookId = const Value.absent(),
     this.startedAt = const Value.absent(),
     this.endedAt = const Value.absent(),
     this.engagedSeconds = const Value.absent(),
+    this.sample = const Value.absent(),
   });
   ReadingSessionsCompanion.insert({
     this.id = const Value.absent(),
@@ -1096,6 +1135,7 @@ class ReadingSessionsCompanion extends UpdateCompanion<ReadingSession> {
     required DateTime startedAt,
     required DateTime endedAt,
     required int engagedSeconds,
+    this.sample = const Value.absent(),
   }) : bookId = Value(bookId),
        startedAt = Value(startedAt),
        endedAt = Value(endedAt),
@@ -1106,6 +1146,7 @@ class ReadingSessionsCompanion extends UpdateCompanion<ReadingSession> {
     Expression<DateTime>? startedAt,
     Expression<DateTime>? endedAt,
     Expression<int>? engagedSeconds,
+    Expression<bool>? sample,
   }) {
     return RawValuesInsertable({
       if (id != null) 'id': id,
@@ -1113,6 +1154,7 @@ class ReadingSessionsCompanion extends UpdateCompanion<ReadingSession> {
       if (startedAt != null) 'started_at': startedAt,
       if (endedAt != null) 'ended_at': endedAt,
       if (engagedSeconds != null) 'engaged_seconds': engagedSeconds,
+      if (sample != null) 'sample': sample,
     });
   }
 
@@ -1122,6 +1164,7 @@ class ReadingSessionsCompanion extends UpdateCompanion<ReadingSession> {
     Value<DateTime>? startedAt,
     Value<DateTime>? endedAt,
     Value<int>? engagedSeconds,
+    Value<bool>? sample,
   }) {
     return ReadingSessionsCompanion(
       id: id ?? this.id,
@@ -1129,6 +1172,7 @@ class ReadingSessionsCompanion extends UpdateCompanion<ReadingSession> {
       startedAt: startedAt ?? this.startedAt,
       endedAt: endedAt ?? this.endedAt,
       engagedSeconds: engagedSeconds ?? this.engagedSeconds,
+      sample: sample ?? this.sample,
     );
   }
 
@@ -1150,6 +1194,9 @@ class ReadingSessionsCompanion extends UpdateCompanion<ReadingSession> {
     if (engagedSeconds.present) {
       map['engaged_seconds'] = Variable<int>(engagedSeconds.value);
     }
+    if (sample.present) {
+      map['sample'] = Variable<bool>(sample.value);
+    }
     return map;
   }
 
@@ -1160,7 +1207,8 @@ class ReadingSessionsCompanion extends UpdateCompanion<ReadingSession> {
           ..write('bookId: $bookId, ')
           ..write('startedAt: $startedAt, ')
           ..write('endedAt: $endedAt, ')
-          ..write('engagedSeconds: $engagedSeconds')
+          ..write('engagedSeconds: $engagedSeconds, ')
+          ..write('sample: $sample')
           ..write(')'))
         .toString();
   }
@@ -3488,6 +3536,7 @@ typedef $$ReadingSessionsTableCreateCompanionBuilder =
       required DateTime startedAt,
       required DateTime endedAt,
       required int engagedSeconds,
+      Value<bool> sample,
     });
 typedef $$ReadingSessionsTableUpdateCompanionBuilder =
     ReadingSessionsCompanion Function({
@@ -3496,6 +3545,7 @@ typedef $$ReadingSessionsTableUpdateCompanionBuilder =
       Value<DateTime> startedAt,
       Value<DateTime> endedAt,
       Value<int> engagedSeconds,
+      Value<bool> sample,
     });
 
 final class $$ReadingSessionsTableReferences
@@ -3554,6 +3604,11 @@ class $$ReadingSessionsTableFilterComposer
     builder: (column) => ColumnFilters(column),
   );
 
+  ColumnFilters<bool> get sample => $composableBuilder(
+    column: $table.sample,
+    builder: (column) => ColumnFilters(column),
+  );
+
   $$BooksTableFilterComposer get bookId {
     final $$BooksTableFilterComposer composer = $composerBuilder(
       composer: this,
@@ -3607,6 +3662,11 @@ class $$ReadingSessionsTableOrderingComposer
     builder: (column) => ColumnOrderings(column),
   );
 
+  ColumnOrderings<bool> get sample => $composableBuilder(
+    column: $table.sample,
+    builder: (column) => ColumnOrderings(column),
+  );
+
   $$BooksTableOrderingComposer get bookId {
     final $$BooksTableOrderingComposer composer = $composerBuilder(
       composer: this,
@@ -3653,6 +3713,9 @@ class $$ReadingSessionsTableAnnotationComposer
     column: $table.engagedSeconds,
     builder: (column) => column,
   );
+
+  GeneratedColumn<bool> get sample =>
+      $composableBuilder(column: $table.sample, builder: (column) => column);
 
   $$BooksTableAnnotationComposer get bookId {
     final $$BooksTableAnnotationComposer composer = $composerBuilder(
@@ -3713,12 +3776,14 @@ class $$ReadingSessionsTableTableManager
                 Value<DateTime> startedAt = const Value.absent(),
                 Value<DateTime> endedAt = const Value.absent(),
                 Value<int> engagedSeconds = const Value.absent(),
+                Value<bool> sample = const Value.absent(),
               }) => ReadingSessionsCompanion(
                 id: id,
                 bookId: bookId,
                 startedAt: startedAt,
                 endedAt: endedAt,
                 engagedSeconds: engagedSeconds,
+                sample: sample,
               ),
           createCompanionCallback:
               ({
@@ -3727,12 +3792,14 @@ class $$ReadingSessionsTableTableManager
                 required DateTime startedAt,
                 required DateTime endedAt,
                 required int engagedSeconds,
+                Value<bool> sample = const Value.absent(),
               }) => ReadingSessionsCompanion.insert(
                 id: id,
                 bookId: bookId,
                 startedAt: startedAt,
                 endedAt: endedAt,
                 engagedSeconds: engagedSeconds,
+                sample: sample,
               ),
           withReferenceMapper: (p0) => p0
               .map(

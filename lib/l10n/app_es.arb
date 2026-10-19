@@ -36,6 +36,7 @@
   "english": "Inglés",
   "catalogEmpty": "El catálogo está vacío",
   "catalogEmptyBody": "Cuando haya libros disponibles, aparecerán aquí.",
+  "catalogLoading": "Cargando el catálogo",
   "retry": "Reintentar",
   "catalogLoadFailed": "No se pudo cargar el catálogo.",
   "catalogLoadFailedStatus": "No se pudo cargar el catálogo ({status}).",
@@ -86,12 +87,7 @@
   "quoteAlreadySaved": "Esa cita ya está guardada.",
   "shareQuoteText": "Compartir texto",
   "quoteShareFailed": "No se pudo compartir la cita.",
-  "quotesLoadFailed": "No se pudieron cargar las citas.\n{error}",
-  "@quotesLoadFailed": {
-    "placeholders": {
-      "error": {"type": "String"}
-    }
-  },
+  "quotesLoadFailed": "No se pudieron cargar las citas. Inténtalo de nuevo.",
   "bookGone": "Este libro ya no está en la biblioteca.",
   "chapterFailed": "No se pudo abrir este capítulo.",
   "preferencesFailed": "No se pudieron aplicar los ajustes de lectura.",
@@ -129,14 +125,11 @@
   },
   "start": "Empezar",
   "startReading": "Quiero empezar a leer",
+  "save": "Guardar",
+  "habitSaved": "Hábito guardado.",
   "next": "Siguiente",
   "answersSaveFailed": "No se pudieron guardar tus respuestas.",
-  "profileLoadFailed": "No se pudo cargar el perfil.\n{error}",
-  "@profileLoadFailed": {
-    "placeholders": {
-      "error": {"type": "String"}
-    }
-  },
+  "profileLoadFailed": "No se pudo cargar el perfil. Inténtalo de nuevo.",
   "motivationQuestion": "¿Qué quieres conseguir con la lectura?",
   "goalQuestion": "¿Cuánto quieres leer?",
   "whenQuestion": "¿Cuándo te gustaría leer?",
@@ -163,6 +156,7 @@
   "fridayLetter": "V",
   "saturdayLetter": "S",
   "sundayLetter": "D",
+  "everyDay": "Todos los días",
   "monday": "Lunes",
   "tuesday": "Martes",
   "wednesday": "Miércoles",
@@ -172,9 +166,27 @@
   "sunday": "Domingo",
   "notSet": "Sin definir",
   "readingHabit": "Hábito de lectura",
-  "sampleReadings": "Generar lecturas de ejemplo",
-  "sampleReadingsSubtitle": "Desde hoy, un mes y medio atrás, de 0 a 15 minutos.",
-  "sampleReadingsBody": "Se agregará una lectura al azar por cada día, desde hoy hasta un mes y medio atrás. Cada una dura entre 0 y 15 minutos.",
+  "profileRecords": "Registros",
+  "profileDevice": "Dispositivo",
+  "profileSampleData": "Datos de muestra",
+  "sampleReadings": "Lecturas de ejemplo",
+  "sampleReadingsSubtitle": "Se agregan al registro de lectura de este dispositivo.",
+  "sampleReadingsBody": "Se agrega una lectura al azar por cada día, desde hoy hasta un mes y medio atrás. Cada una dura entre 0 y 15 minutos.",
+  "sampleReadingsContinue": "Continuar",
+  "sampleReadingsConfirmTitle": "Escribir en el registro",
+  "sampleReadingsConfirmBody": "Estas lecturas se agregan a tu historial en este dispositivo. Puedes quitarlas después desde Perfil.",
+  "sampleReadingsWrite": "Escribirlas",
+  "sampleReadingsPresent": "{count} en el registro de este dispositivo.",
+  "@sampleReadingsPresent": {
+    "placeholders": {
+      "count": {"type": "int"}
+    }
+  },
+  "removeSampleReadings": "Quitar lecturas de ejemplo",
+  "removeSampleReadingsBody": "Se quitan del registro las lecturas de ejemplo. Las que leíste tú se quedan.",
+  "removeSampleReadingsAction": "Quitar",
+  "sampleReadingsRemoved": "Se quitaron las lecturas de ejemplo.",
+  "sampleReadingsRemoveFailed": "No se pudieron quitar las lecturas de ejemplo.",
   "generate": "Generar",
   "sampleReadingsAdded": "Se agregaron {count} lecturas de ejemplo.",
   "@sampleReadingsAdded": {
@@ -545,5 +557,62 @@
   "themeCuaderno": "Cuaderno",
   "themePeriodico": "Periódico",
   "themeFicha": "Ficha",
-  "themeChangeFailed": "No se pudo cambiar la apariencia."
+  "themeChangeFailed": "No se pudo cambiar la apariencia.",
+  "appFont": "Fuente",
+  "fontSystem": "Sistema",
+  "fontSourceSans": "Source Sans",
+  "fontLibreFranklin": "Libre Franklin",
+  "fontSourceSerif": "Source Serif",
+  "fontNewsreader": "Newsreader",
+  "fontChangeFailed": "No se pudo cambiar la fuente.",
+  "appearanceRestore": "Restaurar",
+  "appearanceRestoreFailed": "No se pudo restaurar la apariencia.",
+  "pqrs": "Ayuda",
+  "pqrsMessageCount": "{count} / {limit}",
+  "@pqrsMessageCount": {
+    "placeholders": {
+      "count": {"type": "int"},
+      "limit": {"type": "int"}
+    }
+  },
+  "pqrsIntro": "Peticiones, quejas, reclamos y sugerencias sobre Liora.",
+  "pqrsQuestions": "Preguntas frecuentes",
+  "pqrsWrite": "Escribir",
+  "pqrsKindPetition": "Petición",
+  "pqrsKindComplaint": "Queja",
+  "pqrsKindClaim": "Reclamo",
+  "pqrsKindSuggestion": "Sugerencia",
+  "pqrsKindRequired": "Elige petición, queja, reclamo o sugerencia.",
+  "pqrsMessage": "Mensaje",
+  "pqrsMessageHint": "Qué pasó, o qué te gustaría.",
+  "pqrsMessageRequired": "Escribe el mensaje.",
+  "pqrsMessageTooLong": "El mensaje es demasiado largo.",
+  "pqrsEmail": "Correo",
+  "pqrsEmailHint": "Opcional, si quieres una respuesta",
+  "pqrsEmailInvalid": "Ese correo no es válido.",
+  "pqrsSend": "Enviar",
+  "pqrsSending": "Enviando",
+  "pqrsSendFailed": "No se pudo enviar. Inténtalo de nuevo.",
+  "pqrsHeldTitle": "Enviada",
+  "pqrsHeldBody": "Recibimos tu {kind}.",
+  "@pqrsHeldBody": {
+    "placeholders": {
+      "kind": {"type": "String"}
+    }
+  },
+  "pqrsAnother": "Escribir otra",
+  "pqrsFaqAccount": "¿Necesito una cuenta?",
+  "pqrsFaqAccountAnswer": "No. Tus libros y tu progreso se guardan en este dispositivo.",
+  "pqrsFaqAdd": "¿Cómo añado un libro?",
+  "pqrsFaqAddAnswer": "En Biblioteca, Importar abre un EPUB de este dispositivo. En Descubrimiento puedes bajar uno del catálogo.",
+  "pqrsFaqOffline": "¿Puedo leer sin internet?",
+  "pqrsFaqOfflineAnswer": "Un libro que ya está en la biblioteca se abre sin conexión. El catálogo necesita red para cargar y para descargar.",
+  "pqrsFaqHabit": "¿Cómo cambio la meta o la hora?",
+  "pqrsFaqHabitAnswer": "En Perfil, Hábito de lectura.",
+  "pqrsFaqTime": "¿Dónde veo cuánto he leído?",
+  "pqrsFaqTimeAnswer": "En Tiempo están la semana, el calendario y el tiempo de cada libro.",
+  "pqrsFaqReader": "¿Cómo cambio el tamaño o el modo?",
+  "pqrsFaqReaderAnswer": "Dentro del libro: texto más grande o más pequeño, modo claro u oscuro, y páginas o scroll.",
+  "pqrsFaqDelete": "¿Qué pasa si elimino un libro?",
+  "pqrsFaqDeleteAnswer": "Sale de la biblioteca de este dispositivo, con su progreso y sus citas."
 }

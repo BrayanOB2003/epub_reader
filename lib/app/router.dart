@@ -14,6 +14,8 @@ import 'package:epub_reader/features/onboarding/onboarding_answers.dart';
 import 'package:epub_reader/features/onboarding/onboarding_controller.dart';
 import 'package:epub_reader/features/onboarding/onboarding_page.dart';
 import 'package:epub_reader/features/profile/appearance_page.dart';
+import 'package:epub_reader/features/profile/habit_edit_page.dart';
+import 'package:epub_reader/features/profile/pqrs_page.dart';
 import 'package:epub_reader/features/profile/profile_page.dart';
 import 'package:epub_reader/features/profile/quotes_page.dart';
 import 'package:epub_reader/features/quotes/quote_export_page.dart';
@@ -149,9 +151,24 @@ final appRouterProvider = Provider<GoRouter>((ref) {
                 builder: (context, state) => const ProfilePage(),
                 routes: [
                   GoRoute(
+                    path: 'habit',
+                    name: 'habit',
+                    builder: (context, state) => const HabitEditPage(),
+                  ),
+                  GoRoute(
+                    path: 'quotes',
+                    name: 'quotes',
+                    builder: (context, state) => const QuotesPage(),
+                  ),
+                  GoRoute(
                     path: 'appearance',
                     name: 'appearance',
                     builder: (context, state) => const AppearancePage(),
+                  ),
+                  GoRoute(
+                    path: 'pqrs',
+                    name: 'pqrs',
+                    builder: (context, state) => const PqrsPage(),
                   ),
                   GoRoute(
                     path: 'month',
@@ -184,11 +201,6 @@ final appRouterProvider = Provider<GoRouter>((ref) {
             ],
           ),
         ],
-      ),
-      GoRoute(
-        path: '/quotes',
-        name: 'quotes',
-        builder: (context, state) => const QuotesPage(),
       ),
       GoRoute(
         path: '/quotes/:quoteId/card',

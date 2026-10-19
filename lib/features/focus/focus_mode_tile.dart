@@ -151,6 +151,7 @@ class _FocusModeTileState extends ConsumerState<FocusModeTile>
       children: [
         SwitchListTile.adaptive(
           key: focusModeTileKey,
+          contentPadding: const EdgeInsets.symmetric(horizontal: 20),
           title: Text(l10n.focusMode),
           subtitle: Text(subtitle),
           value: enabled,

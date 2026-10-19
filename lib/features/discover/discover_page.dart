@@ -10,6 +10,7 @@ import 'package:epub_reader/app/schedule_widgets.dart';
 import 'package:epub_reader/core/database/app_database.dart';
 import 'package:epub_reader/features/discover/catalog_cover.dart';
 import 'package:epub_reader/features/discover/data/catalog.dart';
+import 'package:epub_reader/features/discover/discover_skeleton.dart';
 import 'package:epub_reader/l10n/app_localizations.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
@@ -86,9 +87,8 @@ class _DiscoverPageState extends ConsumerState<DiscoverPage> {
 
   void _showMessage(String message) {
     if (!mounted) return;
-    ScaffoldMessenger.of(
-      context,
-    ).showSnackBar(SnackBar(content: Text(message)));
+    ScaffoldMessenger.of(context)
+        .showSnackBar(SnackBar(content: Text(message)));
   }
 
   @override
@@ -100,7 +100,7 @@ class _DiscoverPageState extends ConsumerState<DiscoverPage> {
       body: SafeArea(
         bottom: false,
         child: catalog.when(
-          loading: () => const Center(child: CircularProgressIndicator()),
+          loading: () => const DiscoverSkeleton(),
           error: (error, _) => _CatalogError(
             message: error is CatalogException
                 ? _catalogMessage(AppLocalizations.of(context), error)
@@ -265,9 +265,8 @@ class _GenreLabel extends StatelessWidget {
         header: true,
         child: Text(
           label,
-          style: Theme.of(context).textTheme.labelLarge?.copyWith(
-            color: ScheduleColors.of(context).muted,
-          ),
+          style: Theme.of(context).textTheme.labelLarge
+              ?.copyWith(color: ScheduleColors.of(context).muted),
         ),
       ),
     );
@@ -407,9 +406,8 @@ class _LanguageChip extends StatelessWidget {
               padding: const EdgeInsets.symmetric(horizontal: 14, vertical: 10),
               child: Text(
                 label,
-                style: Theme.of(context).textTheme.labelLarge?.copyWith(
-                  color: selected ? colors.onStation : colors.ink,
-                ),
+                style: Theme.of(context).textTheme.labelLarge
+                    ?.copyWith(color: selected ? colors.onStation : colors.ink),
               ),
             ),
           ),

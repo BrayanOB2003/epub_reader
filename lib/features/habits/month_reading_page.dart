@@ -171,8 +171,18 @@ class _MonthReadingPageState extends ConsumerState<MonthReadingPage> {
         now: now,
       ),
       sharing: _sharing,
-      onRead: (bookId) =>
-          context.push(readingRoute(bookId, readingSourceLibrary)),
+      onRead: (bookId) => openMonthBookReport(
+        context: context,
+        bookId: bookId,
+        books: bookRows,
+        sessions: sessionRows,
+        quoteBookIds: [for (final quote in quoteRows) quote.bookId],
+        now: now,
+        onRead: (id) {
+          if (!context.mounted) return;
+          context.push(readingRoute(id, readingSourceLibrary));
+        },
+      ),
       onOpenMonth: (month) =>
           context.replace('/profile/month/${month.year}/${month.month}'),
       onShare: (copy, origin) => _share(copy, origin),
@@ -668,6 +678,36 @@ String? _bookSubtitle(AppLocalizations l10n, MonthBookLine book) {
   final horizon = book.horizon;
   if (horizon == null) return null;
   return readingHorizonLabel(l10n, horizon);
+}
+
+/// The same book report used on Tiempo. Leer still opens the book.
+void openMonthBookReport({
+  required BuildContext context,
+  required int bookId,
+  required List<Book> books,
+  required List<ReadingSession> sessions,
+  required Iterable<int> quoteBookIds,
+  required DateTime now,
+  required ValueChanged<int> onRead,
+}) {
+  BookReadingReport? reading;
+  for (final report in bookReadingReports(
+    books: books,
+    sessions: sessions,
+    now: now,
+    quoteBookIds: quoteBookIds,
+  )) {
+    if (report.book.id != bookId) continue;
+    reading = report;
+    break;
+  }
+  if (reading == null) return;
+  final report = reading;
+  showDialog<void>(
+    context: context,
+    builder: (context) =>
+        BookReadingReportDialog(report: report, onRead: () => onRead(bookId)),
+  );
 }
 
 String _title(String title, AppLocalizations l10n) {

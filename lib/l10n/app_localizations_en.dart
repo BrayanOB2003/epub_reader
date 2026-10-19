@@ -106,6 +106,9 @@ class AppLocalizationsEn extends AppLocalizations {
       'Books will show up here when some are available.';
 
   @override
+  String get catalogLoading => 'Loading the catalog';
+
+  @override
   String get retry => 'Retry';
 
   @override
@@ -204,9 +207,7 @@ class AppLocalizationsEn extends AppLocalizations {
   String get quoteShareFailed => 'The quote could not be shared.';
 
   @override
-  String quotesLoadFailed(String error) {
-    return 'Quotes could not be loaded.\n$error';
-  }
+  String get quotesLoadFailed => 'Quotes could not be loaded. Try again.';
 
   @override
   String get bookGone => 'This book is no longer in the library.';
@@ -310,15 +311,19 @@ class AppLocalizationsEn extends AppLocalizations {
   String get startReading => 'I want to start reading';
 
   @override
+  String get save => 'Save';
+
+  @override
+  String get habitSaved => 'Habit saved.';
+
+  @override
   String get next => 'Next';
 
   @override
   String get answersSaveFailed => 'Your answers could not be saved.';
 
   @override
-  String profileLoadFailed(String error) {
-    return 'The profile could not be loaded.\n$error';
-  }
+  String get profileLoadFailed => 'The profile could not be loaded. Try again.';
 
   @override
   String get motivationQuestion => 'What do you want from reading?';
@@ -365,25 +370,28 @@ class AppLocalizationsEn extends AppLocalizations {
   String get routineNight => 'Night';
 
   @override
-  String get mondayLetter => 'M';
+  String get mondayLetter => 'Mo';
 
   @override
-  String get tuesdayLetter => 'T';
+  String get tuesdayLetter => 'Tu';
 
   @override
-  String get wednesdayLetter => 'W';
+  String get wednesdayLetter => 'We';
 
   @override
-  String get thursdayLetter => 'T';
+  String get thursdayLetter => 'Th';
 
   @override
-  String get fridayLetter => 'F';
+  String get fridayLetter => 'Fr';
 
   @override
-  String get saturdayLetter => 'S';
+  String get saturdayLetter => 'Sa';
 
   @override
-  String get sundayLetter => 'S';
+  String get sundayLetter => 'Su';
+
+  @override
+  String get everyDay => 'Every day';
 
   @override
   String get monday => 'Monday';
@@ -413,15 +421,59 @@ class AppLocalizationsEn extends AppLocalizations {
   String get readingHabit => 'Reading habit';
 
   @override
-  String get sampleReadings => 'Generate sample readings';
+  String get profileRecords => 'Records';
+
+  @override
+  String get profileDevice => 'Device';
+
+  @override
+  String get profileSampleData => 'Sample data';
+
+  @override
+  String get sampleReadings => 'Sample readings';
 
   @override
   String get sampleReadingsSubtitle =>
-      'From today, a month and a half back, 0 to 15 minutes.';
+      'They are added to the reading log on this device.';
 
   @override
   String get sampleReadingsBody =>
-      'A random reading will be added for each day, from today back a month and a half. Each one lasts between 0 and 15 minutes.';
+      'A random reading is added for each day, from today back a month and a half. Each one lasts between 0 and 15 minutes.';
+
+  @override
+  String get sampleReadingsContinue => 'Continue';
+
+  @override
+  String get sampleReadingsConfirmTitle => 'Write into the log';
+
+  @override
+  String get sampleReadingsConfirmBody =>
+      'These readings are added to your history on this device. You can remove them later from Profile.';
+
+  @override
+  String get sampleReadingsWrite => 'Write them';
+
+  @override
+  String sampleReadingsPresent(int count) {
+    return '$count in the log on this device.';
+  }
+
+  @override
+  String get removeSampleReadings => 'Remove sample readings';
+
+  @override
+  String get removeSampleReadingsBody =>
+      'The sample readings leave the log. Readings you did yourself stay.';
+
+  @override
+  String get removeSampleReadingsAction => 'Remove';
+
+  @override
+  String get sampleReadingsRemoved => 'The sample readings were removed.';
+
+  @override
+  String get sampleReadingsRemoveFailed =>
+      'The sample readings could not be removed.';
 
   @override
   String get generate => 'Generate';
@@ -1020,4 +1072,154 @@ class AppLocalizationsEn extends AppLocalizations {
 
   @override
   String get themeChangeFailed => 'The appearance could not be changed.';
+
+  @override
+  String get appFont => 'Font';
+
+  @override
+  String get fontSystem => 'System';
+
+  @override
+  String get fontSourceSans => 'Source Sans';
+
+  @override
+  String get fontLibreFranklin => 'Libre Franklin';
+
+  @override
+  String get fontSourceSerif => 'Source Serif';
+
+  @override
+  String get fontNewsreader => 'Newsreader';
+
+  @override
+  String get fontChangeFailed => 'The font could not be changed.';
+
+  @override
+  String get appearanceRestore => 'Restore';
+
+  @override
+  String get appearanceRestoreFailed => 'The appearance could not be restored.';
+
+  @override
+  String get pqrs => 'Help';
+
+  @override
+  String pqrsMessageCount(int count, int limit) {
+    return '$count / $limit';
+  }
+
+  @override
+  String get pqrsIntro =>
+      'Requests, complaints, claims, and suggestions about Liora.';
+
+  @override
+  String get pqrsQuestions => 'Frequently asked questions';
+
+  @override
+  String get pqrsWrite => 'Write';
+
+  @override
+  String get pqrsKindPetition => 'Request';
+
+  @override
+  String get pqrsKindComplaint => 'Complaint';
+
+  @override
+  String get pqrsKindClaim => 'Claim';
+
+  @override
+  String get pqrsKindSuggestion => 'Suggestion';
+
+  @override
+  String get pqrsKindRequired =>
+      'Choose a request, complaint, claim, or suggestion.';
+
+  @override
+  String get pqrsMessage => 'Message';
+
+  @override
+  String get pqrsMessageHint => 'What happened, or what you would like.';
+
+  @override
+  String get pqrsMessageRequired => 'Write the message.';
+
+  @override
+  String get pqrsMessageTooLong => 'The message is too long.';
+
+  @override
+  String get pqrsEmail => 'Email';
+
+  @override
+  String get pqrsEmailHint => 'Optional, if you want a reply';
+
+  @override
+  String get pqrsEmailInvalid => 'That email is not valid.';
+
+  @override
+  String get pqrsSend => 'Send';
+
+  @override
+  String get pqrsSending => 'Sending';
+
+  @override
+  String get pqrsSendFailed => 'It could not be sent. Try again.';
+
+  @override
+  String get pqrsHeldTitle => 'Sent';
+
+  @override
+  String pqrsHeldBody(String kind) {
+    return 'We received your $kind.';
+  }
+
+  @override
+  String get pqrsAnother => 'Write another';
+
+  @override
+  String get pqrsFaqAccount => 'Do I need an account?';
+
+  @override
+  String get pqrsFaqAccountAnswer =>
+      'No. Your books and your progress stay on this device.';
+
+  @override
+  String get pqrsFaqAdd => 'How do I add a book?';
+
+  @override
+  String get pqrsFaqAddAnswer =>
+      'In Library, Import opens an EPUB from this device. In Discover you can download one from the catalog.';
+
+  @override
+  String get pqrsFaqOffline => 'Can I read without internet?';
+
+  @override
+  String get pqrsFaqOfflineAnswer =>
+      'A book already in the library opens offline. The catalog needs a connection to load and to download.';
+
+  @override
+  String get pqrsFaqHabit => 'How do I change the goal or the time?';
+
+  @override
+  String get pqrsFaqHabitAnswer => 'In Profile, Reading habit.';
+
+  @override
+  String get pqrsFaqTime => 'Where do I see how much I have read?';
+
+  @override
+  String get pqrsFaqTimeAnswer =>
+      'Time shows the week, the calendar, and the time for each book.';
+
+  @override
+  String get pqrsFaqReader => 'How do I change the size or the mode?';
+
+  @override
+  String get pqrsFaqReaderAnswer =>
+      'Inside the book: larger or smaller text, light or dark, and pages or scroll.';
+
+  @override
+  String get pqrsFaqDelete => 'What happens if I delete a book?';
+
+  @override
+  String get pqrsFaqDeleteAnswer =>
+      'It leaves the library on this device, with its progress and its quotes.';
 }

@@ -1,0 +1,27 @@
+rules_version = '2';
+service cloud.firestore {
+  match /databases/{database}/documents {
+    match /pqrs/{id} {
+      allow create: if request.resource.data.keys().hasAll(['kind', 'message', 'platform', 'locale', 'createdAt'])
+        && request.resource.data.keys().hasOnly(['kind', 'message', 'platform', 'locale', 'createdAt', 'email'])
+        && request.resource.data.kind in ['petition', 'complaint', 'claim', 'suggestion']
+        && request.resource.data.message is string
+        && request.resource.data.message.size() > 0
+        && request.resource.data.message.size() <= 2000
+        && request.resource.data.platform in ['ios', 'android']
+        && request.resource.data.locale is string
+        && request.resource.data.locale.size() > 0
+        && request.resource.data.locale.size() <= 12
+        && request.resource.data.createdAt == request.time
+        && (
+          !request.resource.data.keys().hasAny(['email'])
+          || (
+            request.resource.data.email is string
+            && request.resource.data.email.size() > 0
+            && request.resource.data.email.size() <= 200
+          )
+        );
+      allow read, update, delete: if false;
+    }
+  }
+}

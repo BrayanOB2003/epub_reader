@@ -35,6 +35,24 @@ enum ReadingRoutine {
 
 String readingHourLabel(int hour) => '${hour.toString().padLeft(2, '0')}:00';
 
+/// Period, hour, and days on one settings line.
+String habitScheduleLine(
+  AppLocalizations l10n, {
+  required ReadingRoutine? period,
+  required int? hour,
+  required Iterable<ReadingWeekday> days,
+}) {
+  final ordered = [...days]..sort((a, b) => a.id.compareTo(b.id));
+  final dayLine = ordered.length == ReadingWeekday.values.length
+      ? l10n.everyDay
+      : ordered.map((day) => day.letter(l10n)).join(' ');
+  return [
+    if (period != null) period.label(l10n),
+    if (hour != null) readingHourLabel(hour),
+    if (dayLine.isNotEmpty) dayLine,
+  ].join(' · ');
+}
+
 enum ReadingWeekday {
   monday(1),
   tuesday(2),

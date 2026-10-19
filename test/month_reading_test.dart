@@ -512,6 +512,54 @@ void main() {
     expect(find.text('Compartir'), findsOneWidget);
   });
 
+  testWidgets('tapping a book opens its reading report', (tester) async {
+    final book = _book(id: 1, title: 'Faro', progress: 0.4);
+    final session = _session(
+      id: 1,
+      at: DateTime(2026, 10, 2, 21),
+      seconds: 40 * 60,
+    );
+    await tester.pumpWidget(
+      _app(
+        Builder(
+          builder: (context) => MonthReadingView(
+            report: MonthReadingReport(
+              month: DateTime(2026, 10),
+              closed: true,
+              engagedSeconds: 40 * 60,
+              books: const [
+                MonthBookLine(
+                  bookId: 1,
+                  title: 'Faro',
+                  engagedSeconds: 40 * 60,
+                  progress: 0.4,
+                  finished: false,
+                ),
+              ],
+            ),
+            onRead: (bookId) => openMonthBookReport(
+              context: context,
+              bookId: bookId,
+              books: [book],
+              sessions: [session],
+              quoteBookIds: const [],
+              now: DateTime(2026, 10, 13, 12),
+              onRead: (_) {},
+            ),
+            onShare: (_, _) {},
+          ),
+        ),
+      ),
+    );
+
+    await tester.tap(find.text('Faro'));
+    await tester.pumpAndSettle();
+
+    expect(find.text('Leer'), findsOneWidget);
+    expect(find.text('Cerrar'), findsOneWidget);
+    expect(find.text('1 sesión'), findsOneWidget);
+  });
+
   testWidgets('other months stay off the bottom of the review', (tester) async {
     await tester.pumpWidget(
       _app(
@@ -727,6 +775,7 @@ ReadingSession _session({
     startedAt: at,
     endedAt: at.add(Duration(seconds: seconds)),
     engagedSeconds: seconds,
+    sample: false,
   );
 }
 

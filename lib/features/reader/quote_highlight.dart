@@ -168,7 +168,7 @@ Future<QuoteHighlightChoice?> showQuoteHighlightColors(
               Expanded(
                 child: _HighlightSwatch(
                   color: color.tint(dark: dark),
-                  label: _highlightLabel(l10n, color.id),
+                  label: quoteHighlightLabel(l10n, color.id),
                   selected: color.id == selectedId,
                   onTap: () =>
                       Navigator.pop(context, QuoteHighlightRecolor(color.id)),
@@ -250,7 +250,7 @@ class _HighlightSwatch extends StatelessWidget {
   }
 }
 
-String _highlightLabel(AppLocalizations l10n, String id) {
+String quoteHighlightLabel(AppLocalizations l10n, String id) {
   return switch (id) {
     'green' => l10n.quoteHighlightGreen,
     'blue' => l10n.quoteHighlightBlue,

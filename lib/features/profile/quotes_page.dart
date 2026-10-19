@@ -1,3 +1,4 @@
+import 'package:epub_reader/app/platform_dialog.dart';
 import 'package:epub_reader/app/providers.dart';
 import 'package:epub_reader/app/schedule_theme.dart';
 import 'package:epub_reader/app/schedule_widgets.dart';
@@ -21,25 +22,20 @@ class QuotesPage extends ConsumerWidget {
     final l10n = AppLocalizations.of(context);
     return Scaffold(
       body: SafeArea(
+        bottom: false,
         child: Column(
           crossAxisAlignment: CrossAxisAlignment.start,
           children: [
-            IconButton(
-              tooltip: l10n.back,
-              onPressed: () => context.pop(),
-              icon: const Icon(Icons.arrow_back),
+            ScheduleDetailTitle(
+              title: l10n.savedQuotes,
+              onBack: () => context.pop(),
             ),
             Expanded(
               child: quotes.when(
                 loading: () => const Center(child: CircularProgressIndicator()),
-                error: (error, _) => Center(
-                  child: Padding(
-                    padding: const EdgeInsets.all(24),
-                    child: Text(
-                      l10n.quotesLoadFailed('$error'),
-                      textAlign: TextAlign.center,
-                    ),
-                  ),
+                error: (error, _) => Padding(
+                  padding: const EdgeInsets.all(20),
+                  child: ScheduleIssue(message: l10n.quotesLoadFailed),
                 ),
                 data: (items) {
                   if (items.isEmpty) return const _EmptyQuotes();
@@ -49,13 +45,6 @@ class QuotesPage extends ConsumerWidget {
                     itemBuilder: (context, index) {
                       final entry = entries[index];
                       return switch (entry) {
-                        _QuoteHeading() => Column(
-                          crossAxisAlignment: CrossAxisAlignment.start,
-                          children: [
-                            ScheduleHeader(title: l10n.savedQuotes),
-                            const ScheduleRule(),
-                          ],
-                        ),
                         _QuoteBook(:final group) => _BookHeading(group: group),
                         _QuoteLine(:final quote) => _PaperQuote(
                           key: ValueKey('quote-${quote.id}'),
@@ -80,10 +69,6 @@ sealed class _QuoteEntry {
   const _QuoteEntry();
 }
 
-class _QuoteHeading extends _QuoteEntry {
-  const _QuoteHeading();
-}
-
 class _QuoteBook extends _QuoteEntry {
   const _QuoteBook(this.group);
 
@@ -98,7 +83,6 @@ class _QuoteLine extends _QuoteEntry {
 
 List<_QuoteEntry> _entries(List<QuoteBookGroup> groups) {
   return [
-    const _QuoteHeading(),
     for (final group in groups) ...[
       _QuoteBook(group),
       for (final quote in group.quotes) _QuoteLine(quote),
@@ -108,22 +92,13 @@ List<_QuoteEntry> _entries(List<QuoteBookGroup> groups) {
 
 Future<void> _confirmDelete(BuildContext context, WidgetRef ref, int id) async {
   final l10n = AppLocalizations.of(context);
-  final confirmed = await showDialog<bool>(
-    context: context,
-    builder: (context) => AlertDialog(
-      title: Text(l10n.deleteQuoteTitle),
-      content: Text(l10n.deleteQuoteBody),
-      actions: [
-        TextButton(
-          onPressed: () => Navigator.pop(context, false),
-          child: Text(l10n.cancel),
-        ),
-        TextButton(
-          onPressed: () => Navigator.pop(context, true),
-          child: Text(l10n.delete),
-        ),
-      ],
-    ),
+  final confirmed = await showPlatformConfirm(
+    context,
+    title: l10n.deleteQuoteTitle,
+    message: l10n.deleteQuoteBody,
+    confirm: l10n.delete,
+    cancel: l10n.cancel,
+    destructive: true,
   );
   if (confirmed != true || !context.mounted) return;
   try {
@@ -150,8 +125,6 @@ class _EmptyQuotes extends StatelessWidget {
     final l10n = AppLocalizations.of(context);
     return ListView(
       children: [
-        ScheduleHeader(title: l10n.savedQuotes),
-        const ScheduleRule(),
         Padding(
           padding: const EdgeInsets.fromLTRB(20, 28, 20, 24),
           child: Column(
@@ -171,7 +144,7 @@ class _EmptyQuotes extends StatelessWidget {
               const SizedBox(height: 24),
               ScheduleAction(
                 label: l10n.library,
-                onPressed: () => context.go('/library'),
+                onPressed: () => context.push('/library'),
               ),
             ],
           ),

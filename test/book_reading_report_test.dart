@@ -503,5 +503,6 @@ ReadingSession _session({
     startedAt: startedAt,
     endedAt: startedAt.add(Duration(seconds: seconds)),
     engagedSeconds: seconds,
+    sample: false,
   );
 }

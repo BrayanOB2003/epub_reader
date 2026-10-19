@@ -89,6 +89,9 @@ class ReadingSessions extends Table {
   DateTimeColumn get endedAt => dateTime()();
 
   IntColumn get engagedSeconds => integer()();
+
+  /// True when the session was written by "Lecturas de ejemplo".
+  BoolColumn get sample => boolean().withDefault(const Constant(false))();
 }
 
 /// One row each time the goal, the days, or the hour actually change.
@@ -130,7 +133,7 @@ class AppDatabase extends _$AppDatabase {
   AppDatabase(super.e);
 
   @override
-  int get schemaVersion => 13;
+  int get schemaVersion => 14;
 
   @override
   MigrationStrategy get migration {
@@ -183,6 +186,9 @@ class AppDatabase extends _$AppDatabase {
           await migrator.createTable(readingPlanVersions);
           await migrator.createTable(monthReports);
           await seedPlanHistory();
+        }
+        if (from < 14) {
+          await migrator.addColumn(readingSessions, readingSessions.sample);
         }
       },
     );

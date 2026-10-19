@@ -310,7 +310,7 @@ class _QuoteExportPageState extends ConsumerState<QuoteExportPage> {
             child: Padding(
               padding: const EdgeInsets.all(24),
               child: Text(
-                l10n.quotesLoadFailed('$error'),
+                l10n.quotesLoadFailed,
                 textAlign: TextAlign.center,
               ),
             ),

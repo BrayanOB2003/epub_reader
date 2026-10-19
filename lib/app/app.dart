@@ -1,3 +1,4 @@
+import 'package:epub_reader/app/app_font_store.dart';
 import 'package:epub_reader/app/app_locale.dart';
 import 'package:epub_reader/app/app_theme_store.dart';
 import 'package:epub_reader/app/router.dart';
@@ -18,13 +19,15 @@ class EpubReaderApp extends ConsumerWidget {
     final locale = ref.watch(appLocaleProvider);
     final themeId =
         ref.watch(appThemeProvider).asData?.value ?? AppThemeId.programa;
+    final fontId =
+        ref.watch(appFontProvider).asData?.value ?? AppFontId.sistema;
     return MaterialApp.router(
       title: 'Liora',
       locale: locale,
       supportedLocales: AppLocalizations.supportedLocales,
       localizationsDelegates: AppLocalizations.localizationsDelegates,
-      theme: scheduleTheme(Brightness.light, themeId),
-      darkTheme: scheduleTheme(Brightness.dark, themeId),
+      theme: scheduleTheme(Brightness.light, themeId, fontId),
+      darkTheme: scheduleTheme(Brightness.dark, themeId, fontId),
       themeMode: ThemeMode.system,
       routerConfig: ref.watch(appRouterProvider),
       builder: (context, child) {
@@ -38,15 +41,7 @@ class EpubReaderApp extends ConsumerWidget {
                   primaryColor: colors.station,
                   scaffoldBackgroundColor: colors.paper,
                   barBackgroundColor: colors.paper,
-                  textTheme: CupertinoTextThemeData(
-                    primaryColor: colors.station,
-                    textStyle: TextStyle(color: colors.ink, fontSize: 17),
-                    navLargeTitleTextStyle: TextStyle(
-                      color: colors.ink,
-                      fontSize: 34,
-                      fontWeight: FontWeight.w700,
-                    ),
-                  ),
+                  textTheme: _cupertinoText(colors, fontId),
                 ),
                 child: child ?? const SizedBox.shrink(),
               ),
@@ -56,4 +51,40 @@ class EpubReaderApp extends ConsumerWidget {
       },
     );
   }
+}
+
+CupertinoTextThemeData _cupertinoText(ScheduleColors colors, AppFontId font) {
+  final family = font.family;
+  const fallback = ['CupertinoSystemText', 'Roboto'];
+  return CupertinoTextThemeData(
+    primaryColor: colors.station,
+    textStyle: TextStyle(color: colors.ink, fontSize: 17, fontFamily: family),
+    navLargeTitleTextStyle: TextStyle(
+      color: colors.ink,
+      fontSize: 34,
+      fontWeight: FontWeight.w700,
+      fontFamily: family,
+    ),
+    actionTextStyle: family == null
+        ? null
+        : TextStyle(
+            inherit: false,
+            fontFamily: family,
+            fontFamilyFallback: fallback,
+            fontSize: 17,
+            letterSpacing: -0.41,
+            decoration: TextDecoration.none,
+            color: colors.station,
+          ),
+    tabLabelTextStyle: family == null
+        ? null
+        : TextStyle(
+            inherit: false,
+            fontFamily: family,
+            fontFamilyFallback: fallback,
+            fontSize: 10,
+            fontWeight: FontWeight.w500,
+            letterSpacing: -0.24,
+          ),
+  );
 }

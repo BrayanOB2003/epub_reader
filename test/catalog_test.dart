@@ -1,3 +1,5 @@
+import 'dart:async';
+
 import 'package:drift/native.dart';
 import 'package:epub_reader/app/providers.dart' hide catalogProvider;
 import 'package:epub_reader/app/schedule_theme.dart';
@@ -5,6 +7,7 @@ import 'package:epub_reader/core/database/app_database.dart';
 import 'package:epub_reader/features/discover/data/catalog.dart';
 import 'package:epub_reader/features/discover/data/catalog_notifier.dart';
 import 'package:epub_reader/features/discover/discover_page.dart';
+import 'package:epub_reader/features/discover/discover_skeleton.dart';
 import 'package:epub_reader/l10n/app_localizations.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
@@ -172,6 +175,65 @@ void main() {
     await tester.pumpWidget(const SizedBox.shrink());
     await tester.pump(Duration.zero);
   });
+
+  testWidgets('discovery shows catalog shelves while the catalog loads', (
+    tester,
+  ) async {
+    final database = AppDatabase(NativeDatabase.memory());
+    final gate = Completer<Catalog>();
+    await tester.pumpWidget(
+      ProviderScope(
+        overrides: [
+          databaseProvider.overrideWith((ref) {
+            ref.onDispose(database.close);
+            return database;
+          }),
+          catalogProvider.overrideWith(() => _PendingCatalog(gate)),
+        ],
+        child: MaterialApp(
+          locale: const Locale('es'),
+          localizationsDelegates: AppLocalizations.localizationsDelegates,
+          supportedLocales: AppLocalizations.supportedLocales,
+          theme: scheduleTheme(Brightness.light),
+          home: const DiscoverPage(),
+        ),
+      ),
+    );
+    await tester.pump();
+
+    expect(find.byType(DiscoverSkeleton), findsOneWidget);
+    expect(find.byType(CircularProgressIndicator), findsNothing);
+    expect(find.text('Descubrimiento'), findsOneWidget);
+    expect(find.bySemanticsLabel('Cargando el catálogo'), findsOneWidget);
+
+    gate.complete(
+      Catalog(
+        generatedAt: null,
+        urlsExpireAt: DateTime.utc(2026, 9, 28, 8),
+        books: [
+          _book('Cities', ['Fiction', 'Adventure']),
+        ],
+      ),
+    );
+    await tester.pump();
+    await tester.pump(const Duration(milliseconds: 50));
+
+    expect(find.byType(DiscoverSkeleton), findsNothing);
+    expect(find.text('Cities'), findsOneWidget);
+    expect(find.text('Por añadir'), findsOneWidget);
+
+    await tester.pumpWidget(const SizedBox.shrink());
+    await tester.pump(Duration.zero);
+  });
+}
+
+class _PendingCatalog extends CatalogNotifier {
+  _PendingCatalog(this.gate);
+
+  final Completer<Catalog> gate;
+
+  @override
+  Future<Catalog> build() => gate.future;
 }
 
 class _GenreCatalog extends CatalogNotifier {
