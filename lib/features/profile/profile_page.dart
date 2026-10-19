@@ -1,3 +1,4 @@
+import 'package:epub_reader/app/app_logo.dart';
 import 'package:epub_reader/app/app_theme_store.dart';
 import 'package:epub_reader/app/platform_dialog.dart';
 import 'package:epub_reader/app/providers.dart';
@@ -147,6 +148,7 @@ class _ProfileList extends ConsumerWidget {
             onTap: () => _removeSampleReadings(context, ref),
           ),
         ],
+        const _AppNameplate(),
       ],
     );
   }
@@ -212,6 +214,31 @@ class _ProfileList extends ConsumerWidget {
         SnackBar(content: Text(l10n.sampleReadingsRemoveFailed)),
       );
     }
+  }
+}
+
+class _AppNameplate extends StatelessWidget {
+  const _AppNameplate();
+
+  @override
+  Widget build(BuildContext context) {
+    return Padding(
+      padding: const EdgeInsets.fromLTRB(20, 48, 20, 32),
+      child: Row(
+        children: [
+          const AppLogo(size: 36),
+          const SizedBox(width: 12),
+          Text(
+            'Liora',
+            style: programTitle(
+              context,
+              ScheduleColors.of(context).station,
+              size: 22,
+            ),
+          ),
+        ],
+      ),
+    );
   }
 }
 

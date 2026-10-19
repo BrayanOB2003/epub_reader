@@ -1,5 +1,6 @@
 import 'dart:async';
 
+import 'package:epub_reader/app/app_logo.dart';
 import 'package:epub_reader/app/schedule_theme.dart';
 import 'package:epub_reader/features/analytics/app_analytics.dart';
 import 'package:epub_reader/features/analytics/analytics_events.dart';
@@ -307,30 +308,38 @@ class _Welcome extends StatelessWidget {
   Widget build(BuildContext context) {
     final colors = ScheduleColors.of(context);
     final l10n = AppLocalizations.of(context);
-    return Column(
-      crossAxisAlignment: CrossAxisAlignment.start,
-      children: [
-        const Spacer(),
-        ColoredBox(
-          color: colors.station,
-          child: Padding(
-            padding: const EdgeInsets.fromLTRB(0, 20, 16, 20),
-            child: Text(
-              l10n.welcomeTitle,
-              style: programTitle(context, colors.onStation, size: 44),
-            ),
+    return CustomScrollView(
+      slivers: [
+        SliverFillRemaining(
+          hasScrollBody: false,
+          child: Column(
+            crossAxisAlignment: CrossAxisAlignment.start,
+            mainAxisAlignment: MainAxisAlignment.center,
+            children: [
+              const AppLogo(size: 72, semanticLabel: 'Liora'),
+              const SizedBox(height: 16),
+              ColoredBox(
+                color: colors.station,
+                child: Padding(
+                  padding: const EdgeInsets.fromLTRB(0, 20, 16, 20),
+                  child: Text(
+                    l10n.welcomeTitle,
+                    style: programTitle(context, colors.onStation, size: 44),
+                  ),
+                ),
+              ),
+              const SizedBox(height: 16),
+              Text(l10n.welcomeBody, style: theme.textTheme.bodyLarge),
+              const SizedBox(height: 24),
+              Text(
+                l10n.welcomeAccount,
+                style: theme.textTheme.bodyMedium?.copyWith(
+                  color: theme.colorScheme.onSurfaceVariant,
+                ),
+              ),
+            ],
           ),
         ),
-        const SizedBox(height: 16),
-        Text(l10n.welcomeBody, style: theme.textTheme.bodyLarge),
-        const SizedBox(height: 24),
-        Text(
-          l10n.welcomeAccount,
-          style: theme.textTheme.bodyMedium?.copyWith(
-            color: theme.colorScheme.onSurfaceVariant,
-          ),
-        ),
-        const Spacer(),
       ],
     );
   }
