@@ -614,5 +614,8 @@
   "pqrsFaqReader": "¿Cómo cambio el tamaño o el modo?",
   "pqrsFaqReaderAnswer": "Dentro del libro: texto más grande o más pequeño, modo claro u oscuro, y páginas o scroll.",
   "pqrsFaqDelete": "¿Qué pasa si elimino un libro?",
-  "pqrsFaqDeleteAnswer": "Sale de la biblioteca de este dispositivo, con su progreso y sus citas."
+  "pqrsFaqDeleteAnswer": "Sale de la biblioteca de este dispositivo, con su progreso y sus citas.",
+  "privacyPolicy": "Privacidad",
+  "termsOfUse": "Términos",
+  "legalPageFailed": "No se pudo abrir la página."
 }

@@ -1229,4 +1229,13 @@ class AppLocalizationsEs extends AppLocalizations {
   @override
   String get pqrsFaqDeleteAnswer =>
       'Sale de la biblioteca de este dispositivo, con su progreso y sus citas.';
+
+  @override
+  String get privacyPolicy => 'Privacidad';
+
+  @override
+  String get termsOfUse => 'Términos';
+
+  @override
+  String get legalPageFailed => 'No se pudo abrir la página.';
 }

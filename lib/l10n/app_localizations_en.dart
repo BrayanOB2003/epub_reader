@@ -1221,4 +1221,13 @@ class AppLocalizationsEn extends AppLocalizations {
   @override
   String get pqrsFaqDeleteAnswer =>
       'It leaves the library on this device, with its progress and its quotes.';
+
+  @override
+  String get privacyPolicy => 'Privacy';
+
+  @override
+  String get termsOfUse => 'Terms';
+
+  @override
+  String get legalPageFailed => 'The page could not be opened.';
 }

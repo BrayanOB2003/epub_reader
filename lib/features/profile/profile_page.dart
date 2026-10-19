@@ -17,6 +17,7 @@ import 'package:epub_reader/l10n/app_localizations.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:go_router/go_router.dart';
+import 'package:url_launcher/url_launcher.dart';
 
 class ProfilePage extends ConsumerWidget {
   const ProfilePage({super.key});
@@ -52,6 +53,7 @@ class _ProfileLoadFailed extends StatelessWidget {
           padding: const EdgeInsets.all(20),
           child: ScheduleIssue(message: l10n.profileLoadFailed),
         ),
+        const _AppNameplate(),
       ],
     );
   }
@@ -222,24 +224,81 @@ class _AppNameplate extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) {
+    final l10n = AppLocalizations.of(context);
+    final colors = ScheduleColors.of(context);
+    final linkStyle = TextButton.styleFrom(
+      foregroundColor: colors.station,
+      minimumSize: const Size(48, 48),
+      padding: const EdgeInsets.symmetric(horizontal: 12),
+      tapTargetSize: MaterialTapTargetSize.shrinkWrap,
+      textStyle: Theme.of(context).textTheme.labelLarge,
+    );
     return Padding(
-      padding: const EdgeInsets.fromLTRB(20, 48, 20, 32),
-      child: Row(
+      padding: const EdgeInsets.fromLTRB(8, 48, 8, 20),
+      child: Column(
+        crossAxisAlignment: CrossAxisAlignment.start,
         children: [
-          const AppLogo(size: 36),
-          const SizedBox(width: 12),
-          Text(
-            'Liora',
-            style: programTitle(
-              context,
-              ScheduleColors.of(context).station,
-              size: 22,
+          Padding(
+            padding: const EdgeInsets.symmetric(horizontal: 12),
+            child: Row(
+              children: [
+                const AppLogo(size: 36),
+                const SizedBox(width: 12),
+                Text(
+                  'Liora',
+                  style: programTitle(context, colors.station, size: 22),
+                ),
+              ],
             ),
+          ),
+          Wrap(
+            children: [
+              TextButton(
+                style: linkStyle,
+                onPressed: () => _openLegalPage(
+                  context,
+                  _legalUrl(context, _LegalPage.privacy),
+                ),
+                child: Text(l10n.privacyPolicy),
+              ),
+              TextButton(
+                style: linkStyle,
+                onPressed: () => _openLegalPage(
+                  context,
+                  _legalUrl(context, _LegalPage.terms),
+                ),
+                child: Text(l10n.termsOfUse),
+              ),
+            ],
           ),
         ],
       ),
     );
   }
+}
+
+enum _LegalPage { privacy, terms }
+
+Uri _legalUrl(BuildContext context, _LegalPage page) {
+  final spanish = Localizations.localeOf(context).languageCode == 'es';
+  final path = switch (page) {
+    _LegalPage.privacy => spanish ? '/es/privacy' : '/privacy',
+    _LegalPage.terms => spanish ? '/es/terms' : '/terms',
+  };
+  return Uri.https('www.somosliora.app', path);
+}
+
+Future<void> _openLegalPage(BuildContext context, Uri url) async {
+  final l10n = AppLocalizations.of(context);
+  final messenger = ScaffoldMessenger.of(context);
+  var opened = false;
+  try {
+    opened = await launchUrl(url, mode: LaunchMode.externalApplication);
+  } catch (_) {
+    opened = false;
+  }
+  if (opened || !context.mounted) return;
+  messenger.showSnackBar(SnackBar(content: Text(l10n.legalPageFailed)));
 }
 
 class _GroupLabel extends StatelessWidget {
