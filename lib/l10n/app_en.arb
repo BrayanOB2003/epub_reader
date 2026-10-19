@@ -85,7 +85,7 @@
   "invalidBook": "Invalid book.",
   "welcomeTitle": "Build a reading habit",
   "welcomeBody": "A place to read a little every day and keep that habit going.",
-  "welcomeAccount": "No account. Your books and progress stay on this device.",
+  "welcomeNext": "A few minutes, at the time you choose.",
   "notificationPermissionTitle": "A reminder at your time",
   "notificationPermissionBody": "When the time you chose arrives, Liora can remind you to read.",
   "notificationPermissionAllow": "Turn on reminders",

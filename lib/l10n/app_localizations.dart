@@ -608,11 +608,11 @@ abstract class AppLocalizations {
   /// **'Un lugar para leer un poco cada día y sostener ese hábito.'**
   String get welcomeBody;
 
-  /// No description provided for @welcomeAccount.
+  /// No description provided for @welcomeNext.
   ///
   /// In es, this message translates to:
-  /// **'Sin cuenta. Tus libros y tu progreso se guardan en este dispositivo.'**
-  String get welcomeAccount;
+  /// **'Unos minutos, a la hora que elijas.'**
+  String get welcomeNext;
 
   /// No description provided for @notificationPermissionTitle.
   ///

@@ -283,8 +283,7 @@ class AppLocalizationsEs extends AppLocalizations {
       'Un lugar para leer un poco cada día y sostener ese hábito.';
 
   @override
-  String get welcomeAccount =>
-      'Sin cuenta. Tus libros y tu progreso se guardan en este dispositivo.';
+  String get welcomeNext => 'Unos minutos, a la hora que elijas.';
 
   @override
   String get notificationPermissionTitle => 'Te aviso a tu hora';

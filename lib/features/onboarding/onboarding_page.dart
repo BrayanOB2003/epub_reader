@@ -332,7 +332,7 @@ class _Welcome extends StatelessWidget {
               Text(l10n.welcomeBody, style: theme.textTheme.bodyLarge),
               const SizedBox(height: 24),
               Text(
-                l10n.welcomeAccount,
+                l10n.welcomeNext,
                 style: theme.textTheme.bodyMedium?.copyWith(
                   color: theme.colorScheme.onSurfaceVariant,
                 ),
