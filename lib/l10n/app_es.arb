@@ -110,7 +110,7 @@
   "invalidBook": "Libro no válido.",
   "welcomeTitle": "Crea el hábito de leer",
   "welcomeBody": "Un lugar para leer un poco cada día y sostener ese hábito.",
-  "welcomeAccount": "Sin cuenta. Tus libros y tu progreso se guardan en este dispositivo.",
+  "welcomeNext": "Unos minutos, a la hora que elijas.",
   "notificationPermissionTitle": "Te aviso a tu hora",
   "notificationPermissionBody": "Cuando llega el momento que elegiste, Liora puede recordarte que leas.",
   "notificationPermissionAllow": "Activar avisos",
@@ -614,5 +614,8 @@
   "pqrsFaqReader": "¿Cómo cambio el tamaño o el modo?",
   "pqrsFaqReaderAnswer": "Dentro del libro: texto más grande o más pequeño, modo claro u oscuro, y páginas o scroll.",
   "pqrsFaqDelete": "¿Qué pasa si elimino un libro?",
-  "pqrsFaqDeleteAnswer": "Sale de la biblioteca de este dispositivo, con su progreso y sus citas."
+  "pqrsFaqDeleteAnswer": "Sale de la biblioteca de este dispositivo, con su progreso y sus citas.",
+  "privacyPolicy": "Privacidad",
+  "termsOfUse": "Términos",
+  "legalPageFailed": "No se pudo abrir la página."
 }

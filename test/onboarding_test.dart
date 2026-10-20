@@ -222,7 +222,7 @@ void main() {
       expect(find.text('Crea el hábito de leer'), findsOneWidget);
       expect(
         find.text(
-          'Sin cuenta. Tus libros y tu progreso se guardan en este dispositivo.',
+          'Unos minutos, a la hora que elijas.',
         ),
         findsOneWidget,
       );

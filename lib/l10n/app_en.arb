@@ -85,7 +85,7 @@
   "invalidBook": "Invalid book.",
   "welcomeTitle": "Build a reading habit",
   "welcomeBody": "A place to read a little every day and keep that habit going.",
-  "welcomeAccount": "No account. Your books and progress stay on this device.",
+  "welcomeNext": "A few minutes, at the time you choose.",
   "notificationPermissionTitle": "A reminder at your time",
   "notificationPermissionBody": "When the time you chose arrives, Liora can remind you to read.",
   "notificationPermissionAllow": "Turn on reminders",
@@ -412,5 +412,8 @@
   "pqrsFaqReader": "How do I change the size or the mode?",
   "pqrsFaqReaderAnswer": "Inside the book: larger or smaller text, light or dark, and pages or scroll.",
   "pqrsFaqDelete": "What happens if I delete a book?",
-  "pqrsFaqDeleteAnswer": "It leaves the library on this device, with its progress and its quotes."
+  "pqrsFaqDeleteAnswer": "It leaves the library on this device, with its progress and its quotes.",
+  "privacyPolicy": "Privacy",
+  "termsOfUse": "Terms",
+  "legalPageFailed": "The page could not be opened."
 }

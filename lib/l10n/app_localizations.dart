@@ -608,11 +608,11 @@ abstract class AppLocalizations {
   /// **'Un lugar para leer un poco cada día y sostener ese hábito.'**
   String get welcomeBody;
 
-  /// No description provided for @welcomeAccount.
+  /// No description provided for @welcomeNext.
   ///
   /// In es, this message translates to:
-  /// **'Sin cuenta. Tus libros y tu progreso se guardan en este dispositivo.'**
-  String get welcomeAccount;
+  /// **'Unos minutos, a la hora que elijas.'**
+  String get welcomeNext;
 
   /// No description provided for @notificationPermissionTitle.
   ///
@@ -2251,6 +2251,24 @@ abstract class AppLocalizations {
   /// In es, this message translates to:
   /// **'Sale de la biblioteca de este dispositivo, con su progreso y sus citas.'**
   String get pqrsFaqDeleteAnswer;
+
+  /// No description provided for @privacyPolicy.
+  ///
+  /// In es, this message translates to:
+  /// **'Privacidad'**
+  String get privacyPolicy;
+
+  /// No description provided for @termsOfUse.
+  ///
+  /// In es, this message translates to:
+  /// **'Términos'**
+  String get termsOfUse;
+
+  /// No description provided for @legalPageFailed.
+  ///
+  /// In es, this message translates to:
+  /// **'No se pudo abrir la página.'**
+  String get legalPageFailed;
 }
 
 class _AppLocalizationsDelegate

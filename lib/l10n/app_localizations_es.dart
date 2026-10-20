@@ -283,8 +283,7 @@ class AppLocalizationsEs extends AppLocalizations {
       'Un lugar para leer un poco cada día y sostener ese hábito.';
 
   @override
-  String get welcomeAccount =>
-      'Sin cuenta. Tus libros y tu progreso se guardan en este dispositivo.';
+  String get welcomeNext => 'Unos minutos, a la hora que elijas.';
 
   @override
   String get notificationPermissionTitle => 'Te aviso a tu hora';
@@ -1230,4 +1229,13 @@ class AppLocalizationsEs extends AppLocalizations {
   @override
   String get pqrsFaqDeleteAnswer =>
       'Sale de la biblioteca de este dispositivo, con su progreso y sus citas.';
+
+  @override
+  String get privacyPolicy => 'Privacidad';
+
+  @override
+  String get termsOfUse => 'Términos';
+
+  @override
+  String get legalPageFailed => 'No se pudo abrir la página.';
 }
