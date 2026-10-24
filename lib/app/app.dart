@@ -22,6 +22,7 @@ class EpubReaderApp extends ConsumerWidget {
     final fontId =
         ref.watch(appFontProvider).asData?.value ?? AppFontId.sistema;
     return MaterialApp.router(
+      debugShowCheckedModeBanner: false,
       title: 'Liora',
       locale: locale,
       supportedLocales: AppLocalizations.supportedLocales,
