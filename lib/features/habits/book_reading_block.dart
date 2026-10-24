@@ -16,7 +16,7 @@ class BookReadingBlock extends StatelessWidget {
   final VoidCallback onRead;
 
   /// The time screen's book: cover, title, author, and one duration.
-  /// Tapping it opens the book. On Por libro the same row opens the report.
+  /// Tapping it opens the same report as the books listed under Por libro.
   final bool logRow;
 
   @override
@@ -38,7 +38,7 @@ class BookReadingBlock extends StatelessWidget {
           progress: book.progress,
           trailing: formatReadingDuration(report.engagedSeconds),
           programTrailing: true,
-          onTap: logRow ? onRead : () => _openReport(context),
+          onTap: () => _openReport(context),
           rule: false,
         ),
       ],
