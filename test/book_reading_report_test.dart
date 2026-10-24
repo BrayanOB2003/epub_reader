@@ -407,6 +407,41 @@ void main() {
     expect(find.text('Faltan ~1 h 15 min'), findsNothing);
   });
 
+  testWidgets('the time card opens the same report dialog', (tester) async {
+    var opened = false;
+    await tester.pumpWidget(
+      _app(
+        BookReadingBlock(
+          logRow: true,
+          report: BookReadingReport(
+            book: _book(id: 1, title: 'Uno', progress: 0.5),
+            engagedSeconds: 20 * 60,
+            sessions: 4,
+            quotes: 2,
+            pace: const BookReadingPace(
+              remainingMinutes: 40,
+              minutesPerTenPercent: 10,
+            ),
+          ),
+          onRead: () => opened = true,
+        ),
+      ),
+    );
+
+    await tester.tap(find.text('Uno'));
+    await tester.pumpAndSettle();
+
+    expect(opened, isFalse);
+    expect(find.text('Faltan ~40 min'), findsOneWidget);
+    expect(find.text('~10 min por cada 10 %'), findsOneWidget);
+    expect(find.text('4 sesiones · 2 citas'), findsOneWidget);
+
+    await tester.tap(find.text('Leer'));
+    await tester.pumpAndSettle();
+
+    expect(opened, isTrue);
+  });
+
   testWidgets('without a pace the dialog shows the session and no quotes', (
     tester,
   ) async {

@@ -121,43 +121,62 @@ String scheduleDay(DateTime day, String languageCode) {
 }
 
 class ScheduleHeader extends StatelessWidget {
-  const ScheduleHeader({required this.title, this.date, super.key});
+  const ScheduleHeader({
+    required this.title,
+    this.date,
+    this.leading,
+    super.key,
+  });
 
   final String title;
   final DateTime? date;
+
+  /// Mark beside the title. The library home uses the station logo.
+  final Widget? leading;
 
   @override
   Widget build(BuildContext context) {
     final colors = ScheduleColors.of(context);
     final ios = Theme.of(context).platform == TargetPlatform.iOS;
+    final heading = Semantics(
+      header: true,
+      child: Text(
+        title,
+        style: Theme.of(context).textTheme.headlineMedium?.copyWith(
+          fontSize: ios ? 34 : 28,
+          fontWeight: FontWeight.w700,
+          height: 1.05,
+          color: colors.ink,
+        ),
+      ),
+    );
+    final dateLine = date == null
+        ? null
+        : Text(
+            scheduleDate(date!, Localizations.localeOf(context).languageCode),
+            style: Theme.of(
+              context,
+            ).textTheme.bodyLarge?.copyWith(color: colors.muted),
+          );
+    final lines = Column(
+      crossAxisAlignment: CrossAxisAlignment.start,
+      children: [
+        heading,
+        if (dateLine != null) ...[const SizedBox(height: 8), dateLine],
+      ],
+    );
     return Padding(
       padding: const EdgeInsets.fromLTRB(20, 20, 20, 12),
-      child: Column(
-        crossAxisAlignment: CrossAxisAlignment.start,
-        children: [
-          Semantics(
-            header: true,
-            child: Text(
-              title,
-              style: Theme.of(context).textTheme.headlineMedium?.copyWith(
-                fontSize: ios ? 34 : 28,
-                fontWeight: FontWeight.w700,
-                height: 1.05,
-                color: colors.ink,
-              ),
+      child: leading == null
+          ? lines
+          : Row(
+              crossAxisAlignment: CrossAxisAlignment.start,
+              children: [
+                leading!,
+                const SizedBox(width: 12),
+                Expanded(child: lines),
+              ],
             ),
-          ),
-          if (date != null) ...[
-            const SizedBox(height: 8),
-            Text(
-              scheduleDate(date!, Localizations.localeOf(context).languageCode),
-              style: Theme.of(
-                context,
-              ).textTheme.bodyLarge?.copyWith(color: colors.muted),
-            ),
-          ],
-        ],
-      ),
     );
   }
 }
@@ -470,10 +489,9 @@ class ScheduleIssue extends StatelessWidget {
           Expanded(
             child: Text(
               message,
-              style: Theme.of(context).textTheme.bodyMedium?.copyWith(
-                color: colors.ink,
-                height: 1.4,
-              ),
+              style: Theme.of(
+                context,
+              ).textTheme.bodyMedium?.copyWith(color: colors.ink, height: 1.4),
             ),
           ),
         ],

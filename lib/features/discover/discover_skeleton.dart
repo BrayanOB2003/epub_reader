@@ -34,7 +34,7 @@ class _DiscoverSkeletonState extends State<DiscoverSkeleton>
     super.initState();
     _sweep = AnimationController(
       vsync: this,
-      duration: const Duration(milliseconds: 1800),
+      duration: const Duration(milliseconds: 1400),
     );
   }
 
@@ -143,21 +143,21 @@ class _InkSweep extends StatelessWidget {
   Widget build(BuildContext context) {
     final colors = ScheduleColors.of(context);
     final base = _bone(colors);
-    final toward = Theme.of(context).brightness == Brightness.dark
-        ? colors.ink
-        : colors.paper;
-    final wash = Color.lerp(base, toward, 0.42)!;
+    // Wet ink on the unprinted slots: toward ink, not paper.
+    final wash = Color.lerp(base, colors.ink, 0.36)!;
     return AnimatedBuilder(
       animation: animation,
       builder: (context, child) {
-        final center = -1.7 + animation.value * 3.4;
         return ShaderMask(
           blendMode: BlendMode.srcATop,
           shaderCallback: (bounds) {
             return LinearGradient(
-              begin: Alignment(0, center - 0.28),
-              end: Alignment(0, center + 0.28),
-              colors: [base, wash, base],
+              begin: Alignment.topCenter,
+              end: Alignment.bottomCenter,
+              colors: [base, base, wash, base, base],
+              stops: const [0.0, 0.10, 0.28, 0.46, 1.0],
+              tileMode: TileMode.repeated,
+              transform: _InkPress(animation.value),
             ).createShader(bounds);
           },
           child: child,
@@ -165,6 +165,17 @@ class _InkSweep extends StatelessWidget {
       },
       child: child,
     );
+  }
+}
+
+class _InkPress extends GradientTransform {
+  const _InkPress(this.shift);
+
+  final double shift;
+
+  @override
+  Matrix4 transform(Rect bounds, {TextDirection? textDirection}) {
+    return Matrix4.translationValues(0, bounds.height * shift, 0);
   }
 }
 
