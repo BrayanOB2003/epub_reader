@@ -1,3 +1,4 @@
+import 'package:epub_reader/app/app_logo.dart';
 import 'package:epub_reader/app/providers.dart';
 import 'package:epub_reader/features/analytics/analytics_events.dart';
 import 'package:epub_reader/features/analytics/app_analytics.dart';
@@ -172,7 +173,11 @@ class _Schedule extends StatelessWidget {
     return Column(
       crossAxisAlignment: CrossAxisAlignment.stretch,
       children: [
-        ScheduleHeader(title: l10n.library, date: DateTime.now()),
+        ScheduleHeader(
+          title: l10n.library,
+          date: DateTime.now(),
+          leading: const AppLogo(size: 36, semanticLabel: 'Liora'),
+        ),
         const ScheduleRule(),
         if (routine != null)
           _LiveBand(
