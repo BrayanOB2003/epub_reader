@@ -2225,7 +2225,7 @@ abstract class AppLocalizations {
   /// No description provided for @pqrsFaqTimeAnswer.
   ///
   /// In es, this message translates to:
-  /// **'En Tiempo están la semana, el calendario y el tiempo de cada libro.'**
+  /// **'En Tiempo están la semana y el calendario.'**
   String get pqrsFaqTimeAnswer;
 
   /// No description provided for @pqrsFaqReader.
@@ -2269,6 +2269,54 @@ abstract class AppLocalizations {
   /// In es, this message translates to:
   /// **'No se pudo abrir la página.'**
   String get legalPageFailed;
+
+  /// No description provided for @premiumTitle.
+  ///
+  /// In es, this message translates to:
+  /// **'Premium'**
+  String get premiumTitle;
+
+  /// No description provided for @premiumLead.
+  ///
+  /// In es, this message translates to:
+  /// **'Un pago abre las tres.'**
+  String get premiumLead;
+
+  /// No description provided for @premiumPrice.
+  ///
+  /// In es, this message translates to:
+  /// **'7 USD'**
+  String get premiumPrice;
+
+  /// No description provided for @premiumMonthBody.
+  ///
+  /// In es, this message translates to:
+  /// **'El mes que cerraste: los días del plan, el tiempo y los libros.'**
+  String get premiumMonthBody;
+
+  /// No description provided for @premiumBooksBody.
+  ///
+  /// In es, this message translates to:
+  /// **'El tiempo de cada libro, aparte de la semana y el calendario.'**
+  String get premiumBooksBody;
+
+  /// No description provided for @premiumAppearanceBody.
+  ///
+  /// In es, this message translates to:
+  /// **'El papel, la tinta y la letra con la que se lee Liora.'**
+  String get premiumAppearanceBody;
+
+  /// No description provided for @premiumUnlock.
+  ///
+  /// In es, this message translates to:
+  /// **'Desbloquear · 7 USD'**
+  String get premiumUnlock;
+
+  /// No description provided for @premiumPurchaseUnavailable.
+  ///
+  /// In es, this message translates to:
+  /// **'La compra no está disponible todavía.'**
+  String get premiumPurchaseUnavailable;
 }
 
 class _AppLocalizationsDelegate

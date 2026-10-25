@@ -295,6 +295,7 @@ void main() {
     );
     await tester.pumpAndSettle();
 
+    await tester.scrollUntilVisible(find.text('Citas'), 200);
     expect(find.text('Citas'), findsOneWidget);
     expect(find.text('2'), findsOneWidget);
   });

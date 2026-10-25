@@ -1205,8 +1205,7 @@ class AppLocalizationsEn extends AppLocalizations {
   String get pqrsFaqTime => 'Where do I see how much I have read?';
 
   @override
-  String get pqrsFaqTimeAnswer =>
-      'Time shows the week, the calendar, and the time for each book.';
+  String get pqrsFaqTimeAnswer => 'Time shows the week and the calendar.';
 
   @override
   String get pqrsFaqReader => 'How do I change the size or the mode?';
@@ -1230,4 +1229,31 @@ class AppLocalizationsEn extends AppLocalizations {
 
   @override
   String get legalPageFailed => 'The page could not be opened.';
+
+  @override
+  String get premiumTitle => 'Premium';
+
+  @override
+  String get premiumLead => 'One payment opens all three.';
+
+  @override
+  String get premiumPrice => '7 USD';
+
+  @override
+  String get premiumMonthBody =>
+      'The month you closed: the plan\'s days, the time, and the books.';
+
+  @override
+  String get premiumBooksBody =>
+      'The time in each book, apart from the week and the calendar.';
+
+  @override
+  String get premiumAppearanceBody =>
+      'The paper, the ink, and the type Liora is read in.';
+
+  @override
+  String get premiumUnlock => 'Unlock · 7 USD';
+
+  @override
+  String get premiumPurchaseUnavailable => 'The purchase is not available yet.';
 }
