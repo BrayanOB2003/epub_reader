@@ -54,13 +54,13 @@ class BookReadingBlock extends StatelessWidget {
   }
 }
 
-/// The extended record, as one sheet on paper.
+/// The extended record, as one sheet of the log.
 ///
-/// The cover, title, author, and mark name the book. The total is the only
-/// large figure, under that block. Time left sits on the figure. Pace, the
-/// horizon, and the session count each sit on their own line further down,
-/// in the quiet ink. Quotes stay on the session line. The frame stays the platform
-/// dialog; the fill is paper so the log colors stay the ones in the sheet.
+/// The cover, title, author, and mark name the book on paper. The total is
+/// the only figure, and it is the live band. Time left sits under that band.
+/// Pace, the horizon, and the session count each sit on their own line
+/// further down, in the quiet ink. Quotes stay on the session line. Leer is
+/// the station control; Cerrar stays text.
 class BookReadingReportDialog extends StatelessWidget {
   const BookReadingReportDialog({
     required this.report,
@@ -88,82 +88,110 @@ class BookReadingReportDialog extends StatelessWidget {
     return AlertDialog(
       semanticLabel: title,
       backgroundColor: colors.paper,
-      contentPadding: const EdgeInsets.fromLTRB(24, 20, 24, 0),
-      actionsPadding: const EdgeInsets.fromLTRB(12, 20, 12, 12),
+      surfaceTintColor: Colors.transparent,
+      elevation: 0,
+      shadowColor: Colors.transparent,
+      shape: RoundedRectangleBorder(borderRadius: scheduleRadius(context)),
+      contentPadding: EdgeInsets.zero,
       content: Column(
         mainAxisSize: MainAxisSize.min,
-        crossAxisAlignment: CrossAxisAlignment.start,
+        crossAxisAlignment: CrossAxisAlignment.stretch,
         children: [
-          Row(
-            crossAxisAlignment: CrossAxisAlignment.start,
-            children: [
-              if (hasCover)
-                ScheduleCover(bytes: cover, width: 36, height: 52)
-              else
-                ScheduleCoverPlaceholder(width: 36, height: 52, title: title),
-              const SizedBox(width: 12),
-              Expanded(
-                child: Column(
-                  crossAxisAlignment: CrossAxisAlignment.start,
-                  children: [
-                    Text(
-                      title,
-                      style: programTitle(context, colors.ink, size: 22),
-                      maxLines: 2,
-                      overflow: TextOverflow.ellipsis,
-                    ),
-                    if (shownAuthor != null) ...[
-                      const SizedBox(height: 4),
+          Padding(
+            padding: const EdgeInsets.fromLTRB(20, 20, 20, 16),
+            child: Row(
+              crossAxisAlignment: CrossAxisAlignment.start,
+              children: [
+                if (hasCover)
+                  ScheduleCover(bytes: cover, width: 52, height: 74)
+                else
+                  ScheduleCoverPlaceholder(width: 52, height: 74, title: title),
+                const SizedBox(width: 12),
+                Expanded(
+                  child: Column(
+                    crossAxisAlignment: CrossAxisAlignment.start,
+                    children: [
                       Text(
-                        shownAuthor,
-                        style: quiet,
+                        title,
+                        style: programTitle(context, colors.ink, size: 22),
                         maxLines: 2,
                         overflow: TextOverflow.ellipsis,
                       ),
+                      if (shownAuthor != null) ...[
+                        const SizedBox(height: 4),
+                        Text(
+                          shownAuthor,
+                          style: quiet,
+                          maxLines: 2,
+                          overflow: TextOverflow.ellipsis,
+                        ),
+                      ],
+                      const SizedBox(height: 8),
+                      ScheduleProgress(value: book.progress),
                     ],
-                    const SizedBox(height: 8),
-                    ScheduleProgress(value: book.progress),
-                  ],
+                  ),
                 ),
-              ),
-            ],
+              ],
+            ),
           ),
-          const SizedBox(height: 20),
-          Text(
-            formatReadingDuration(report.engagedSeconds),
-            style: programTitle(
-              context,
-              colors.ink,
-              size: 28,
-            ).copyWith(fontFeatures: const [FontFeature.tabularFigures()]),
-          ),
-          if (detail.remaining != null) ...[
-            const SizedBox(height: 8),
-            Text(detail.remaining!, style: body?.copyWith(color: colors.ink)),
-          ],
-          if (detail.context.isNotEmpty) ...[
-            const SizedBox(height: 16),
-            for (var i = 0; i < detail.context.length; i++)
-              Padding(
-                padding: EdgeInsets.only(top: i == 0 ? 0 : 8),
-                child: Text(detail.context[i], style: quiet),
+          ColoredBox(
+            color: colors.station,
+            child: Padding(
+              padding: const EdgeInsets.fromLTRB(20, 14, 20, 16),
+              child: Text(
+                formatReadingDuration(report.engagedSeconds),
+                style: programTitle(
+                  context,
+                  typeOnStation(context),
+                  size: 36,
+                ).copyWith(fontFeatures: const [FontFeature.tabularFigures()]),
               ),
-          ],
+            ),
+          ),
+          if (detail.remaining != null)
+            Padding(
+              padding: const EdgeInsets.fromLTRB(20, 16, 20, 0),
+              child: Text(
+                detail.remaining!,
+                style: body?.copyWith(color: colors.ink),
+              ),
+            ),
+          if (detail.context.isNotEmpty)
+            Padding(
+              padding: EdgeInsets.fromLTRB(
+                20,
+                detail.remaining == null ? 16 : 12,
+                20,
+                0,
+              ),
+              child: Column(
+                crossAxisAlignment: CrossAxisAlignment.start,
+                children: [
+                  for (var i = 0; i < detail.context.length; i++)
+                    Padding(
+                      padding: EdgeInsets.only(top: i == 0 ? 0 : 8),
+                      child: Text(detail.context[i], style: quiet),
+                    ),
+                ],
+              ),
+            ),
+          Padding(
+            padding: const EdgeInsets.fromLTRB(20, 20, 20, 0),
+            child: ScheduleAction(
+              label: l10n.read,
+              onPressed: () {
+                Navigator.pop(context);
+                onRead();
+              },
+            ),
+          ),
+          TextButton(
+            onPressed: () => Navigator.pop(context),
+            style: TextButton.styleFrom(minimumSize: const Size.fromHeight(48)),
+            child: Text(l10n.close),
+          ),
         ],
       ),
-      actions: [
-        TextButton(
-          onPressed: () => Navigator.pop(context),
-          child: Text(l10n.close),
-        ),
-        TextButton(
-          onPressed: () {
-            Navigator.pop(context);
-            onRead();
-          },
-          child: Text(l10n.read),
-        ),
-      ],
     );
   }
 }

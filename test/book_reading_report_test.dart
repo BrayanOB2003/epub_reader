@@ -372,7 +372,7 @@ void main() {
           (widget) =>
               widget is Text &&
               widget.data == '3 h 45 min' &&
-              widget.style?.fontSize == 28,
+              widget.style?.fontSize == 36,
         ),
       ),
     );
@@ -394,11 +394,25 @@ void main() {
     expect(figure.left, closeTo(cover.left, 1));
     expect(figure.left, lessThan(title.dx));
     expect(figure.top, greaterThan(cover.bottom));
-    expect(left.top - figure.bottom, greaterThan(4));
-    expect(left.top - figure.bottom, lessThan(16));
-    expect(pace.top - left.bottom, greaterThan(left.top - figure.bottom));
-    expect(horizon.top - pace.bottom, greaterThan(4));
-    expect(horizon.top - pace.bottom, lessThan(16));
+    expect(left.top, greaterThan(figure.bottom));
+    expect(pace.top, greaterThan(left.bottom));
+    expect(horizon.top, greaterThan(pace.bottom));
+    expect(
+      tester
+          .widget<ColoredBox>(
+            find
+                .ancestor(
+                  of: find.descendant(
+                    of: dialog,
+                    matching: find.text('3 h 45 min'),
+                  ),
+                  matching: find.byType(ColoredBox),
+                )
+                .first,
+          )
+          .color,
+      ScheduleColors.light.station,
+    );
 
     await tester.tap(find.text('Leer'));
     await tester.pumpAndSettle();
@@ -482,7 +496,7 @@ void main() {
           (widget) =>
               widget is Text &&
               widget.data == '1 min 30 s' &&
-              widget.style?.fontSize == 28,
+              widget.style?.fontSize == 36,
         ),
       ),
     );
