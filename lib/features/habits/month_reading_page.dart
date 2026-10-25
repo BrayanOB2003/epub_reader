@@ -335,9 +335,8 @@ class _MonthReadingPageState extends ConsumerState<MonthReadingPage> {
       await _export.share(file.path, origin: origin);
     } catch (_) {
       if (!mounted) return;
-      ScaffoldMessenger.of(
-        context,
-      ).showSnackBar(SnackBar(content: Text(l10n.monthShareFailed)));
+      ScaffoldMessenger.of(context)
+          .showSnackBar(SnackBar(content: Text(l10n.monthShareFailed)));
     } finally {
       if (mounted) setState(() => _sharing = false);
     }
@@ -374,8 +373,8 @@ class MonthReadingView extends StatelessWidget {
           ScheduleHeader(title: l10n.monthReading),
           const ScheduleRule(),
           Padding(
-            padding: const EdgeInsets.all(24),
-            child: Text(l10n.monthReadingEmpty, textAlign: TextAlign.center),
+            padding: const EdgeInsets.fromLTRB(20, 16, 20, 16),
+            child: Text(l10n.monthReadingEmpty),
           ),
         ],
       );
@@ -401,44 +400,24 @@ class MonthReadingView extends StatelessWidget {
       child: ListView(
         padding: const EdgeInsets.only(bottom: 24),
         children: [
-          _MonthTitle(
+          _MonthBand(
             title: scheduleMonthTitle(report.month.month, code),
+            headline: headline,
+            minutes: minutes,
+            showMinutes: report.metDays != null,
+            comparison:
+                report.minuteDeltaSeconds != null &&
+                    report.comparedMonth != null
+                ? _comparison(l10n, report, code)
+                : null,
+            metDays: report.metDays,
+            plannedDays: report.plannedDays,
             onPrevious: older == null || open == null
                 ? null
                 : () => open(older),
             onNext: newer == null || open == null ? null : () => open(newer),
           ),
           const ScheduleRule(),
-          Padding(
-            padding: const EdgeInsets.fromLTRB(20, 16, 20, 16),
-            child: Column(
-              crossAxisAlignment: CrossAxisAlignment.start,
-              children: [
-                Text(headline, style: Theme.of(context).textTheme.bodyLarge),
-                if (report.metDays != null) ...[
-                  const SizedBox(height: 12),
-                  Text(
-                    minutes,
-                    style: programTitle(
-                      context,
-                      ScheduleColors.of(context).ink,
-                      size: 28,
-                    ),
-                  ),
-                ],
-                if (report.minuteDeltaSeconds != null &&
-                    report.comparedMonth != null) ...[
-                  const SizedBox(height: 8),
-                  Text(
-                    _comparison(l10n, report, code),
-                    style: Theme.of(context).textTheme.bodyMedium?.copyWith(
-                      color: ScheduleColors.of(context).muted,
-                    ),
-                  ),
-                ],
-              ],
-            ),
-          ),
           for (final book in report.books)
             ScheduleListing(
               key: ValueKey(book.bookId),
@@ -493,6 +472,82 @@ class MonthReadingView extends StatelessWidget {
   }
 }
 
+/// The month on air: its name, the sentence, and the one figure.
+class _MonthBand extends StatelessWidget {
+  const _MonthBand({
+    required this.title,
+    required this.headline,
+    required this.minutes,
+    required this.showMinutes,
+    required this.onPrevious,
+    required this.onNext,
+    this.comparison,
+    this.metDays,
+    this.plannedDays,
+  });
+
+  final String title;
+  final String headline;
+  final String minutes;
+  final bool showMinutes;
+  final String? comparison;
+  final int? metDays;
+  final int? plannedDays;
+  final VoidCallback? onPrevious;
+  final VoidCallback? onNext;
+
+  @override
+  Widget build(BuildContext context) {
+    final colors = ScheduleColors.of(context);
+    final onBand = typeOnStation(context);
+    final met = metDays;
+    final planned = plannedDays;
+    return ColoredBox(
+      color: colors.station,
+      child: Column(
+        crossAxisAlignment: CrossAxisAlignment.start,
+        children: [
+          _MonthTitle(title: title, onPrevious: onPrevious, onNext: onNext),
+          Padding(
+            padding: const EdgeInsets.fromLTRB(20, 4, 20, 20),
+            child: Column(
+              crossAxisAlignment: CrossAxisAlignment.start,
+              children: [
+                Text(
+                  headline,
+                  style: Theme.of(context).textTheme.bodyLarge
+                      ?.copyWith(color: onBand),
+                ),
+                if (showMinutes) ...[
+                  const SizedBox(height: 12),
+                  Text(
+                    minutes,
+                    style: programTitle(context, onBand, size: 36).copyWith(
+                      fontFeatures: const [FontFeature.tabularFigures()],
+                    ),
+                  ),
+                ],
+                if (comparison != null) ...[
+                  const SizedBox(height: 8),
+                  Text(
+                    comparison!,
+                    style: Theme.of(context).textTheme.bodyMedium
+                        ?.copyWith(color: colors.onStationMuted),
+                  ),
+                ],
+                if (met != null && planned != null && planned > 0) ...[
+                  const SizedBox(height: 16),
+                  _MonthPlanMarks(met: met, planned: planned),
+                ],
+              ],
+            ),
+          ),
+        ],
+      ),
+    );
+  }
+}
+
 class _MonthTitle extends StatelessWidget {
   const _MonthTitle({
     required this.title,
@@ -508,12 +563,18 @@ class _MonthTitle extends StatelessWidget {
   Widget build(BuildContext context) {
     final colors = ScheduleColors.of(context);
     final l10n = AppLocalizations.of(context);
-    final ios = Theme.of(context).platform == TargetPlatform.iOS;
+    final onBand = typeOnStation(context);
     return Row(
       children: [
         IconButton(
           tooltip: l10n.previousMonth,
           onPressed: onPrevious,
+          style: IconButton.styleFrom(
+            foregroundColor: onBand,
+            disabledForegroundColor: colors.onStationMuted.withValues(
+              alpha: 0.45,
+            ),
+          ),
           icon: const Icon(Icons.chevron_left),
         ),
         Expanded(
@@ -521,20 +582,51 @@ class _MonthTitle extends StatelessWidget {
             title,
             maxLines: 1,
             overflow: TextOverflow.ellipsis,
-            style: Theme.of(context).textTheme.headlineMedium?.copyWith(
-              fontSize: ios ? 34 : 28,
-              fontWeight: FontWeight.w700,
-              height: 1.05,
-              color: colors.ink,
-            ),
+            style: programTitle(context, onBand, size: 34),
           ),
         ),
         IconButton(
           tooltip: l10n.nextMonth,
           onPressed: onNext,
+          style: IconButton.styleFrom(
+            foregroundColor: onBand,
+            disabledForegroundColor: colors.onStationMuted.withValues(
+              alpha: 0.45,
+            ),
+          ),
           icon: const Icon(Icons.chevron_right),
         ),
       ],
+    );
+  }
+}
+
+/// Days of the plan, as the same squares the month already uses.
+class _MonthPlanMarks extends StatelessWidget {
+  const _MonthPlanMarks({required this.met, required this.planned});
+
+  final int met;
+  final int planned;
+
+  @override
+  Widget build(BuildContext context) {
+    final colors = ScheduleColors.of(context);
+    final filled = met.clamp(0, planned);
+    return ExcludeSemantics(
+      child: Wrap(
+        spacing: 4,
+        runSpacing: 4,
+        children: [
+          for (var index = 0; index < planned; index++)
+            DecoratedBox(
+              decoration: BoxDecoration(
+                color: index < filled ? colors.onStation : Colors.transparent,
+                border: Border.all(color: colors.onStationMuted),
+              ),
+              child: const SizedBox.square(dimension: 12),
+            ),
+        ],
+      ),
     );
   }
 }
@@ -567,7 +659,7 @@ class _ArchetypeBlock extends StatelessWidget {
     final l10n = AppLocalizations.of(context);
     final colors = ScheduleColors.of(context);
     return Padding(
-      padding: const EdgeInsets.fromLTRB(20, 16, 20, 16),
+      padding: const EdgeInsets.fromLTRB(20, 20, 20, 20),
       child: Column(
         crossAxisAlignment: CrossAxisAlignment.start,
         children: [
@@ -580,12 +672,11 @@ class _ArchetypeBlock extends StatelessWidget {
             _archetypePhrase(l10n, report.kind),
             style: Theme.of(context).textTheme.bodyLarge,
           ),
-          const SizedBox(height: 4),
+          const SizedBox(height: 8),
           Text(
             _archetypeEvidence(l10n, report.evidence),
-            style: Theme.of(
-              context,
-            ).textTheme.bodyMedium?.copyWith(color: colors.muted),
+            style: Theme.of(context).textTheme.bodyMedium
+                ?.copyWith(color: colors.muted),
           ),
         ],
       ),
@@ -603,7 +694,7 @@ class _QuoteBlock extends StatelessWidget {
     final colors = ScheduleColors.of(context);
     final title = quote.bookTitle.trim();
     return Padding(
-      padding: const EdgeInsets.fromLTRB(20, 16, 20, 16),
+      padding: const EdgeInsets.fromLTRB(20, 20, 20, 20),
       child: Column(
         crossAxisAlignment: CrossAxisAlignment.start,
         children: [
@@ -611,15 +702,15 @@ class _QuoteBlock extends StatelessWidget {
             quote.passage,
             maxLines: 4,
             overflow: TextOverflow.ellipsis,
-            style: Theme.of(context).textTheme.bodyLarge,
+            style: Theme.of(context).textTheme.bodyLarge
+                ?.copyWith(height: 1.45),
           ),
           if (title.isNotEmpty) ...[
             const SizedBox(height: 4),
             Text(
               title,
-              style: Theme.of(
-                context,
-              ).textTheme.bodyMedium?.copyWith(color: colors.muted),
+              style: Theme.of(context).textTheme.bodyMedium
+                  ?.copyWith(color: colors.muted),
             ),
           ],
         ],

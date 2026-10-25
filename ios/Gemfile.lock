@@ -266,7 +266,7 @@ PLATFORMS
 
 DEPENDENCIES
   fastlane (>= 2.234.0)
-  fastlane-plugin-firebase_app_distribution
+  fastlane-plugin-firebase_app_distribution (>= 1.0.0)
 
 BUNDLED WITH
    2.5.23

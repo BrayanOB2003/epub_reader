@@ -5,6 +5,7 @@ import 'package:epub_reader/app/schedule_widgets.dart';
 import 'package:epub_reader/features/profile/reader_profile_store.dart';
 import 'package:epub_reader/features/profile/reading_routine.dart';
 import 'package:epub_reader/l10n/app_localizations.dart';
+import 'package:flutter/cupertino.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:go_router/go_router.dart';
@@ -54,10 +55,17 @@ class AppearancePage extends ConsumerWidget {
                       onTap: () => _selectTheme(context, ref, id),
                     ),
                   Padding(
-                    padding: const EdgeInsets.fromLTRB(20, 24, 20, 12),
-                    child: Text(
-                      l10n.appFont,
-                      style: Theme.of(context).textTheme.headlineSmall,
+                    padding: const EdgeInsets.fromLTRB(20, 28, 20, 12),
+                    child: Semantics(
+                      header: true,
+                      child: Text(
+                        l10n.appFont,
+                        style: programTitle(
+                          context,
+                          ScheduleColors.of(context).ink,
+                          size: 22,
+                        ),
+                      ),
                     ),
                   ),
                   SizedBox(
@@ -221,47 +229,21 @@ class _ThemeChoice extends StatelessWidget {
           child: InkWell(
             onTap: onTap,
             child: ConstrainedBox(
-              constraints: const BoxConstraints(minHeight: 64),
+              constraints: const BoxConstraints(minHeight: 48),
               child: Padding(
                 padding: const EdgeInsets.symmetric(
                   horizontal: 20,
-                  vertical: 8,
+                  vertical: 12,
                 ),
                 child: Row(
                   children: [
-                    ClipRRect(
-                      borderRadius: radius,
-                      child: DecoratedBox(
-                        decoration: BoxDecoration(
-                          color: palette.paper,
-                          border: Border.all(color: colors.rule),
-                          borderRadius: radius,
-                        ),
-                        child: SizedBox(
-                          width: 36,
-                          height: 48,
-                          child: Column(
-                            children: [
-                              Expanded(
-                                child: Center(
-                                  child: Text(
-                                    label.isEmpty ? '' : label[0],
-                                    style: themeChoiceStyle(
-                                      look,
-                                      palette.ink,
-                                      Theme.of(context).platform,
-                                    ),
-                                  ),
-                                ),
-                              ),
-                              ColoredBox(
-                                color: palette.station,
-                                child: const SizedBox(height: 8, width: 36),
-                              ),
-                            ],
-                          ),
-                        ),
-                      ),
+                    _ThemeSpecimen(
+                      look: look,
+                      palette: palette,
+                      radius: radius,
+                      initial: label.isEmpty ? '' : label[0],
+                      selected: selected,
+                      borderColor: selected ? palette.station : colors.rule,
                     ),
                     const SizedBox(width: 16),
                     Expanded(
@@ -269,12 +251,18 @@ class _ThemeChoice extends StatelessWidget {
                         label,
                         style: themeChoiceStyle(
                           look,
-                          colors.ink,
+                          selected ? colors.ink : colors.muted,
                           Theme.of(context).platform,
                         ),
                       ),
                     ),
-                    if (selected) Icon(Icons.check, color: colors.station),
+                    if (selected)
+                      Icon(
+                        Theme.of(context).platform == TargetPlatform.iOS
+                            ? CupertinoIcons.check_mark
+                            : Icons.check,
+                        color: colors.station,
+                      ),
                   ],
                 ),
               ),
@@ -286,6 +274,66 @@ class _ThemeChoice extends StatelessWidget {
           child: const SizedBox(height: 1, width: double.infinity),
         ),
       ],
+    );
+  }
+}
+
+class _ThemeSpecimen extends StatelessWidget {
+  const _ThemeSpecimen({
+    required this.look,
+    required this.palette,
+    required this.radius,
+    required this.initial,
+    required this.selected,
+    required this.borderColor,
+  });
+
+  final ScheduleLook look;
+  final ScheduleColors palette;
+  final BorderRadius radius;
+  final String initial;
+  final bool selected;
+  final Color borderColor;
+
+  static const width = 64.0;
+  static const height = 86.0;
+
+  @override
+  Widget build(BuildContext context) {
+    return ClipRRect(
+      borderRadius: radius,
+      child: DecoratedBox(
+        decoration: BoxDecoration(
+          color: palette.paper,
+          border: Border.all(color: borderColor),
+          borderRadius: radius,
+        ),
+        child: SizedBox(
+          width: width,
+          height: height,
+          child: Column(
+            children: [
+              Expanded(
+                child: Center(
+                  child: Text(
+                    initial,
+                    style: themeChoiceStyle(
+                      look,
+                      palette.ink,
+                      Theme.of(context).platform,
+                      size: 32,
+                    ),
+                  ),
+                ),
+              ),
+              ColoredBox(
+                color: palette.station,
+                child: SizedBox(height: selected ? 14 : 10, width: width),
+              ),
+            ],
+          ),
+        ),
+      ),
     );
   }
 }
@@ -306,9 +354,9 @@ class _FontChoice extends StatelessWidget {
   final bool selected;
   final VoidCallback onTap;
 
-  static const width = 112.0;
-  static const cardHeight = 96.0;
-  static const stripHeight = 148.0;
+  static const width = 128.0;
+  static const cardHeight = 120.0;
+  static const stripHeight = 176.0;
 
   @override
   Widget build(BuildContext context) {
@@ -350,17 +398,20 @@ class _FontChoice extends StatelessWidget {
                                   'CupertinoSystemText',
                                   'Roboto',
                                 ],
-                                fontSize: 32,
+                                fontSize: 40,
                                 fontWeight: FontWeight.w500,
                                 height: 1,
-                                color: palette.ink,
+                                color: selected ? palette.ink : palette.muted,
                               ),
                             ),
                           ),
                         ),
                         ColoredBox(
                           color: palette.station,
-                          child: const SizedBox(height: 8, width: width),
+                          child: SizedBox(
+                            height: selected ? 14 : 8,
+                            width: width,
+                          ),
                         ),
                       ],
                     ),

@@ -12,9 +12,7 @@ permissions:
 env:
   FIREBASE_PROJECT_ID: epub-reader-6a972
   FIREBASE_ANDROID_APP_ID: "1:969465994480:android:ab8c7310f649e4ea85f635"
-  # Grupo de testers creado en Firebase App Distribution. Se puede override
-  # con el repository variable FIREBASE_TESTER_GROUPS.
-  FIREBASE_TESTER_GROUPS: ${{ vars.FIREBASE_TESTER_GROUPS || 'testers' }}
+  FIREBASE_TESTER_GROUPS: ANDROID
 
 jobs:
   android-distribute:
