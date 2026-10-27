@@ -408,12 +408,20 @@
   "pqrsFaqHabit": "How do I change the goal or the time?",
   "pqrsFaqHabitAnswer": "In Profile, Reading habit.",
   "pqrsFaqTime": "Where do I see how much I have read?",
-  "pqrsFaqTimeAnswer": "Time shows the week, the calendar, and the time for each book.",
+  "pqrsFaqTimeAnswer": "Time shows the week and the calendar.",
   "pqrsFaqReader": "How do I change the size or the mode?",
   "pqrsFaqReaderAnswer": "Inside the book: larger or smaller text, light or dark, and pages or scroll.",
   "pqrsFaqDelete": "What happens if I delete a book?",
   "pqrsFaqDeleteAnswer": "It leaves the library on this device, with its progress and its quotes.",
   "privacyPolicy": "Privacy",
   "termsOfUse": "Terms",
-  "legalPageFailed": "The page could not be opened."
+  "legalPageFailed": "The page could not be opened.",
+  "premiumTitle": "Premium",
+  "premiumLead": "One payment opens all three.",
+  "premiumPrice": "7 USD",
+  "premiumMonthBody": "The month you closed: the plan's days, the time, and the books.",
+  "premiumBooksBody": "The time in each book, apart from the week and the calendar.",
+  "premiumAppearanceBody": "The paper, the ink, and the type Liora is read in.",
+  "premiumUnlock": "Unlock · 7 USD",
+  "premiumPurchaseUnavailable": "The purchase is not available yet."
 }

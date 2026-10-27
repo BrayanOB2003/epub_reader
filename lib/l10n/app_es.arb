@@ -610,12 +610,20 @@
   "pqrsFaqHabit": "¿Cómo cambio la meta o la hora?",
   "pqrsFaqHabitAnswer": "En Perfil, Hábito de lectura.",
   "pqrsFaqTime": "¿Dónde veo cuánto he leído?",
-  "pqrsFaqTimeAnswer": "En Tiempo están la semana, el calendario y el tiempo de cada libro.",
+  "pqrsFaqTimeAnswer": "En Tiempo están la semana y el calendario.",
   "pqrsFaqReader": "¿Cómo cambio el tamaño o el modo?",
   "pqrsFaqReaderAnswer": "Dentro del libro: texto más grande o más pequeño, modo claro u oscuro, y páginas o scroll.",
   "pqrsFaqDelete": "¿Qué pasa si elimino un libro?",
   "pqrsFaqDeleteAnswer": "Sale de la biblioteca de este dispositivo, con su progreso y sus citas.",
   "privacyPolicy": "Privacidad",
   "termsOfUse": "Términos",
-  "legalPageFailed": "No se pudo abrir la página."
+  "legalPageFailed": "No se pudo abrir la página.",
+  "premiumTitle": "Premium",
+  "premiumLead": "Un pago abre las tres.",
+  "premiumPrice": "7 USD",
+  "premiumMonthBody": "El mes que cerraste: los días del plan, el tiempo y los libros.",
+  "premiumBooksBody": "El tiempo de cada libro, aparte de la semana y el calendario.",
+  "premiumAppearanceBody": "El papel, la tinta y la letra con la que se lee Liora.",
+  "premiumUnlock": "Desbloquear · 7 USD",
+  "premiumPurchaseUnavailable": "La compra no está disponible todavía."
 }

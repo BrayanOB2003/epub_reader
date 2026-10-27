@@ -1,6 +1,9 @@
 name: Deploy iOS to Firebase Distribution
 
 on:
+  push:
+    branches:
+      - test
   workflow_dispatch:
 
 permissions:
@@ -106,6 +109,7 @@ jobs:
           FIREBASE_TESTER_GROUPS: ${{ env.FIREBASE_TESTER_GROUPS }}
           MATCH_PASSWORD: ${{ secrets.MATCH_PASSWORD }}
           MATCH_GIT_URL: ${{ secrets.MATCH_GIT_URL }}
+          MATCH_GIT_BASIC_AUTHORIZATION: ${{ secrets.MATCH_GIT_BASIC_AUTHORIZATION }}
           MATCH_KEYCHAIN_NAME: "ios-build.keychain-db"
           MATCH_KEYCHAIN_PASSWORD: "build_password_123"
           IOS_BUNDLE_ID: ${{ env.IOS_BUNDLE_ID }}
@@ -115,6 +119,10 @@ jobs:
           if [ -z "${FIREBASE_SERVICE_ACCOUNT_JSON}" ] || [ -z "${MATCH_PASSWORD}" ] || [ -z "${MATCH_GIT_URL}" ]; then
             echo "::error::Faltan secrets de iOS: FIREBASE_SERVICE_ACCOUNT_JSON, MATCH_PASSWORD y MATCH_GIT_URL."
             exit 1
+          fi
+          # Si el secret no existe llega vacio; match lo interpretaria como un header invalido.
+          if [ -z "${MATCH_GIT_BASIC_AUTHORIZATION:-}" ]; then
+            unset MATCH_GIT_BASIC_AUTHORIZATION
           fi
           printf '%s' "$FIREBASE_SERVICE_ACCOUNT_JSON" > "$RUNNER_TEMP/firebase-sa.json"
           export GOOGLE_APPLICATION_CREDENTIALS="$RUNNER_TEMP/firebase-sa.json"

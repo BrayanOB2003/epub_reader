@@ -1213,8 +1213,7 @@ class AppLocalizationsEs extends AppLocalizations {
   String get pqrsFaqTime => '¿Dónde veo cuánto he leído?';
 
   @override
-  String get pqrsFaqTimeAnswer =>
-      'En Tiempo están la semana, el calendario y el tiempo de cada libro.';
+  String get pqrsFaqTimeAnswer => 'En Tiempo están la semana y el calendario.';
 
   @override
   String get pqrsFaqReader => '¿Cómo cambio el tamaño o el modo?';
@@ -1238,4 +1237,32 @@ class AppLocalizationsEs extends AppLocalizations {
 
   @override
   String get legalPageFailed => 'No se pudo abrir la página.';
+
+  @override
+  String get premiumTitle => 'Premium';
+
+  @override
+  String get premiumLead => 'Un pago abre las tres.';
+
+  @override
+  String get premiumPrice => '7 USD';
+
+  @override
+  String get premiumMonthBody =>
+      'El mes que cerraste: los días del plan, el tiempo y los libros.';
+
+  @override
+  String get premiumBooksBody =>
+      'El tiempo de cada libro, aparte de la semana y el calendario.';
+
+  @override
+  String get premiumAppearanceBody =>
+      'El papel, la tinta y la letra con la que se lee Liora.';
+
+  @override
+  String get premiumUnlock => 'Desbloquear · 7 USD';
+
+  @override
+  String get premiumPurchaseUnavailable =>
+      'La compra no está disponible todavía.';
 }

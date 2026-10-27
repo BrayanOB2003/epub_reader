@@ -1,5 +1,4 @@
 import 'package:epub_reader/app/app_logo.dart';
-import 'package:epub_reader/app/app_theme_store.dart';
 import 'package:epub_reader/app/platform_dialog.dart';
 import 'package:epub_reader/app/providers.dart';
 import 'package:epub_reader/app/schedule_theme.dart';
@@ -7,9 +6,7 @@ import 'package:epub_reader/app/schedule_widgets.dart';
 import 'package:epub_reader/core/database/app_database.dart';
 import 'package:epub_reader/features/focus/focus_mode.dart';
 import 'package:epub_reader/features/focus/focus_mode_tile.dart';
-import 'package:epub_reader/features/habits/month_reading.dart';
 import 'package:epub_reader/features/onboarding/onboarding_answers.dart';
-import 'package:epub_reader/features/profile/appearance_page.dart';
 import 'package:epub_reader/features/profile/reader_profile_store.dart';
 import 'package:epub_reader/features/profile/reading_routine.dart';
 import 'package:epub_reader/features/reader/quote_highlight_default_tile.dart';
@@ -69,7 +66,6 @@ class _ProfileList extends ConsumerWidget {
     final l10n = AppLocalizations.of(context);
     final colors = ScheduleColors.of(context);
     final quoteCount = ref.watch(savedQuotesProvider).asData?.value.length;
-    final reviewed = ref.watch(readingSessionsProvider).asData?.value;
     final sampleCount =
         ref.watch(sampleSessionCountProvider).asData?.value ?? 0;
     final goal = saved == null
@@ -84,9 +80,8 @@ class _ProfileList extends ConsumerWidget {
             routineHour: saved!.routineHour,
             routineDays: saved!.routineDays,
           );
-    final muted = Theme.of(context).textTheme.bodyLarge?.copyWith(
-      color: colors.muted,
-    );
+    final muted = Theme.of(context).textTheme.bodyLarge
+        ?.copyWith(color: colors.muted);
     return ListView(
       children: [
         ScheduleHeader(title: l10n.profile),
@@ -105,12 +100,14 @@ class _ProfileList extends ConsumerWidget {
           trailingStyle: muted,
           onTap: saved == null ? null : () => context.push('/profile/habit'),
         ),
-        _GroupLabel(title: l10n.profileRecords),
         _ProfileRow(
-          title: _reviewTitle(context, l10n, reviewed),
-          onTap: () => context.push('/profile/month'),
+          title: l10n.premiumTitle,
+          subtitle: l10n.premiumLead,
+          trailing: l10n.premiumPrice,
+          trailingStyle: muted,
+          onTap: () => context.push('/profile/premium'),
         ),
-        const Divider(height: 1),
+        _GroupLabel(title: l10n.profileRecords),
         _ProfileRow(
           title: l10n.savedQuotes,
           trailing: quoteCount == null ? null : '$quoteCount',
@@ -118,16 +115,6 @@ class _ProfileList extends ConsumerWidget {
           onTap: () => context.push('/profile/quotes'),
         ),
         _GroupLabel(title: l10n.profileDevice),
-        _ProfileRow(
-          title: l10n.appearance,
-          trailing: themeLabel(
-            l10n,
-            ref.watch(appThemeProvider).asData?.value ?? AppThemeId.programa,
-          ),
-          trailingStyle: muted,
-          onTap: () => context.push('/profile/appearance'),
-        ),
-        const Divider(height: 1),
         const QuoteHighlightDefaultTile(),
         const Divider(height: 1),
         if (saved != null && ref.watch(focusModeControllerProvider).offered)
@@ -185,7 +172,9 @@ class _ProfileList extends ConsumerWidget {
       );
     } catch (_) {
       if (!context.mounted) return;
-      messenger.showSnackBar(SnackBar(content: Text(l10n.sampleReadingsFailed)));
+      messenger.showSnackBar(
+        SnackBar(content: Text(l10n.sampleReadingsFailed)),
+      );
     }
   }
 
@@ -312,9 +301,8 @@ class _GroupLabel extends StatelessWidget {
       padding: const EdgeInsets.fromLTRB(20, 28, 20, 8),
       child: Text(
         title,
-        style: Theme.of(context).textTheme.labelLarge?.copyWith(
-          color: ScheduleColors.of(context).muted,
-        ),
+        style: Theme.of(context).textTheme.labelLarge
+            ?.copyWith(color: ScheduleColors.of(context).muted),
       ),
     );
   }
@@ -346,8 +334,7 @@ class _ProfileRow extends StatelessWidget {
       trailing: Row(
         mainAxisSize: MainAxisSize.min,
         children: [
-          if (value != null)
-            Text(value, style: trailingStyle),
+          if (value != null) Text(value, style: trailingStyle),
           if (onTap != null) ...[
             if (value != null) const SizedBox(width: 4),
             const ScheduleDisclosure(),
@@ -357,19 +344,4 @@ class _ProfileRow extends StatelessWidget {
       onTap: onTap,
     );
   }
-}
-
-String _reviewTitle(
-  BuildContext context,
-  AppLocalizations l10n,
-  List<ReadingSession>? sessions,
-) {
-  if (sessions == null) return l10n.monthReading;
-  final month = monthOnReview(sessions: sessions, now: DateTime.now());
-  if (month == null) return l10n.monthReading;
-  final code = Localizations.localeOf(context).languageCode;
-  final name = code == 'en'
-      ? scheduleMonthTitle(month.month, code)
-      : scheduleMonthName(month.month, code);
-  return l10n.monthReadingOf(name);
 }

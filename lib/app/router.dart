@@ -16,6 +16,7 @@ import 'package:epub_reader/features/onboarding/onboarding_page.dart';
 import 'package:epub_reader/features/profile/appearance_page.dart';
 import 'package:epub_reader/features/profile/habit_edit_page.dart';
 import 'package:epub_reader/features/profile/pqrs_page.dart';
+import 'package:epub_reader/features/profile/premium_offer.dart';
 import 'package:epub_reader/features/profile/profile_page.dart';
 import 'package:epub_reader/features/profile/quotes_page.dart';
 import 'package:epub_reader/features/quotes/quote_export_page.dart';
@@ -154,6 +155,11 @@ final appRouterProvider = Provider<GoRouter>((ref) {
                     path: 'habit',
                     name: 'habit',
                     builder: (context, state) => const HabitEditPage(),
+                  ),
+                  GoRoute(
+                    path: 'premium',
+                    name: 'premium',
+                    builder: (context, state) => const PremiumPage(),
                   ),
                   GoRoute(
                     path: 'quotes',

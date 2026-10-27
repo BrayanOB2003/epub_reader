@@ -80,6 +80,7 @@ void main() {
     await tester.pumpWidget(_profileApp(database));
     await tester.pumpAndSettle();
 
+    await tester.scrollUntilVisible(find.byType(Switch), 200);
     await tester.tap(find.byType(Switch));
     await tester.pumpAndSettle();
 
@@ -119,6 +120,7 @@ void main() {
     await tester.pumpWidget(_profileApp(database));
     await tester.pumpAndSettle();
 
+    await tester.scrollUntilVisible(find.byType(Switch), 200);
     await tester.tap(find.byType(Switch));
     await tester.pumpAndSettle();
 
@@ -175,6 +177,7 @@ void main() {
         );
         await tester.pumpAndSettle();
 
+        await tester.scrollUntilVisible(find.byType(Switch), 200);
         await tester.tap(find.byType(Switch));
         await tester.pumpAndSettle();
 
