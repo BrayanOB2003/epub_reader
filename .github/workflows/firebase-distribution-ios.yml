@@ -14,7 +14,8 @@ env:
   FIREBASE_IOS_APP_ID: "1:969465994480:ios:665f555c3d432fb585f635"
   FIREBASE_TESTER_GROUPS: IOS
   IOS_BUNDLE_ID: com.somosliora.app
-  APPLE_TEAM_ID: 9PAN8935L8
+  # Team del certificado y del perfil que genero match con la API key de App Store Connect.
+  APPLE_TEAM_ID: 6P775JHDM9
 
 jobs:
   ios-distribute:
