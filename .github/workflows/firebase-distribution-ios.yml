@@ -101,6 +101,24 @@ jobs:
           bundler-cache: true
           working-directory: ios
 
+      # Diagnostico y calentamiento: en el run anterior fastlane agoto 3/6/12/24s
+      # en `xcodebuild -showBuildSettings` tras resolver los paquetes SPM en frio.
+      # Aqui lo corremos sin limite corto y medimos cuanto tarda de verdad.
+      # Si termina, es lentitud (y deja la cache lista para fastlane). Si se
+      # cuelga, el timeout del paso lo corta y sabemos que no es solo lentitud.
+      - name: Calentar workspace de Xcode y medir showBuildSettings
+        working-directory: ios
+        timeout-minutes: 12
+        run: |
+          set -euo pipefail
+          echo "== resolvePackageDependencies =="
+          time xcodebuild -resolvePackageDependencies -workspace Runner.xcworkspace -scheme Runner -configuration Release > "$RUNNER_TEMP/resolve.log" 2>&1 || { tail -40 "$RUNNER_TEMP/resolve.log"; exit 1; }
+          echo "== showBuildSettings (1ra vez, en frio) =="
+          time xcodebuild -showBuildSettings -workspace Runner.xcworkspace -scheme Runner -configuration Release > "$RUNNER_TEMP/settings.log" 2>&1 || { tail -40 "$RUNNER_TEMP/settings.log"; exit 1; }
+          echo "== showBuildSettings (2da vez, en caliente) =="
+          time xcodebuild -showBuildSettings -workspace Runner.xcworkspace -scheme Runner -configuration Release > /dev/null 2>&1
+          grep -E "^\s+(PRODUCT_BUNDLE_IDENTIFIER|MARKETING_VERSION|CURRENT_PROJECT_VERSION) =" "$RUNNER_TEMP/settings.log" | sort -u | head -5
+
       - name: Build and Distribute iOS
         working-directory: ios
         env:
@@ -112,6 +130,9 @@ jobs:
           MATCH_GIT_BASIC_AUTHORIZATION: ${{ secrets.MATCH_GIT_BASIC_AUTHORIZATION }}
           MATCH_KEYCHAIN_NAME: "ios-build.keychain-db"
           MATCH_KEYCHAIN_PASSWORD: "build_password_123"
+          # El timeout se duplica en cada reintento: 120+240+480s = 14 min maximo.
+          FASTLANE_XCODEBUILD_SETTINGS_TIMEOUT: "120"
+          FASTLANE_XCODEBUILD_SETTINGS_RETRIES: "3"
           IOS_BUNDLE_ID: ${{ env.IOS_BUNDLE_ID }}
           APPLE_TEAM_ID: ${{ env.APPLE_TEAM_ID }}
         run: |
