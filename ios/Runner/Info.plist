@@ -10,6 +10,8 @@
 	<false/>
 	<key>FlutterDeepLinkingEnabled</key>
 	<false/>
+	<key>ITSAppUsesNonExemptEncryption</key>
+	<false/>
 	<key>CFBundleDisplayName</key>
 	<string>Liora</string>
 	<key>CFBundleDocumentTypes</key>

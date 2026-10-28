@@ -30,8 +30,12 @@ concurrency:
   cancel-in-progress: false
 
 env:
-  # Grupo externo de TestFlight al que store_test distribuye la build.
-  TESTFLIGHT_EXTERNAL_GROUP: liora-externo
+  # Grupo de TestFlight al que store_test asigna la build. Por ahora es un grupo
+  # INTERNO (usuarios de la cuenta de App Store Connect, sin Beta App Review).
+  # Para testers externos: crea un grupo externo, cambia el nombre y pon
+  # TESTFLIGHT_DISTRIBUTE_EXTERNAL en "true" (el preflight valida que el tipo coincida).
+  TESTFLIGHT_GROUP: liora-externo
+  TESTFLIGHT_DISTRIBUTE_EXTERNAL: "false"
   # Track de Google Play donde store_test sube la build (sin revision de Google).
   ANDROID_TEST_TRACK: internal
   IOS_BUNDLE_ID: com.somosliora.app
@@ -522,6 +526,7 @@ jobs:
         working-directory: ios
         shell: bash
         env:
+          RELEASE_MODE: ${{ inputs.mode }}
           APP_STORE_CONNECT_API_KEY_ID: ${{ secrets.APP_STORE_CONNECT_API_KEY_ID }}
           APP_STORE_CONNECT_ISSUER_ID: ${{ secrets.APP_STORE_CONNECT_ISSUER_ID }}
           APP_STORE_CONNECT_API_KEY_P8_BASE64: ${{ secrets.APP_STORE_CONNECT_API_KEY_P8_BASE64 }}

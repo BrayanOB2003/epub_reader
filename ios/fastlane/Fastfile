@@ -78,6 +78,36 @@ def store_release_notes
   notes.empty? ? "Validate this version before publication." : notes
 end
 
+def testflight_group_name
+  ENV.fetch("TESTFLIGHT_GROUP")
+end
+
+# true: distribuye a un grupo EXTERNO (pasa por Beta App Review de Apple).
+# false: distribuye a un grupo INTERNO (usuarios de tu cuenta; sin revision).
+def testflight_external?
+  ENV.fetch("TESTFLIGHT_DISTRIBUTE_EXTERNAL", "false") == "true"
+end
+
+# Falla pronto (antes de compilar) si el grupo de TestFlight no existe o su tipo
+# no coincide con TESTFLIGHT_DISTRIBUTE_EXTERNAL. Sin esto, pilot no asigna la
+# build al grupo y no avisa.
+def validate_testflight_group!(app)
+  group = app.get_beta_groups.find { |item| item.name == testflight_group_name }
+  if group.nil?
+    UI.user_error!("No existe el grupo de TestFlight '#{testflight_group_name}'. Crealo en App Store Connect.")
+  end
+
+  expected = testflight_external? ? "externo" : "interno"
+  actual = group.is_internal_group ? "interno" : "externo"
+  if expected != actual
+    UI.user_error!(
+      "El grupo '#{testflight_group_name}' es #{actual} pero TESTFLIGHT_DISTRIBUTE_EXTERNAL " \
+      "pide uno #{expected}. El tipo no se puede cambiar: crea otro grupo del tipo correcto."
+    )
+  end
+  UI.success("Grupo de TestFlight '#{testflight_group_name}' (#{actual}) valido.")
+end
+
 # Envia a revision de App Store la build ya subida a TestFlight, sin recompilar.
 # Es idempotente: si la version ya esta enviada o publicada, no hace nada.
 def submit_to_app_review(api_key)
@@ -163,7 +193,8 @@ platform :ios do
   desc "Valida App Store Connect antes de compilar y decide si hace falta una build nueva"
   lane :preflight_store_build do
     api_key = store_api_key
-    store_connect_app
+    app = store_connect_app
+    validate_testflight_group!(app) if ENV["RELEASE_MODE"] == "store_test"
 
     version = store_app_version
     build = store_build_number
@@ -245,23 +276,24 @@ platform :ios do
     UI.success("ExportOptions.plist escrito en #{export_options_path}")
   end
 
-  desc "Sube la build a TestFlight y la distribuye al grupo externo de pruebas"
+  desc "Sube la build a TestFlight y la asigna al grupo de pruebas (interno o externo)"
   lane :store_test do
     api_key = store_api_key
+    external = testflight_external?
+    validate_testflight_group!(store_connect_app)
 
     options = {
       api_key: api_key,
       app_identifier: store_bundle_id,
-      groups: [ENV.fetch("TESTFLIGHT_EXTERNAL_GROUP")],
-      distribute_external: true,
-      notify_external_testers: true,
-      reject_build_waiting_for_review: true,
+      groups: [testflight_group_name],
+      distribute_external: external,
+      # Los grupos internos no pasan por Beta App Review; los externos si.
+      submit_beta_review: external,
       changelog: store_release_notes
     }
-    # Declaracion de cifrado de exportacion. Solo se envia si se configura la
-    # variable (true/false); si no, App Store Connect la pide manualmente.
-    unless ENV["IOS_USES_NON_EXEMPT_ENCRYPTION"].to_s.empty?
-      options[:uses_non_exempt_encryption] = ENV["IOS_USES_NON_EXEMPT_ENCRYPTION"] == "true"
+    if external
+      options[:notify_external_testers] = true
+      options[:reject_build_waiting_for_review] = true
     end
 
     if File.exist?(store_ipa_path)
