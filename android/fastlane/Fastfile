@@ -54,6 +54,12 @@ def play_track_codes(track)
     track: track,
     json_key: play_json_key
   ).map(&:to_i)
+rescue NoMethodError => e
+  # Bug de fastlane (supply): un track sin ningun release devuelve nil y revienta
+  # con "undefined method flat_map for nil". Equivale a un track vacio.
+  raise unless e.message.include?("flat_map")
+
+  []
 rescue StandardError => e
   raise unless e.message =~ /not\s*found|notFound|404/i
 
