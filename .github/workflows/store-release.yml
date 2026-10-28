@@ -34,7 +34,7 @@ env:
   # INTERNO (usuarios de la cuenta de App Store Connect, sin Beta App Review).
   # Para testers externos: crea un grupo externo, cambia el nombre y pon
   # TESTFLIGHT_DISTRIBUTE_EXTERNAL en "true" (el preflight valida que el tipo coincida).
-  TESTFLIGHT_GROUP: liora-externo
+  TESTFLIGHT_GROUP: liora-internal
   TESTFLIGHT_DISTRIBUTE_EXTERNAL: "false"
   # Track de Google Play donde store_test sube la build (sin revision de Google).
   ANDROID_TEST_TRACK: internal

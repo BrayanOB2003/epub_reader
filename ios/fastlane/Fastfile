@@ -106,6 +106,7 @@ def validate_testflight_group!(app)
     )
   end
   UI.success("Grupo de TestFlight '#{testflight_group_name}' (#{actual}) valido.")
+  group
 end
 
 # Envia a revision de App Store la build ya subida a TestFlight, sin recompilar.
@@ -280,17 +281,23 @@ platform :ios do
   lane :store_test do
     api_key = store_api_key
     external = testflight_external?
-    validate_testflight_group!(store_connect_app)
+    group = validate_testflight_group!(store_connect_app)
 
     options = {
       api_key: api_key,
       app_identifier: store_bundle_id,
-      groups: [testflight_group_name],
       distribute_external: external,
       # Los grupos internos no pasan por Beta App Review; los externos si.
       submit_beta_review: external,
       changelog: store_release_notes
     }
+    # Un grupo interno con distribucion automatica ya recibe todas las builds de
+    # App Store Connect; asignarlas a mano no hace falta. En el resto se asigna.
+    if group.is_internal_group && group.has_access_to_all_builds
+      UI.message("El grupo '#{testflight_group_name}' recibe todas las builds automaticamente.")
+    else
+      options[:groups] = [testflight_group_name]
+    end
     if external
       options[:notify_external_testers] = true
       options[:reject_build_waiting_for_review] = true
