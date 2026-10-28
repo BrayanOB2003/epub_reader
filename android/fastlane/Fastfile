@@ -1,5 +1,109 @@
 default_platform(:android)
 
+# ---------------------------------------------------------------------------
+# Helpers compartidos por los lanes de tienda (store_test, submit_tested,
+# direct_review). El lane `distribute` (Firebase APK) no los usa.
+# ---------------------------------------------------------------------------
+
+# Tracks donde puede existir ya un version code de esta app.
+PLAY_TRACKS = %w[internal alpha beta production].freeze
+
+def repo_root
+  File.expand_path("../..", FastlaneCore::FastlaneFolder.path)
+end
+
+def store_aab_path
+  File.join(repo_root, "build", "app", "outputs", "bundle", "release", "app-release.aab")
+end
+
+def play_package_name
+  ENV.fetch("ANDROID_PACKAGE_NAME", "com.somosliora.app")
+end
+
+def play_json_key
+  ENV.fetch("PLAY_STORE_JSON_KEY_PATH")
+end
+
+def store_build_number
+  Integer(ENV.fetch("CI_BUILD_NUMBER"))
+end
+
+def play_test_track
+  ENV.fetch("ANDROID_TEST_TRACK", "internal")
+end
+
+# Estado del release en Play. Una app que nunca se publico solo admite `draft`
+# hasta completar el primer lanzamiento manual desde la consola.
+def play_release_status
+  ENV.fetch("PLAY_RELEASE_STATUS", "completed")
+end
+
+# Escribe un output del paso de GitHub Actions (para los `if:` del workflow).
+def github_output(key, value)
+  path = ENV["GITHUB_OUTPUT"].to_s
+  return if path.empty?
+
+  File.open(path, "a") { |file| file.puts("#{key}=#{value}") }
+end
+
+# Version codes publicados en un track. Un track vacio o inexistente devuelve [];
+# cualquier otro error (credenciales, permisos) se propaga para no ocultarlo.
+def play_track_codes(track)
+  google_play_track_version_codes(
+    package_name: play_package_name,
+    track: track,
+    json_key: play_json_key
+  ).map(&:to_i)
+rescue StandardError => e
+  raise unless e.message =~ /not\s*found|notFound|404/i
+
+  []
+end
+
+def supply_without_metadata(options)
+  supply(
+    package_name: play_package_name,
+    json_key: play_json_key,
+    skip_upload_apk: true,
+    skip_upload_metadata: true,
+    skip_upload_changelogs: true,
+    skip_upload_images: true,
+    skip_upload_screenshots: true,
+    **options
+  )
+end
+
+# Promueve a produccion lo que ya esta en el track interno, sin recompilar.
+def promote_internal_to_production
+  build = store_build_number
+  production = play_track_codes("production")
+  if production.include?(build)
+    UI.important("El version code #{build} ya esta en produccion. No se vuelve a promover.")
+    return
+  end
+
+  internal = play_track_codes(play_test_track)
+  unless internal.include?(build)
+    UI.user_error!(
+      "El version code #{build} no esta en el track #{play_test_track} (hay: #{internal.inspect}). " \
+      "Ejecuta primero store_test."
+    )
+  end
+  if internal.max != build
+    UI.user_error!(
+      "El track #{play_test_track} tiene una build mas nueva (#{internal.max}) que la probada (#{build}). " \
+      "Promover publicaria otra version; ejecuta de nuevo store_test con la version correcta."
+    )
+  end
+
+  supply_without_metadata(
+    track: play_test_track,
+    track_promote_to: "production",
+    track_promote_release_status: play_release_status,
+    skip_upload_aab: true
+  )
+end
+
 platform :android do
   desc "Sube el APK release a Firebase App Distribution"
   lane :distribute do
@@ -11,5 +115,60 @@ platform :android do
       groups: ENV.fetch("FIREBASE_TESTER_GROUPS"),
       release_notes_file: ENV["FIREBASE_RELEASE_NOTES_FILE"]
     )
+  end
+
+  desc "Valida Google Play antes de compilar y decide si hace falta una build nueva"
+  lane :preflight_store_build do
+    build = store_build_number
+
+    codes_by_track = PLAY_TRACKS.to_h { |track| [track, play_track_codes(track)] }
+    all_codes = codes_by_track.values.flatten
+    UI.message("Version codes en Play: #{codes_by_track.inspect}")
+
+    if all_codes.include?(build)
+      where = codes_by_track.select { |_, codes| codes.include?(build) }.keys
+      UI.important("El version code #{build} ya existe en Play (#{where.join(", ")}). No se recompila.")
+      github_output("build_required", "false")
+    elsif !all_codes.empty? && build < all_codes.max
+      UI.user_error!(
+        "El version code #{build} es menor que el mayor ya usado en Play (#{all_codes.max}). " \
+        "Google Play exige un numero mayor."
+      )
+    else
+      UI.success("Version code #{build} nuevo. Mayor en Play: #{all_codes.max || 0}.")
+      github_output("build_required", "true")
+    end
+  end
+
+  desc "Sube el AAB al track de pruebas de Google Play"
+  lane :store_test do
+    if File.exist?(store_aab_path)
+      supply_without_metadata(
+        track: play_test_track,
+        aab: store_aab_path,
+        release_status: play_release_status
+      )
+    else
+      UI.important("No hay AAB nuevo: el version code #{store_build_number} ya estaba en Play.")
+    end
+  end
+
+  desc "Promueve a produccion la build ya probada en el track de pruebas (sin recompilar)"
+  lane :submit_tested do
+    promote_internal_to_production
+  end
+
+  desc "Sube el AAB directo a produccion (Google Play lo revisa y publica)"
+  lane :direct_review do
+    if File.exist?(store_aab_path)
+      supply_without_metadata(
+        track: "production",
+        aab: store_aab_path,
+        release_status: play_release_status
+      )
+    else
+      # La build ya estaba en Play (p. ej. por un store_test previo): se promueve.
+      promote_internal_to_production
+    end
   end
 end

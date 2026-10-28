@@ -1,0 +1,688 @@
+name: Store Release
+
+on:
+  workflow_dispatch:
+    inputs:
+      mode:
+        description: Release destination
+        required: true
+        type: choice
+        options:
+          - store_test
+          - submit_tested
+          - direct_review
+      source_run_id:
+        description: store_test run ID (only for submit_tested)
+        required: false
+        type: string
+      release_notes:
+        description: Manual text for TestFlight What to Test
+        required: false
+        default: Validate this version before publication.
+        type: string
+
+permissions:
+  actions: read
+  contents: read
+
+concurrency:
+  group: store-release-main
+  cancel-in-progress: false
+
+env:
+  # Grupo externo de TestFlight al que store_test distribuye la build.
+  TESTFLIGHT_EXTERNAL_GROUP: liora-externo
+  # Track de Google Play donde store_test sube la build (sin revision de Google).
+  ANDROID_TEST_TRACK: internal
+  IOS_BUNDLE_ID: com.somosliora.app
+  # Team del certificado y del perfil que genera match con la API key.
+  APPLE_TEAM_ID: 6P775JHDM9
+
+jobs:
+  prepare:
+    name: Validate release version
+    runs-on: ubuntu-latest
+    outputs:
+      app_version: ${{ steps.new_version.outputs.app_version || steps.tested_version.outputs.app_version }}
+      build_number: ${{ steps.new_version.outputs.build_number || steps.tested_version.outputs.build_number }}
+      previous_app_version: ${{ steps.new_version.outputs.previous_app_version || steps.tested_version.outputs.previous_app_version }}
+      previous_build_number: ${{ steps.new_version.outputs.previous_build_number || steps.tested_version.outputs.previous_build_number }}
+      commit_sha: ${{ steps.new_version.outputs.commit_sha || steps.tested_version.outputs.commit_sha }}
+      readium_sha: ${{ steps.new_version.outputs.readium_sha || steps.tested_version.outputs.readium_sha }}
+    steps:
+      - name: Require main branch
+        shell: bash
+        run: |
+          if [[ "$GITHUB_REF_NAME" != "main" ]]; then
+            echo "::error::Store Release can only run from the main branch."
+            exit 1
+          fi
+
+      - name: Validate submit_tested input
+        if: ${{ inputs.mode == 'submit_tested' }}
+        shell: bash
+        env:
+          SOURCE_RUN_ID: ${{ inputs.source_run_id }}
+        run: |
+          if [[ ! "$SOURCE_RUN_ID" =~ ^[0-9]+$ ]]; then
+            echo "::error::source_run_id is required and must be numeric for submit_tested."
+            exit 1
+          fi
+
+      - name: Checkout repository
+        uses: actions/checkout@v4
+        with:
+          fetch-depth: 0
+          persist-credentials: false
+
+      # El pubspec.lock del repo apunta a flutter_readium como ruta local, asi
+      # que cada job hace `flutter pub upgrade flutter_readium` y toma el ultimo
+      # commit de la rama prod del fork. Para que tests, Android e iOS compilen
+      # exactamente lo mismo, el commit se fija aqui una sola vez y los demas
+      # jobs verifican que resolvieron ese mismo commit.
+      - name: Calculate and validate new release version
+        id: new_version
+        if: ${{ inputs.mode != 'submit_tested' }}
+        env:
+          RELEASE_MODE: ${{ inputs.mode }}
+        shell: bash
+        run: |
+          python3 <<'PY'
+          import json
+          import os
+          import re
+          import subprocess
+          from pathlib import Path
+
+          version_pattern = re.compile(
+              r"^version:\s*(\d+)\.(\d+)\.(\d+)\+(\d+)\s*$",
+              re.MULTILINE,
+          )
+
+          def parse_version(content, source):
+              match = version_pattern.search(content)
+              if not match:
+                  raise SystemExit(
+                      f"::error::No semantic version x.y.z+build was found in {source}."
+                  )
+              major, minor, patch, build = map(int, match.groups())
+              return major, minor, patch, build
+
+          current_content = Path("pubspec.yaml").read_text()
+          current = parse_version(current_content, "pubspec.yaml")
+
+          commits = subprocess.check_output(
+              ["git", "log", "-G", "^version:", "--format=%H", "--", "pubspec.yaml"],
+              text=True,
+          ).splitlines()
+          if not commits:
+              raise SystemExit("::error::The current version change was not found in Git.")
+
+          # Si el cambio de version es el primer commit del proyecto no hay
+          # version previa: se toma como build 0, asi la primera release es +1.
+          try:
+              previous_content = subprocess.check_output(
+                  ["git", "show", f"{commits[0]}^:pubspec.yaml"],
+                  text=True,
+                  stderr=subprocess.DEVNULL,
+              )
+              previous = parse_version(previous_content, "the previous pubspec.yaml version")
+          except subprocess.CalledProcessError:
+              previous = (0, 0, 0, 0)
+
+          if current[3] != previous[3] + 1:
+              raise SystemExit(
+                  "::error::The build number must increment by exactly one: "
+                  f"{previous[3]} -> {current[3]}."
+              )
+
+          readium_ref = subprocess.check_output(
+              ["git", "ls-remote", "https://github.com/BrayanOB2003/flutter_readium.git", "refs/heads/prod"],
+              text=True,
+          ).split()
+          if not readium_ref:
+              raise SystemExit("::error::Could not resolve the prod branch of the flutter_readium fork.")
+          readium_sha = readium_ref[0]
+
+          app_version = ".".join(map(str, current[:3]))
+          previous_app_version = ".".join(map(str, previous[:3]))
+          info = {
+              "mode": os.environ["RELEASE_MODE"],
+              "runId": os.environ["GITHUB_RUN_ID"],
+              "commitSha": os.environ["GITHUB_SHA"],
+              "ref": os.environ["GITHUB_REF_NAME"],
+              "appVersion": app_version,
+              "buildNumber": current[3],
+              "previousAppVersion": previous_app_version,
+              "previousBuildNumber": previous[3],
+              "readiumSha": readium_sha,
+          }
+          Path("release-info").mkdir()
+          Path("release-info/BUILD_INFO.json").write_text(
+              json.dumps(info, indent=2) + "\n"
+          )
+
+          outputs = {
+              "app_version": app_version,
+              "build_number": current[3],
+              "previous_app_version": previous_app_version,
+              "previous_build_number": previous[3],
+              "commit_sha": os.environ["GITHUB_SHA"],
+              "readium_sha": readium_sha,
+          }
+          with open(os.environ["GITHUB_OUTPUT"], "a") as output:
+              for key, value in outputs.items():
+                  output.write(f"{key}={value}\n")
+          PY
+
+      - name: Download tested release information
+        if: ${{ inputs.mode == 'submit_tested' }}
+        uses: actions/download-artifact@v4
+        with:
+          name: store-release-info
+          path: release-info
+          repository: ${{ github.repository }}
+          run-id: ${{ inputs.source_run_id }}
+          github-token: ${{ secrets.GITHUB_TOKEN }}
+
+      - name: Validate tested release information
+        id: tested_version
+        if: ${{ inputs.mode == 'submit_tested' }}
+        shell: bash
+        run: |
+          python3 <<'PY'
+          import json
+          import os
+          from pathlib import Path
+
+          path = Path("release-info/BUILD_INFO.json")
+          info = json.loads(path.read_text())
+          required = {
+              "mode",
+              "commitSha",
+              "ref",
+              "appVersion",
+              "buildNumber",
+              "previousAppVersion",
+              "previousBuildNumber",
+          }
+          missing = sorted(required - info.keys())
+          if missing:
+              raise SystemExit(f"::error::BUILD_INFO.json is incomplete: {', '.join(missing)}")
+          if info["mode"] != "store_test":
+              raise SystemExit("::error::source_run_id does not reference a store_test run.")
+          if info["ref"] != "main":
+              raise SystemExit("::error::The tested build was not generated from main.")
+
+          outputs = {
+              "app_version": info["appVersion"],
+              "build_number": info["buildNumber"],
+              "previous_app_version": info["previousAppVersion"],
+              "previous_build_number": info["previousBuildNumber"],
+              "commit_sha": info["commitSha"],
+              "readium_sha": info.get("readiumSha", ""),
+          }
+          with open(os.environ["GITHUB_OUTPUT"], "a") as output:
+              for key, value in outputs.items():
+                  output.write(f"{key}={value}\n")
+          PY
+
+      - name: Upload release information
+        uses: actions/upload-artifact@v4
+        with:
+          name: store-release-info
+          path: release-info/BUILD_INFO.json
+          retention-days: 90
+          if-no-files-found: error
+
+      - name: Add release summary
+        shell: bash
+        env:
+          MODE: ${{ inputs.mode }}
+          APP_VERSION: ${{ steps.new_version.outputs.app_version || steps.tested_version.outputs.app_version }}
+          BUILD_NUMBER: ${{ steps.new_version.outputs.build_number || steps.tested_version.outputs.build_number }}
+          COMMIT_SHA: ${{ steps.new_version.outputs.commit_sha || steps.tested_version.outputs.commit_sha }}
+          READIUM_SHA: ${{ steps.new_version.outputs.readium_sha || steps.tested_version.outputs.readium_sha }}
+        run: |
+          {
+            echo "## Store Release"
+            echo "- Mode: \`${MODE}\`"
+            echo "- Version: \`${APP_VERSION}+${BUILD_NUMBER}\`"
+            echo "- Commit: \`${COMMIT_SHA}\`"
+            echo "- flutter_readium: \`${READIUM_SHA}\`"
+            echo "- Run ID: \`${GITHUB_RUN_ID}\`"
+          } >> "$GITHUB_STEP_SUMMARY"
+
+  quality:
+    name: Analyze and test
+    if: ${{ inputs.mode != 'submit_tested' }}
+    needs: prepare
+    runs-on: ubuntu-latest
+    timeout-minutes: 30
+    env:
+      READIUM_SHA: ${{ needs.prepare.outputs.readium_sha }}
+    steps:
+      - name: Checkout repository
+        uses: actions/checkout@v4
+        with:
+          persist-credentials: false
+
+      - name: Read Flutter version
+        id: fvm
+        run: |
+          set -euo pipefail
+          VERSION=$(python3 -c 'import json; print(json.load(open(".fvmrc"))["flutter"])')
+          echo "version=${VERSION}" >> "$GITHUB_OUTPUT"
+          echo "Flutter ${VERSION}"
+
+      - name: Setup Flutter
+        uses: subosito/flutter-action@v2
+        with:
+          flutter-version: ${{ steps.fvm.outputs.version }}
+          channel: stable
+          cache: true
+
+      - name: Create production environment
+        env:
+          APP_ENV_FILE: ${{ secrets.APP_ENV_FILE }}
+        shell: bash
+        run: |
+          set -euo pipefail
+          if [ -z "${APP_ENV_FILE}" ]; then
+            echo "::error::Falta el secret APP_ENV_FILE (contenido de .env/.env, incluida la linea X_EPUB_KEY)."
+            exit 1
+          fi
+          mkdir -p .env
+          printf '%s\n' "$APP_ENV_FILE" > .env/.env
+          grep -qE '^X_EPUB_KEY[:=]' .env/.env
+
+      - name: Install dependencies and generate code
+        shell: bash
+        run: |
+          set -euo pipefail
+          flutter pub upgrade flutter_readium
+          grep -A12 '^  flutter_readium:' pubspec.lock | grep -q "resolved-ref: \"${READIUM_SHA}\"" || {
+            echo "::error::flutter_readium no resolvio el commit fijado en prepare (${READIUM_SHA}). La rama prod cambio durante el run; vuelve a ejecutar."
+            exit 1
+          }
+          dart run build_runner build --delete-conflicting-outputs
+
+      - name: Analyze
+        run: flutter analyze --no-fatal-infos --no-fatal-warnings
+
+      - name: Test
+        run: flutter test
+
+  android-store:
+    name: Android Store
+    if: ${{ always() && needs.prepare.result == 'success' && (needs.quality.result == 'success' || needs.quality.result == 'skipped') }}
+    needs:
+      - prepare
+      - quality
+    runs-on: ubuntu-latest
+    timeout-minutes: 60
+    env:
+      APP_VERSION: ${{ needs.prepare.outputs.app_version }}
+      CI_BUILD_NUMBER: ${{ needs.prepare.outputs.build_number }}
+      PREVIOUS_APP_VERSION: ${{ needs.prepare.outputs.previous_app_version }}
+      PREVIOUS_BUILD_NUMBER: ${{ needs.prepare.outputs.previous_build_number }}
+      READIUM_SHA: ${{ needs.prepare.outputs.readium_sha }}
+      RELEASE_NOTES: ${{ inputs.release_notes }}
+    steps:
+      - name: Checkout repository
+        uses: actions/checkout@v4
+        with:
+          persist-credentials: false
+
+      - name: Setup Ruby and Fastlane
+        uses: ruby/setup-ruby@v1
+        with:
+          ruby-version: "3.2"
+          bundler-cache: true
+          working-directory: android
+
+      - name: Configure Google Play credentials
+        env:
+          PLAY_STORE_SERVICE_ACCOUNT_JSON: ${{ secrets.PLAY_STORE_SERVICE_ACCOUNT_JSON }}
+        shell: bash
+        run: |
+          set -euo pipefail
+          if [ -z "${PLAY_STORE_SERVICE_ACCOUNT_JSON}" ]; then
+            echo "::error::Falta el secret PLAY_STORE_SERVICE_ACCOUNT_JSON (service account con acceso a Google Play)."
+            exit 1
+          fi
+          PLAY_STORE_JSON_KEY_PATH="$RUNNER_TEMP/play-store-service-account.json"
+          printf '%s' "$PLAY_STORE_SERVICE_ACCOUNT_JSON" > "$PLAY_STORE_JSON_KEY_PATH"
+          python3 -m json.tool "$PLAY_STORE_JSON_KEY_PATH" > /dev/null
+          echo "PLAY_STORE_JSON_KEY_PATH=$PLAY_STORE_JSON_KEY_PATH" >> "$GITHUB_ENV"
+
+      - name: Validate Google Play before build
+        id: android-preflight
+        if: ${{ inputs.mode != 'submit_tested' }}
+        working-directory: android
+        shell: bash
+        run: bundle exec fastlane preflight_store_build
+
+      - name: Setup Java
+        if: ${{ inputs.mode != 'submit_tested' && steps.android-preflight.outputs.build_required != 'false' }}
+        uses: actions/setup-java@v4
+        with:
+          distribution: temurin
+          java-version: "17"
+
+      - name: Read Flutter version
+        if: ${{ inputs.mode != 'submit_tested' && steps.android-preflight.outputs.build_required != 'false' }}
+        id: fvm
+        run: |
+          set -euo pipefail
+          VERSION=$(python3 -c 'import json; print(json.load(open(".fvmrc"))["flutter"])')
+          echo "version=${VERSION}" >> "$GITHUB_OUTPUT"
+          echo "Flutter ${VERSION}"
+
+      - name: Setup Flutter
+        if: ${{ inputs.mode != 'submit_tested' && steps.android-preflight.outputs.build_required != 'false' }}
+        uses: subosito/flutter-action@v2
+        with:
+          flutter-version: ${{ steps.fvm.outputs.version }}
+          channel: stable
+          cache: true
+
+      - name: Create production environment
+        if: ${{ inputs.mode != 'submit_tested' && steps.android-preflight.outputs.build_required != 'false' }}
+        env:
+          APP_ENV_FILE: ${{ secrets.APP_ENV_FILE }}
+        shell: bash
+        run: |
+          set -euo pipefail
+          if [ -z "${APP_ENV_FILE}" ]; then
+            echo "::error::Falta el secret APP_ENV_FILE (contenido de .env/.env, incluida la linea X_EPUB_KEY)."
+            exit 1
+          fi
+          mkdir -p .env
+          printf '%s\n' "$APP_ENV_FILE" > .env/.env
+          grep -qE '^X_EPUB_KEY[:=]' .env/.env
+
+      - name: Install Flutter dependencies and generate code
+        if: ${{ inputs.mode != 'submit_tested' && steps.android-preflight.outputs.build_required != 'false' }}
+        shell: bash
+        run: |
+          set -euo pipefail
+          flutter pub upgrade flutter_readium
+          grep -A12 '^  flutter_readium:' pubspec.lock | grep -q "resolved-ref: \"${READIUM_SHA}\"" || {
+            echo "::error::flutter_readium no resolvio el commit fijado en prepare (${READIUM_SHA}). La rama prod cambio durante el run; vuelve a ejecutar."
+            exit 1
+          }
+          dart run build_runner build --delete-conflicting-outputs
+
+      - name: Configure Android release signing
+        if: ${{ inputs.mode != 'submit_tested' && steps.android-preflight.outputs.build_required != 'false' }}
+        env:
+          ANDROID_KEYSTORE_BASE64: ${{ secrets.ANDROID_KEYSTORE_BASE64 }}
+          ANDROID_STORE_PASSWORD: ${{ secrets.ANDROID_STORE_PASSWORD }}
+          ANDROID_KEY_PASSWORD: ${{ secrets.ANDROID_KEY_PASSWORD }}
+          ANDROID_KEY_ALIAS: ${{ secrets.ANDROID_KEY_ALIAS }}
+        shell: bash
+        run: |
+          set -euo pipefail
+          if [ -z "${ANDROID_KEYSTORE_BASE64}" ] || [ -z "${ANDROID_STORE_PASSWORD}" ] || [ -z "${ANDROID_KEY_PASSWORD}" ] || [ -z "${ANDROID_KEY_ALIAS}" ]; then
+            echo "::error::Faltan secrets de firma Android: ANDROID_KEYSTORE_BASE64, ANDROID_STORE_PASSWORD, ANDROID_KEY_PASSWORD, ANDROID_KEY_ALIAS."
+            exit 1
+          fi
+          printf '%s' "$ANDROID_KEYSTORE_BASE64" | base64 -d > android/app/liora-upload.jks
+          test -s android/app/liora-upload.jks
+          {
+            echo "storePassword=${ANDROID_STORE_PASSWORD}"
+            echo "keyPassword=${ANDROID_KEY_PASSWORD}"
+            echo "keyAlias=${ANDROID_KEY_ALIAS}"
+            echo "storeFile=liora-upload.jks"
+          } > android/key.properties
+
+      # El gradle.properties del repo pide 8G de heap. El runner de GitHub no
+      # tiene esa RAM y el daemon muere. Estas lineas pisan el heap solo en CI.
+      - name: Configure Gradle resources for GitHub runner
+        if: ${{ inputs.mode != 'submit_tested' && steps.android-preflight.outputs.build_required != 'false' }}
+        shell: bash
+        run: |
+          set -euo pipefail
+          sed -i 's/^org.gradle.jvmargs=.*/org.gradle.jvmargs=-Xmx3584m -XX:MaxMetaspaceSize=512m -XX:ReservedCodeCacheSize=256m -XX:+HeapDumpOnOutOfMemoryError/' android/gradle.properties
+          {
+            echo "org.gradle.vfs.watch=false"
+            echo "org.gradle.workers.max=2"
+            echo "kotlin.daemon.jvmargs=-Xmx1536m"
+          } >> android/gradle.properties
+
+      - name: Create signed Android App Bundle
+        if: ${{ inputs.mode != 'submit_tested' && steps.android-preflight.outputs.build_required != 'false' }}
+        run: |
+          flutter build appbundle --release \
+            --build-name="$APP_VERSION" \
+            --build-number="$CI_BUILD_NUMBER"
+          jarsigner -verify build/app/outputs/bundle/release/app-release.aab
+
+      - name: Download release information
+        if: ${{ inputs.mode != 'submit_tested' && steps.android-preflight.outputs.build_required != 'false' }}
+        uses: actions/download-artifact@v4
+        with:
+          name: store-release-info
+          path: release-info
+
+      - name: Upload Android Store artifact
+        if: ${{ inputs.mode != 'submit_tested' && steps.android-preflight.outputs.build_required != 'false' }}
+        uses: actions/upload-artifact@v4
+        with:
+          name: android-store-${{ env.APP_VERSION }}-${{ env.CI_BUILD_NUMBER }}
+          path: |
+            build/app/outputs/bundle/release/app-release.aab
+            release-info/BUILD_INFO.json
+          retention-days: 90
+          if-no-files-found: error
+          compression-level: 0
+
+      - name: Upload or promote Android release
+        working-directory: android
+        shell: bash
+        env:
+          RELEASE_MODE: ${{ inputs.mode }}
+        run: bundle exec fastlane "$RELEASE_MODE"
+
+  ios-store:
+    name: iOS Store
+    if: ${{ always() && needs.prepare.result == 'success' && (needs.quality.result == 'success' || needs.quality.result == 'skipped') }}
+    needs:
+      - prepare
+      - quality
+    runs-on: macos-26
+    timeout-minutes: 90
+    env:
+      APP_VERSION: ${{ needs.prepare.outputs.app_version }}
+      CI_BUILD_NUMBER: ${{ needs.prepare.outputs.build_number }}
+      PREVIOUS_APP_VERSION: ${{ needs.prepare.outputs.previous_app_version }}
+      PREVIOUS_BUILD_NUMBER: ${{ needs.prepare.outputs.previous_build_number }}
+      READIUM_SHA: ${{ needs.prepare.outputs.readium_sha }}
+      RELEASE_NOTES: ${{ inputs.release_notes }}
+      MATCH_KEYCHAIN_NAME: ios-build.keychain-db
+    steps:
+      - name: Checkout repository
+        uses: actions/checkout@v4
+        with:
+          persist-credentials: false
+
+      - name: Setup Ruby and Fastlane
+        uses: ruby/setup-ruby@v1
+        with:
+          ruby-version: "3.2"
+          bundler-cache: true
+          working-directory: ios
+
+      # Los secrets de Apple solo se exponen a los pasos de fastlane (no a las
+      # acciones de terceros). El repo es publico, asi que se limita su alcance.
+      - name: Validate App Store Connect before build
+        id: ios-preflight
+        if: ${{ inputs.mode != 'submit_tested' }}
+        working-directory: ios
+        shell: bash
+        env:
+          APP_STORE_CONNECT_API_KEY_ID: ${{ secrets.APP_STORE_CONNECT_API_KEY_ID }}
+          APP_STORE_CONNECT_ISSUER_ID: ${{ secrets.APP_STORE_CONNECT_ISSUER_ID }}
+          APP_STORE_CONNECT_API_KEY_P8_BASE64: ${{ secrets.APP_STORE_CONNECT_API_KEY_P8_BASE64 }}
+        run: |
+          set -euo pipefail
+          if [ -z "${APP_STORE_CONNECT_API_KEY_ID}" ] || [ -z "${APP_STORE_CONNECT_ISSUER_ID}" ] || [ -z "${APP_STORE_CONNECT_API_KEY_P8_BASE64}" ]; then
+            echo "::error::Faltan secrets de App Store Connect: APP_STORE_CONNECT_API_KEY_ID, APP_STORE_CONNECT_ISSUER_ID y APP_STORE_CONNECT_API_KEY_P8_BASE64."
+            exit 1
+          fi
+          bundle exec fastlane preflight_store_build
+
+      - name: Create temporary keychain
+        if: ${{ inputs.mode != 'submit_tested' && steps.ios-preflight.outputs.build_required != 'false' }}
+        shell: bash
+        run: |
+          set -euo pipefail
+          KEYCHAIN_PATH="$HOME/Library/Keychains/${MATCH_KEYCHAIN_NAME}"
+          KEYCHAIN_PASSWORD="$(uuidgen)"
+          echo "::add-mask::${KEYCHAIN_PASSWORD}"
+          echo "MATCH_KEYCHAIN_PASSWORD=${KEYCHAIN_PASSWORD}" >> "$GITHUB_ENV"
+          security create-keychain -p "$KEYCHAIN_PASSWORD" "$KEYCHAIN_PATH"
+          security set-keychain-settings -lut 21600 "$KEYCHAIN_PATH"
+          security unlock-keychain -p "$KEYCHAIN_PASSWORD" "$KEYCHAIN_PATH"
+          security default-keychain -s "$KEYCHAIN_PATH"
+          security list-keychains -d user -s "$KEYCHAIN_PATH"
+
+      - name: Read Flutter version
+        if: ${{ inputs.mode != 'submit_tested' && steps.ios-preflight.outputs.build_required != 'false' }}
+        id: fvm
+        run: |
+          set -euo pipefail
+          VERSION=$(python3 -c 'import json; print(json.load(open(".fvmrc"))["flutter"])')
+          echo "version=${VERSION}" >> "$GITHUB_OUTPUT"
+          echo "Flutter ${VERSION}"
+
+      - name: Setup Flutter
+        if: ${{ inputs.mode != 'submit_tested' && steps.ios-preflight.outputs.build_required != 'false' }}
+        uses: subosito/flutter-action@v2
+        with:
+          flutter-version: ${{ steps.fvm.outputs.version }}
+          channel: stable
+          cache: true
+
+      - name: Setup Xcode
+        if: ${{ inputs.mode != 'submit_tested' && steps.ios-preflight.outputs.build_required != 'false' }}
+        uses: maxim-lobanov/setup-xcode@v1
+        with:
+          xcode-version: latest-stable
+
+      - name: Precache Flutter iOS
+        if: ${{ inputs.mode != 'submit_tested' && steps.ios-preflight.outputs.build_required != 'false' }}
+        run: flutter precache --ios
+
+      - name: Create production environment
+        if: ${{ inputs.mode != 'submit_tested' && steps.ios-preflight.outputs.build_required != 'false' }}
+        env:
+          APP_ENV_FILE: ${{ secrets.APP_ENV_FILE }}
+        shell: bash
+        run: |
+          set -euo pipefail
+          if [ -z "${APP_ENV_FILE}" ]; then
+            echo "::error::Falta el secret APP_ENV_FILE (contenido de .env/.env, incluida la linea X_EPUB_KEY)."
+            exit 1
+          fi
+          mkdir -p .env
+          printf '%s\n' "$APP_ENV_FILE" > .env/.env
+          grep -qE '^X_EPUB_KEY[:=]' .env/.env
+
+      - name: Install Flutter dependencies and generate code
+        if: ${{ inputs.mode != 'submit_tested' && steps.ios-preflight.outputs.build_required != 'false' }}
+        shell: bash
+        run: |
+          set -euo pipefail
+          flutter pub upgrade flutter_readium
+          grep -A12 '^  flutter_readium:' pubspec.lock | grep -q "resolved-ref: \"${READIUM_SHA}\"" || {
+            echo "::error::flutter_readium no resolvio el commit fijado en prepare (${READIUM_SHA}). La rama prod cambio durante el run; vuelve a ejecutar."
+            exit 1
+          }
+          dart run build_runner build --delete-conflicting-outputs
+
+      - name: Prepare iOS store signing
+        if: ${{ inputs.mode != 'submit_tested' && steps.ios-preflight.outputs.build_required != 'false' }}
+        working-directory: ios
+        shell: bash
+        env:
+          MATCH_PASSWORD: ${{ secrets.MATCH_PASSWORD }}
+          MATCH_GIT_URL: ${{ secrets.MATCH_GIT_URL }}
+          MATCH_GIT_BASIC_AUTHORIZATION: ${{ secrets.MATCH_GIT_BASIC_AUTHORIZATION }}
+        run: |
+          set -euo pipefail
+          if [ -z "${MATCH_PASSWORD}" ] || [ -z "${MATCH_GIT_URL}" ]; then
+            echo "::error::Faltan secrets de firma iOS: MATCH_PASSWORD y MATCH_GIT_URL."
+            exit 1
+          fi
+          # Si el secret no existe llega vacio; match lo interpretaria como un header invalido.
+          if [ -z "${MATCH_GIT_BASIC_AUTHORIZATION:-}" ]; then
+            unset MATCH_GIT_BASIC_AUTHORIZATION
+          fi
+          bundle exec fastlane prepare_store_signing
+
+      - name: Create signed iOS release
+        if: ${{ inputs.mode != 'submit_tested' && steps.ios-preflight.outputs.build_required != 'false' }}
+        run: |
+          flutter build ipa --release \
+            --build-name="$APP_VERSION" \
+            --build-number="$CI_BUILD_NUMBER" \
+            --export-options-plist=ios/build/store/ExportOptions.plist
+
+      - name: Prepare iOS store artifacts
+        if: ${{ inputs.mode != 'submit_tested' && steps.ios-preflight.outputs.build_required != 'false' }}
+        shell: bash
+        run: |
+          set -euo pipefail
+          shopt -s nullglob
+          ipa_files=(build/ios/ipa/*.ipa)
+          if [[ ${#ipa_files[@]} -ne 1 ]]; then
+            echo "::error::Expected one IPA in build/ios/ipa, but found ${#ipa_files[@]}."
+            exit 1
+          fi
+          dsym_dir="build/ios/archive/Runner.xcarchive/dSYMs"
+          if [[ ! -d "$dsym_dir" ]]; then
+            echo "::error::The dSYMs were not found at $dsym_dir."
+            exit 1
+          fi
+          mkdir -p ios/build/store
+          cp "${ipa_files[0]}" ios/build/store/Runner.ipa
+          ditto -c -k --sequesterRsrc "$dsym_dir" ios/build/store/Runner.dSYMs.zip
+
+      - name: Upload or promote iOS release
+        id: fastlane-ios
+        working-directory: ios
+        shell: bash
+        env:
+          RELEASE_MODE: ${{ inputs.mode }}
+          APP_STORE_CONNECT_API_KEY_ID: ${{ secrets.APP_STORE_CONNECT_API_KEY_ID }}
+          APP_STORE_CONNECT_ISSUER_ID: ${{ secrets.APP_STORE_CONNECT_ISSUER_ID }}
+          APP_STORE_CONNECT_API_KEY_P8_BASE64: ${{ secrets.APP_STORE_CONNECT_API_KEY_P8_BASE64 }}
+        run: |
+          set -euo pipefail
+          if [ -z "${APP_STORE_CONNECT_API_KEY_ID}" ] || [ -z "${APP_STORE_CONNECT_ISSUER_ID}" ] || [ -z "${APP_STORE_CONNECT_API_KEY_P8_BASE64}" ]; then
+            echo "::error::Faltan secrets de App Store Connect."
+            exit 1
+          fi
+          bundle exec fastlane "$RELEASE_MODE"
+
+      - name: Download release information
+        if: ${{ always() && inputs.mode != 'submit_tested' && steps.ios-preflight.outputs.build_required != 'false' }}
+        uses: actions/download-artifact@v4
+        with:
+          name: store-release-info
+          path: release-info
+
+      - name: Upload iOS Store artifact
+        if: ${{ always() && inputs.mode != 'submit_tested' && steps.ios-preflight.outputs.build_required != 'false' }}
+        uses: actions/upload-artifact@v4
+        with:
+          name: ios-store-${{ env.APP_VERSION }}-${{ env.CI_BUILD_NUMBER }}
+          path: |
+            ios/build/store/Runner.ipa
+            ios/build/store/Runner.dSYMs.zip
+            release-info/BUILD_INFO.json
+          retention-days: 90
+          if-no-files-found: warn
+          compression-level: 0

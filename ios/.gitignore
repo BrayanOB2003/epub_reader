@@ -39,3 +39,6 @@ vendor/bundle
 !default.mode2v3
 !default.pbxuser
 !default.perspectivev3
+
+# Salidas locales/CI del pipeline de tiendas (IPA firmado, ExportOptions, build info).
+build/

@@ -1,5 +1,116 @@
 default_platform(:ios)
 
+# ---------------------------------------------------------------------------
+# Helpers compartidos por los lanes de tienda (store_test, submit_tested,
+# direct_review). El lane `distribute` (Firebase ad-hoc) no los usa.
+# ---------------------------------------------------------------------------
+
+# Estados de una version de App Store que significan "ya fue enviada a revision
+# o publicada". Sirven para que reintentar `submit_tested` no falle ni duplique.
+SUBMITTED_APP_STORE_STATES = %w[
+  WAITING_FOR_REVIEW
+  IN_REVIEW
+  PENDING_DEVELOPER_RELEASE
+  PENDING_APPLE_RELEASE
+  PROCESSING_FOR_APP_STORE
+  READY_FOR_SALE
+  READY_FOR_DISTRIBUTION
+].freeze
+
+def ios_dir
+  File.expand_path("..", FastlaneCore::FastlaneFolder.path)
+end
+
+def store_dir
+  File.join(ios_dir, "build", "store")
+end
+
+def store_ipa_path
+  File.join(store_dir, "Runner.ipa")
+end
+
+def export_options_path
+  File.join(store_dir, "ExportOptions.plist")
+end
+
+def store_bundle_id
+  ENV.fetch("IOS_BUNDLE_ID")
+end
+
+def store_app_version
+  ENV.fetch("APP_VERSION")
+end
+
+def store_build_number
+  Integer(ENV.fetch("CI_BUILD_NUMBER"))
+end
+
+# Escribe un output del paso de GitHub Actions (para los `if:` del workflow).
+def github_output(key, value)
+  path = ENV["GITHUB_OUTPUT"].to_s
+  return if path.empty?
+
+  File.open(path, "a") { |file| file.puts("#{key}=#{value}") }
+end
+
+# Autentica contra App Store Connect con la API key (sin Apple ID ni 2FA).
+# La key llega en base64 desde un secret de GitHub.
+def store_api_key
+  key = app_store_connect_api_key(
+    key_id: ENV.fetch("APP_STORE_CONNECT_API_KEY_ID"),
+    issuer_id: ENV.fetch("APP_STORE_CONNECT_ISSUER_ID"),
+    key_content: ENV.fetch("APP_STORE_CONNECT_API_KEY_P8_BASE64"),
+    is_key_content_base64: true,
+    in_house: false
+  )
+  Spaceship::ConnectAPI.token = Spaceship::ConnectAPI::Token.from(hash: key)
+  key
+end
+
+def store_connect_app
+  app = Spaceship::ConnectAPI::App.find(store_bundle_id)
+  UI.user_error!("No existe la app #{store_bundle_id} en App Store Connect.") if app.nil?
+  app
+end
+
+def store_release_notes
+  notes = ENV["RELEASE_NOTES"].to_s.strip
+  notes.empty? ? "Validate this version before publication." : notes
+end
+
+# Envia a revision de App Store la build ya subida a TestFlight, sin recompilar.
+# Es idempotente: si la version ya esta enviada o publicada, no hace nada.
+def submit_to_app_review(api_key)
+  version = store_app_version
+  build = store_build_number
+
+  app = store_connect_app
+  existing = app.get_app_store_versions(filter: { platform: "IOS" }).find do |item|
+    item.version_string == version
+  end
+  if existing && SUBMITTED_APP_STORE_STATES.include?(existing.app_store_state)
+    UI.important("La version #{version} ya esta en estado #{existing.app_store_state}. No se reenvia.")
+    return
+  end
+
+  # La metadata (descripcion, capturas, privacidad, "What's New") se gestiona
+  # en App Store Connect; este lane solo selecciona la build y envia a revision.
+  deliver(
+    api_key: api_key,
+    app_identifier: store_bundle_id,
+    app_version: version,
+    build_number: build.to_s,
+    skip_binary_upload: true,
+    skip_screenshots: true,
+    skip_metadata: true,
+    force: true,
+    submit_for_review: true,
+    automatic_release: false,
+    precheck_include_in_app_purchases: false,
+    run_precheck_before_submit: false
+  )
+end
+
 platform :ios do
   desc "Firma ad-hoc con match y sube el IPA a Firebase App Distribution"
   lane :distribute do
@@ -47,5 +158,166 @@ platform :ios do
       groups: ENV.fetch("FIREBASE_TESTER_GROUPS"),
       release_notes_file: ENV["FIREBASE_RELEASE_NOTES_FILE"]
     )
+  end
+
+  desc "Valida App Store Connect antes de compilar y decide si hace falta una build nueva"
+  lane :preflight_store_build do
+    api_key = store_api_key
+    store_connect_app
+
+    version = store_app_version
+    build = store_build_number
+
+    latest = latest_testflight_build_number(
+      api_key: api_key,
+      app_identifier: store_bundle_id,
+      version: version,
+      initial_build_number: 0
+    )
+
+    if latest == build
+      UI.important("La build #{version} (#{build}) ya esta en App Store Connect. No se recompila.")
+      github_output("build_required", "false")
+    elsif latest > build
+      UI.user_error!(
+        "El build number #{build} es menor que el ultimo subido para #{version} (#{latest}). " \
+        "App Store Connect exige un numero mayor."
+      )
+    else
+      UI.success("Build #{version} (#{build}) nueva. Ultimo en TestFlight para esta version: #{latest}.")
+      github_output("build_required", "true")
+    end
+  end
+
+  desc "Instala el perfil appstore con match y deja listo ExportOptions.plist para flutter build ipa"
+  lane :prepare_store_signing do
+    match(
+      type: "appstore",
+      readonly: true,
+      app_identifier: store_bundle_id,
+      team_id: ENV.fetch("APPLE_TEAM_ID"),
+      git_url: ENV.fetch("MATCH_GIT_URL"),
+      keychain_name: ENV.fetch("MATCH_KEYCHAIN_NAME"),
+      keychain_password: ENV.fetch("MATCH_KEYCHAIN_PASSWORD")
+    )
+
+    profile_name = ENV["sigh_#{store_bundle_id}_appstore_profile-name"]
+    UI.user_error!("match no dejo el nombre del provisioning profile appstore") if profile_name.to_s.empty?
+
+    update_code_signing_settings(
+      use_automatic_signing: false,
+      path: File.join(ios_dir, "Runner.xcodeproj"),
+      targets: ["Runner"],
+      team_id: ENV.fetch("APPLE_TEAM_ID"),
+      bundle_identifier: store_bundle_id,
+      code_sign_identity: "Apple Distribution",
+      profile_name: profile_name
+    )
+
+    FileUtils.mkdir_p(store_dir)
+    File.write(export_options_path, <<~PLIST)
+      <?xml version="1.0" encoding="UTF-8"?>
+      <!DOCTYPE plist PUBLIC "-//Apple//DTD PLIST 1.0//EN" "http://www.apple.com/DTDs/PropertyList-1.0.dtd">
+      <plist version="1.0">
+      <dict>
+        <key>method</key>
+        <string>app-store-connect</string>
+        <key>destination</key>
+        <string>export</string>
+        <key>teamID</key>
+        <string>#{ENV.fetch("APPLE_TEAM_ID")}</string>
+        <key>signingStyle</key>
+        <string>manual</string>
+        <key>signingCertificate</key>
+        <string>Apple Distribution</string>
+        <key>provisioningProfiles</key>
+        <dict>
+          <key>#{store_bundle_id}</key>
+          <string>#{profile_name}</string>
+        </dict>
+        <key>uploadSymbols</key>
+        <true/>
+        <key>manageAppVersionAndBuildNumber</key>
+        <false/>
+      </dict>
+      </plist>
+    PLIST
+    UI.success("ExportOptions.plist escrito en #{export_options_path}")
+  end
+
+  desc "Sube la build a TestFlight y la distribuye al grupo externo de pruebas"
+  lane :store_test do
+    api_key = store_api_key
+
+    options = {
+      api_key: api_key,
+      app_identifier: store_bundle_id,
+      groups: [ENV.fetch("TESTFLIGHT_EXTERNAL_GROUP")],
+      distribute_external: true,
+      notify_external_testers: true,
+      reject_build_waiting_for_review: true,
+      changelog: store_release_notes
+    }
+    # Declaracion de cifrado de exportacion. Solo se envia si se configura la
+    # variable (true/false); si no, App Store Connect la pide manualmente.
+    unless ENV["IOS_USES_NON_EXEMPT_ENCRYPTION"].to_s.empty?
+      options[:uses_non_exempt_encryption] = ENV["IOS_USES_NON_EXEMPT_ENCRYPTION"] == "true"
+    end
+
+    if File.exist?(store_ipa_path)
+      upload_to_testflight(
+        ipa: store_ipa_path,
+        skip_waiting_for_build_processing: false,
+        **options
+      )
+    else
+      UI.important("No hay IPA nuevo: la build ya estaba en TestFlight. Solo se asegura su distribucion.")
+      upload_to_testflight(
+        distribute_only: true,
+        app_version: store_app_version,
+        build_number: store_build_number.to_s,
+        **options
+      )
+    end
+  end
+
+  desc "Envia a revision de App Store la build ya probada en TestFlight (sin recompilar)"
+  lane :submit_tested do
+    api_key = store_api_key
+
+    latest = latest_testflight_build_number(
+      api_key: api_key,
+      app_identifier: store_bundle_id,
+      version: store_app_version,
+      initial_build_number: 0
+    )
+    if latest < store_build_number
+      UI.user_error!(
+        "La build #{store_app_version} (#{store_build_number}) no existe en TestFlight " \
+        "(ultima: #{latest}). Ejecuta primero store_test."
+      )
+    end
+
+    submit_to_app_review(api_key)
+  end
+
+  desc "Sube la build a App Store Connect y la envia directo a revision"
+  lane :direct_review do
+    api_key = store_api_key
+
+    if File.exist?(store_ipa_path)
+      upload_to_testflight(
+        api_key: api_key,
+        app_identifier: store_bundle_id,
+        ipa: store_ipa_path,
+        skip_submission: true,
+        distribute_external: false,
+        skip_waiting_for_build_processing: false
+      )
+    else
+      UI.important("No hay IPA nuevo: la build ya estaba en App Store Connect.")
+    end
+
+    submit_to_app_review(api_key)
   end
 end
