@@ -95,7 +95,7 @@ void main() {
     expect(find.bySemanticsLabel('Liora'), findsOneWidget);
     expect(
       tester.widget<ClipRRect>(find.byType(ClipRRect)).borderRadius,
-      BorderRadius.circular(30),
+      BorderRadius.circular(5),
     );
     expect(find.text('Biblioteca'), findsOneWidget);
     final provider = image.image as ThemedLogoImage;

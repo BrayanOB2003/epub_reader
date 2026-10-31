@@ -77,3 +77,5 @@ app.*.map.json
 **/.impeccable/live/deferred-svelte-component-accepts.json
 **/.impeccable/live/*.png
 # impeccable-ignore-end
+# Informacion de release generada por el workflow Store Release.
+/release-info/
