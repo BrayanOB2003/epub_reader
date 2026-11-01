@@ -369,20 +369,17 @@ packages:
   flutter_readium:
     dependency: "direct main"
     description:
-      path: flutter_readium
-      ref: prod
-      resolved-ref: "027e97245d7cb4e26ee650651541797cfdb37b46"
-      url: "https://github.com/BrayanOB2003/flutter_readium.git"
-    source: git
-    version: "0.6.0"
+      path: "../flutter_readium/flutter_readium"
+      relative: true
+    source: path
+    version: "0.6.1"
   flutter_readium_platform_interface:
     dependency: transitive
     description:
-      name: flutter_readium_platform_interface
-      sha256: e343a5005c02fe9c6a07816c412c3966f106ef90de319871b2cf222533ebe310
-      url: "https://pub.dev"
-    source: hosted
-    version: "0.6.0"
+      path: "../flutter_readium/flutter_readium_platform_interface"
+      relative: true
+    source: path
+    version: "0.6.1"
   flutter_riverpod:
     dependency: "direct main"
     description:

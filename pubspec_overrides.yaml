@@ -1,0 +1,5 @@
+# Local debug only. This file is gitignored.
+# CI keeps the git dependency on the prod branch of the fork.
+dependency_overrides:
+  flutter_readium:
+    path: ../flutter_readium/flutter_readium
