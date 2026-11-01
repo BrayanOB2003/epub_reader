@@ -1,0 +1,629 @@
+{
+  "@@locale": "es",
+  "discover": "Descubrimiento",
+  "library": "Biblioteca",
+  "time": "Tiempo",
+  "profile": "Perfil",
+  "noBooksYet": "Todavía no hay libros",
+  "epubOnDevice": "Un EPUB de este dispositivo",
+  "import": "Importar",
+  "importing": "Importando",
+  "importEpub": "Importar EPUB",
+  "read": "Leer",
+  "notStarted": "Sin empezar",
+  "delete": "Eliminar",
+  "deleteBook": "Eliminar libro",
+  "removeBook": "¿Quitar «{title}» de la biblioteca?",
+  "@removeBook": {
+    "placeholders": {
+      "title": {"type": "String"}
+    }
+  },
+  "cancel": "Cancelar",
+  "alreadyInLibrary": "Este libro ya está en la biblioteca.",
+  "importFailed": "No se pudo importar el EPUB.",
+  "deleteFailed": "No se pudo eliminar el libro.",
+  "addFailed": "No se pudo añadir el libro a la biblioteca.",
+  "untitled": "Sin título",
+  "notAnEpub": "El archivo no es un EPUB válido.",
+  "epubMissingRoot": "El EPUB no indica su archivo de contenido.",
+  "epubMissingContent": "No se encontró el contenido del EPUB.",
+  "toAdd": "Por añadir",
+  "inYourLibrary": "En tu biblioteca",
+  "add": "Añadir",
+  "allLanguages": "Todos",
+  "spanish": "Español",
+  "english": "Inglés",
+  "catalogEmpty": "El catálogo está vacío",
+  "catalogEmptyBody": "Cuando haya libros disponibles, aparecerán aquí.",
+  "catalogLoading": "Cargando el catálogo",
+  "retry": "Reintentar",
+  "catalogLoadFailed": "No se pudo cargar el catálogo.",
+  "catalogLoadFailedStatus": "No se pudo cargar el catálogo ({status}).",
+  "@catalogLoadFailedStatus": {
+    "placeholders": {
+      "status": {"type": "int"}
+    }
+  },
+  "catalogInvalid": "El catálogo no tiene el formato esperado.",
+  "missingDownload": "Este libro no tiene enlace de descarga.",
+  "downloadFailed": "No se pudo descargar el libro ({status}).",
+  "@downloadFailed": {
+    "placeholders": {
+      "status": {"type": "int"}
+    }
+  },
+  "missingApiKey": "Falta X_EPUB_KEY en .env.",
+  "contents": "Índice",
+  "close": "Cerrar",
+  "back": "Atrás",
+  "noContents": "Este libro no tiene índice.",
+  "contentsKeepReading": "Puedes seguir pasando páginas.",
+  "contentsSearch": "Buscar en el índice",
+  "contentsNoMatches": "Ningún capítulo coincide.",
+  "chapterLabel": "Capítulo {position}",
+  "@chapterLabel": {
+    "placeholders": {
+      "position": {"type": "int"}
+    }
+  },
+  "chapterOpenFailed": "No se pudo abrir «{title}».",
+  "@chapterOpenFailed": {
+    "placeholders": {
+      "title": {"type": "String"}
+    }
+  },
+  "showChapters": "Mostrar capítulos",
+  "hideChapters": "Ocultar capítulos",
+  "copy": "Copiar",
+  "share": "Compartir",
+  "copied": "Copiado",
+  "saveQuote": "Guardar cita",
+  "quoteSaved": "Cita guardada",
+  "quoteSaveFailed": "No se pudo guardar la cita.",
+  "savedQuotes": "Citas",
+  "noQuotes": "Todavía no hay citas",
+  "noQuotesBody": "Selecciona un pasaje y pulsa Guardar cita.",
+  "quoteAlreadySaved": "Esa cita ya está guardada.",
+  "shareQuoteText": "Compartir texto",
+  "quoteShareFailed": "No se pudo compartir la cita.",
+  "quotesLoadFailed": "No se pudieron cargar las citas. Inténtalo de nuevo.",
+  "bookGone": "Este libro ya no está en la biblioteca.",
+  "chapterFailed": "No se pudo abrir este capítulo.",
+  "preferencesFailed": "No se pudieron aplicar los ajustes de lectura.",
+  "preferencesSaveFailed": "No se pudieron guardar los ajustes de lectura.",
+  "fixedColor": "En un libro de maquetación fija el color del texto no cambia.",
+  "fixedPages": "Este libro se lee por páginas.",
+  "fixedSize": "En un libro de maquetación fija el tamaño del texto no cambia.",
+  "fixedColorShort": "En este libro el color del texto no cambia",
+  "fixedPagesShort": "Este libro se lee por páginas",
+  "fixedSizeShort": "En este libro el tamaño del texto no cambia",
+  "pageMode": "Lectura por páginas",
+  "scrollMode": "Lectura con scroll",
+  "lightMode": "Modo claro",
+  "darkMode": "Modo oscuro",
+  "smallerText": "Reducir texto",
+  "originalSize": "Tamaño original",
+  "largerText": "Aumentar texto",
+  "readerDesktopOnly": "El lector funciona en iOS y Android. En el escritorio de macOS Readium no abre el EPUB.",
+  "openFailed": "No se pudo abrir el libro.",
+  "invalidBook": "Libro no válido.",
+  "welcomeTitle": "Crea el hábito de leer",
+  "welcomeBody": "Un lugar para leer un poco cada día y sostener ese hábito.",
+  "welcomeNext": "Unos minutos, a la hora que elijas.",
+  "notificationPermissionTitle": "Te aviso a tu hora",
+  "notificationPermissionBody": "Cuando llega el momento que elegiste, Liora puede recordarte que leas.",
+  "notificationPermissionAllow": "Activar avisos",
+  "notificationPermissionSkip": "Ahora no",
+  "notificationPermissionFailed": "No se pudo pedir el permiso.",
+  "stepOf": "{step} de {total}",
+  "@stepOf": {
+    "placeholders": {
+      "step": {"type": "int"},
+      "total": {"type": "int"}
+    }
+  },
+  "start": "Empezar",
+  "startReading": "Quiero empezar a leer",
+  "save": "Guardar",
+  "habitSaved": "Hábito guardado.",
+  "next": "Siguiente",
+  "answersSaveFailed": "No se pudieron guardar tus respuestas.",
+  "profileLoadFailed": "No se pudo cargar el perfil. Inténtalo de nuevo.",
+  "motivationQuestion": "¿Qué quieres conseguir con la lectura?",
+  "goalQuestion": "¿Cuánto quieres leer?",
+  "whenQuestion": "¿Cuándo te gustaría leer?",
+  "whichDays": "¿Qué días?",
+  "whatTime": "¿A qué hora?",
+  "minutes": "{count} minutos",
+  "@minutes": {
+    "placeholders": {
+      "count": {"type": "int"}
+    }
+  },
+  "motivationReadMore": "Leer más",
+  "motivationHabit": "Crear un hábito",
+  "motivationFinishBooks": "Terminar más libros",
+  "motivationLearn": "Aprender cosas nuevas",
+  "motivationTimeForMe": "Tener un momento para mí",
+  "routineMorning": "Mañana",
+  "routineAfternoon": "Tarde",
+  "routineNight": "Noche",
+  "mondayLetter": "L",
+  "tuesdayLetter": "M",
+  "wednesdayLetter": "X",
+  "thursdayLetter": "J",
+  "fridayLetter": "V",
+  "saturdayLetter": "S",
+  "sundayLetter": "D",
+  "everyDay": "Todos los días",
+  "monday": "Lunes",
+  "tuesday": "Martes",
+  "wednesday": "Miércoles",
+  "thursday": "Jueves",
+  "friday": "Viernes",
+  "saturday": "Sábado",
+  "sunday": "Domingo",
+  "notSet": "Sin definir",
+  "readingHabit": "Hábito de lectura",
+  "profileRecords": "Registros",
+  "profileDevice": "Dispositivo",
+  "profileSampleData": "Datos de muestra",
+  "sampleReadings": "Lecturas de ejemplo",
+  "sampleReadingsSubtitle": "Se agregan al registro de lectura de este dispositivo.",
+  "sampleReadingsBody": "Se agrega una lectura al azar por cada día, desde hoy hasta un mes y medio atrás. Cada una dura entre 0 y 15 minutos.",
+  "sampleReadingsContinue": "Continuar",
+  "sampleReadingsConfirmTitle": "Escribir en el registro",
+  "sampleReadingsConfirmBody": "Estas lecturas se agregan a tu historial en este dispositivo. Puedes quitarlas después desde Perfil.",
+  "sampleReadingsWrite": "Escribirlas",
+  "sampleReadingsPresent": "{count} en el registro de este dispositivo.",
+  "@sampleReadingsPresent": {
+    "placeholders": {
+      "count": {"type": "int"}
+    }
+  },
+  "removeSampleReadings": "Quitar lecturas de ejemplo",
+  "removeSampleReadingsBody": "Se quitan del registro las lecturas de ejemplo. Las que leíste tú se quedan.",
+  "removeSampleReadingsAction": "Quitar",
+  "sampleReadingsRemoved": "Se quitaron las lecturas de ejemplo.",
+  "sampleReadingsRemoveFailed": "No se pudieron quitar las lecturas de ejemplo.",
+  "generate": "Generar",
+  "sampleReadingsAdded": "Se agregaron {count} lecturas de ejemplo.",
+  "@sampleReadingsAdded": {
+    "placeholders": {
+      "count": {"type": "int"}
+    }
+  },
+  "sampleReadingsFailed": "No se pudieron generar las lecturas.",
+  "thisWeek": "Esta semana",
+  "goalLine": "Meta · {duration}",
+  "@goalLine": {
+    "placeholders": {
+      "duration": {"type": "String"}
+    }
+  },
+  "noRecords": "Todavía no hay registros",
+  "noRecordsBody": "El tiempo se guarda cuando una lectura pasa de 30 segundos.",
+  "booksLoadFailed": "No se pudieron cargar los libros.\n{error}",
+  "@booksLoadFailed": {
+    "placeholders": {
+      "error": {"type": "String"}
+    }
+  },
+  "readingTimeLoadFailed": "No se pudo cargar el tiempo de lectura.\n{error}",
+  "@readingTimeLoadFailed": {
+    "placeholders": {
+      "error": {"type": "String"}
+    }
+  },
+  "previousMonth": "Mes anterior",
+  "nextMonth": "Mes siguiente",
+  "today": "Hoy",
+  "goalLabel": "Meta",
+  "minutesShort": "{count} min",
+  "@minutesShort": {
+    "placeholders": {
+      "count": {"type": "int"}
+    }
+  },
+  "minutesOfGoal": "{done} / {goal} min",
+  "@minutesOfGoal": {
+    "placeholders": {
+      "done": {"type": "int"},
+      "goal": {"type": "int"}
+    }
+  },
+  "yesterday": "Ayer",
+  "goalMet": "meta cumplida",
+  "partialReading": "leído sin cumplir la meta",
+  "noReading": "sin lectura",
+  "calendarDate": "{day} de {month}",
+  "@calendarDate": {
+    "placeholders": {
+      "day": {"type": "int"},
+      "month": {"type": "String"}
+    }
+  },
+  "dayReading": "{day} · {duration}",
+  "@dayReading": {
+    "placeholders": {
+      "day": {"type": "String"},
+      "duration": {"type": "String"}
+    }
+  },
+  "calendarDay": "{day} de {month}, {duration}, {state}",
+  "@calendarDay": {
+    "placeholders": {
+      "day": {"type": "int"},
+      "month": {"type": "String"},
+      "duration": {"type": "String"},
+      "state": {"type": "String"}
+    }
+  },
+  "libraryLoadFailed": "No se pudo cargar la biblioteca.\n{error}",
+  "@libraryLoadFailed": {
+    "placeholders": {
+      "error": {"type": "String"}
+    }
+  },
+  "sampleBookTitle": "Lectura de ejemplo",
+  "notificationChannelName": "Avisos",
+  "notificationChannelDescription": "Avisos de Liora",
+  "notificationRoutineTitle": "Hora de leer",
+  "notificationRoutineBody": "Son las {hour}. Hoy tu meta es {minutes} min.",
+  "@notificationRoutineBody": {
+    "placeholders": {
+      "hour": {"type": "String"},
+      "minutes": {"type": "int"}
+    }
+  },
+  "notificationGoalTitle": "La meta de hoy",
+  "notificationGoalRemainingBody": "Te faltan {minutes} min para cerrar el día.",
+  "@notificationGoalRemainingBody": {
+    "placeholders": {
+      "minutes": {"type": "int"}
+    }
+  },
+  "notificationGoalMetTitle": "Meta cumplida",
+  "notificationGoalMetBody": "Cerraste el día. {minutes} min.",
+  "@notificationGoalMetBody": {
+    "placeholders": {
+      "minutes": {"type": "int"}
+    }
+  },
+  "notificationResumeChapterBody": "Sigues en el capítulo {chapter} de {title}.",
+  "@notificationResumeChapterBody": {
+    "placeholders": {
+      "chapter": {"type": "int"},
+      "title": {"type": "String"}
+    }
+  },
+  "notificationResumeSectionBody": "Sigues en {section} de {title}.",
+  "@notificationResumeSectionBody": {
+    "placeholders": {
+      "section": {"type": "String"},
+      "title": {"type": "String"}
+    }
+  },
+  "notificationResumeBookBody": "Sigues con {title}.",
+  "@notificationResumeBookBody": {
+    "placeholders": {
+      "title": {"type": "String"}
+    }
+  },
+  "notificationStreakTitle": "Tu racha",
+  "notificationStreakBody": "Llevas {days} días. Hoy también cuenta.",
+  "@notificationStreakBody": {
+    "placeholders": {
+      "days": {"type": "int"}
+    }
+  },
+  "notificationNudgeTitle": "Todavía hay tiempo",
+  "notificationNudgeBody1": "Dos minutos alcanzan para no soltar el día.",
+  "notificationNudgeBody2": "Si hoy se llenó, quédate con un par de páginas.",
+  "notificationNudgeBody3": "No hace falta cumplir la meta. Abrir el libro ya cuenta.",
+  "notificationNudgeBody4": "Un momento corto también sostiene el hábito.",
+  "notificationNudgeBody5": "El día todavía tiene sitio para unas líneas.",
+  "focusMode": "Modo concentración",
+  "focusModeAndroidBody": "Silencia notificaciones y llamadas mientras Liora está abierta. Las alarmas siguen sonando.",
+  "focusModeIosBody": "Al abrir Liora, el iPhone entra en No molestar si preparas Atajos una vez.",
+  "focusModeIosOnBody": "Activo. Para quitarlo del todo, borra la automatización en Atajos.",
+  "focusModePermissionNeeded": "Para silenciar el teléfono, permite a Liora el acceso a No molestar.",
+  "focusModeChangeFailed": "No se pudo cambiar No molestar.",
+  "focusModeIosRemains": "La automatización de Atajos sigue hasta que la borres.",
+  "focusGuideTitle": "No molestar al leer",
+  "focusGuideBody": "iOS no deja que una app encienda No molestar. Atajos sí, si lo dejas preparado una vez.",
+  "focusGuideOpenHeading": "Al abrir Liora",
+  "focusGuideOpenSteps": "1. En Atajos, entra en Automatización y pulsa +.\n2. Elige App, luego Liora, y deja marcada la opción de al abrirla.\n3. Añade Definir concentración, elige No molestar y ponlo en Activado.\n4. Desactiva Preguntar antes de ejecutar.",
+  "focusGuideCloseHeading": "Al cerrar Liora",
+  "focusGuideCloseSteps": "Repite los pasos con la opción de al cerrarla y No molestar en Desactivado.",
+  "focusGuideOpenShortcuts": "Abrir Atajos",
+  "focusGuideDone": "Listo",
+  "focusGuideNotNow": "Ahora no",
+  "focusGuideOpenFailed": "No se pudo abrir Atajos.",
+  "createQuoteImage": "Crear imagen",
+  "quoteImageTitle": "Imagen",
+  "saveToPhotos": "Guardar en fotos",
+  "quoteImageSaved": "Imagen guardada en fotos",
+  "quoteImageSaveFailed": "No se pudo guardar la imagen.",
+  "quoteImageShareFailed": "No se pudo compartir la imagen.",
+  "quoteImageTooLong": "Este pasaje es demasiado largo para este formato.",
+  "quoteImageImportFailed": "No se pudo usar esa imagen.",
+  "quoteImageTooLarge": "Esa imagen pesa demasiado.",
+  "quoteBackgroundFailed": "No se pudo abrir el fondo.",
+  "quoteImageMissing": "Esta cita ya no está.",
+  "removeQuoteBackground": "¿Quitar este fondo?",
+  "removeQuoteBackgroundBody": "Se borra la copia guardada en este dispositivo.",
+  "importQuoteBackground": "Importar fondo",
+  "removeImportedBackground": "Quitar fondo",
+  "quoteFormatStory": "Historia",
+  "quoteFormatPost": "Publicación",
+  "quoteFormatSquare": "Cuadrada",
+  "quoteFormatScreen": "Pantalla",
+  "quoteFontSerif": "Serif",
+  "quoteFontCondensed": "Condensada",
+  "quoteFontPlain": "Texto",
+  "quoteTextSize": "Tamaño",
+  "quoteVeil": "Velo",
+  "quoteInkPaper": "Papel",
+  "quoteInkWhite": "Blanco",
+  "quoteInkCream": "Crema",
+  "quoteInkInk": "Tinta",
+  "quoteInkBlack": "Negro",
+  "quoteInkStation": "Azul",
+  "quoteHighlightColor": "Color del resaltado",
+  "quoteHighlightAmber": "Ámbar",
+  "quoteHighlightGreen": "Verde",
+  "quoteHighlightBlue": "Azul",
+  "quoteHighlightRose": "Rosa",
+  "quoteHighlightViolet": "Violeta",
+  "quoteHighlightFailed": "No se pudo cambiar el color.",
+  "quoteHighlightDefault": "Color de las citas",
+  "quoteHighlightDefaultSubtitle": "Para las citas que guardes desde ahora.",
+  "deleteQuote": "Eliminar cita",
+  "deleteQuoteTitle": "¿Eliminar esta cita?",
+  "deleteQuoteBody": "Sale de tus citas y deja de estar resaltada en el libro.",
+  "quoteDeleted": "Cita eliminada.",
+  "quoteDeleteFailed": "No se pudo eliminar la cita.",
+  "chapterMinuteLeft": "Un minuto de capítulo",
+  "chapterMinutesLeft": "Unos {minutes} min de capítulo",
+  "@chapterMinutesLeft": {
+    "placeholders": {
+      "minutes": {"type": "int"}
+    }
+  },
+  "chapterFinishTitle": "¿Sigues un poco más?",
+  "chapterMinuteAlmostDone": "Te falta un minuto para acabar el capítulo.",
+  "chapterMinutesAlmostDone": "Te faltan unos {minutes} min para acabar el capítulo.",
+  "@chapterMinutesAlmostDone": {
+    "placeholders": {
+      "minutes": {"type": "int"}
+    }
+  },
+  "chapterMinuteAlmostDoneNamed": "Te falta un minuto para acabar «{title}».",
+  "@chapterMinuteAlmostDoneNamed": {
+    "placeholders": {
+      "title": {"type": "String"}
+    }
+  },
+  "chapterMinutesAlmostDoneNamed": "Te faltan unos {minutes} min para acabar «{title}».",
+  "@chapterMinutesAlmostDoneNamed": {
+    "placeholders": {
+      "minutes": {"type": "int"},
+      "title": {"type": "String"}
+    }
+  },
+  "keepReading": "Seguir leyendo",
+  "leaveReader": "Salir",
+  "tableView": "Tabla",
+  "bookTimeLeft": "Faltan ~{duration}",
+  "@bookTimeLeft": {
+    "placeholders": {
+      "duration": {"type": "String"}
+    }
+  },
+  "bookPacePerTen": "~{duration} por cada 10 %",
+  "@bookPacePerTen": {
+    "placeholders": {
+      "duration": {"type": "String"}
+    }
+  },
+  "bookUnderAWeek": "A este ritmo, menos de una semana",
+  "bookWeekLeft": "A este ritmo, una semana",
+  "bookWeeksLeft": "A este ritmo, unas {count} semanas",
+  "@bookWeeksLeft": {
+    "placeholders": {
+      "count": {"type": "int"}
+    }
+  },
+  "bookSittingLeft": "Una lectura como las últimas",
+  "readingByBook": "Por libro",
+  "allReadingBooks": "Todos los libros",
+  "readingByBookEmpty": "Todavía no hay un libro con tiempo de lectura.",
+  "bookSittingsLeft": "Unas {count} lecturas como las últimas",
+  "@bookSittingsLeft": {
+    "placeholders": {
+      "count": {"type": "int"}
+    }
+  },
+  "bookSession": "1 sesión",
+  "bookSessions": "{count} sesiones",
+  "@bookSessions": {
+    "placeholders": {
+      "count": {"type": "int"}
+    }
+  },
+  "bookQuote": "1 cita",
+  "bookQuotes": "{count} citas",
+  "@bookQuotes": {
+    "placeholders": {
+      "count": {"type": "int"}
+    }
+  },
+  "monthReading": "Resumen del mes",
+  "monthReadingOf": "Resumen de {month}",
+  "@monthReadingOf": {
+    "placeholders": {
+      "month": {"type": "String"}
+    }
+  },
+  "monthReadingEmpty": "El resumen aparece al cerrar un mes con lectura.",
+  "monthInProgress": "En curso",
+  "monthPlanDays": "En {month} cumpliste {met} de {planned} días de tu plan.",
+  "@monthPlanDays": {
+    "placeholders": {
+      "month": {"type": "String"},
+      "met": {"type": "int"},
+      "planned": {"type": "int"}
+    }
+  },
+  "monthReadTime": "En {month} leíste {duration}.",
+  "@monthReadTime": {
+    "placeholders": {
+      "month": {"type": "String"},
+      "duration": {"type": "String"}
+    }
+  },
+  "monthMinutesMore": "{duration} más que en {month}",
+  "@monthMinutesMore": {
+    "placeholders": {
+      "duration": {"type": "String"},
+      "month": {"type": "String"}
+    }
+  },
+  "monthMinutesLess": "{duration} menos que en {month}",
+  "@monthMinutesLess": {
+    "placeholders": {
+      "duration": {"type": "String"},
+      "month": {"type": "String"}
+    }
+  },
+  "monthBookFinished": "Terminaste este libro.",
+  "monthShareFailed": "No se pudo compartir el resumen.",
+  "monthMethodical": "Lector metódico",
+  "monthMethodicalPhrase": "La constancia ya forma parte de ti.",
+  "monthMethodicalEvidence": "{onTime} de {sessions} lecturas empezaron cerca de las {hour}.",
+  "@monthMethodicalEvidence": {
+    "placeholders": {
+      "onTime": {"type": "int"},
+      "sessions": {"type": "int"},
+      "hour": {"type": "String"}
+    }
+  },
+  "monthAnt": "Lector hormiga",
+  "monthAntPhrase": "Aprovechas cada momento. Paso a paso construyes grandes lecturas.",
+  "monthAntEvidence": "Cumpliste {met} de {planned} días, en lecturas de 15 min o menos.",
+  "@monthAntEvidence": {
+    "placeholders": {
+      "met": {"type": "int"},
+      "planned": {"type": "int"}
+    }
+  },
+  "monthMarathoner": "El maratonista",
+  "monthMarathonerPhrase": "Cuando te sumerges en una historia, el tiempo pierde su forma.",
+  "monthMarathonerEvidence": "Los días que leíste, promedias {duration}.",
+  "@monthMarathonerEvidence": {
+    "placeholders": {
+      "duration": {"type": "String"}
+    }
+  },
+  "monthHunter": "Cazador de ideas",
+  "monthHunterPhrase": "No solo lees: coleccionas pensamientos y los haces tuyos.",
+  "monthHunterEvidence": "Guardaste citas en {withQuotes} de {sessions} lecturas.",
+  "@monthHunterEvidence": {
+    "placeholders": {
+      "withQuotes": {"type": "int"},
+      "sessions": {"type": "int"}
+    }
+  },
+  "monthEarly": "El madrugador",
+  "monthEarlyPhrase": "Inicias el día alimentando tu mente antes de que empiece la rutina.",
+  "monthAfternoon": "Lector de sobremesa",
+  "monthAfternoonPhrase": "Haces una pausa en mitad del día y la llenas de páginas.",
+  "monthNight": "El búho nocturno",
+  "monthNightPhrase": "Encuentras la calma y la concentración cuando el mundo se apaga.",
+  "monthBandEvidence": "El {percent} % de tu lectura fue en esa franja.",
+  "@monthBandEvidence": {
+    "placeholders": {
+      "percent": {"type": "int"}
+    }
+  },
+  "monthNomad": "Lector nómada",
+  "monthNomadPhrase": "Cualquier momento es bueno para abrir un libro.",
+  "monthNomadEvidence": "Ninguna franja llega al 60 %.",
+  "appearance": "Apariencia",
+  "themePrograma": "Programa",
+  "themeLibro": "Libro",
+  "themeCuaderno": "Cuaderno",
+  "themePeriodico": "Periódico",
+  "themeFicha": "Ficha",
+  "themeChangeFailed": "No se pudo cambiar la apariencia.",
+  "appFont": "Fuente",
+  "fontSystem": "Sistema",
+  "fontSourceSans": "Source Sans",
+  "fontLibreFranklin": "Libre Franklin",
+  "fontSourceSerif": "Source Serif",
+  "fontNewsreader": "Newsreader",
+  "fontChangeFailed": "No se pudo cambiar la fuente.",
+  "appearanceRestore": "Restaurar",
+  "appearanceRestoreFailed": "No se pudo restaurar la apariencia.",
+  "pqrs": "Ayuda",
+  "pqrsMessageCount": "{count} / {limit}",
+  "@pqrsMessageCount": {
+    "placeholders": {
+      "count": {"type": "int"},
+      "limit": {"type": "int"}
+    }
+  },
+  "pqrsIntro": "Peticiones, quejas, reclamos y sugerencias sobre Liora.",
+  "pqrsQuestions": "Preguntas frecuentes",
+  "pqrsWrite": "Escribir",
+  "pqrsKindPetition": "Petición",
+  "pqrsKindComplaint": "Queja",
+  "pqrsKindClaim": "Reclamo",
+  "pqrsKindSuggestion": "Sugerencia",
+  "pqrsKindRequired": "Elige petición, queja, reclamo o sugerencia.",
+  "pqrsMessage": "Mensaje",
+  "pqrsMessageHint": "Qué pasó, o qué te gustaría.",
+  "pqrsMessageRequired": "Escribe el mensaje.",
+  "pqrsMessageTooLong": "El mensaje es demasiado largo.",
+  "pqrsEmail": "Correo",
+  "pqrsEmailHint": "Opcional, si quieres una respuesta",
+  "pqrsEmailInvalid": "Ese correo no es válido.",
+  "pqrsSend": "Enviar",
+  "pqrsSending": "Enviando",
+  "pqrsSendFailed": "No se pudo enviar. Inténtalo de nuevo.",
+  "pqrsHeldTitle": "Enviada",
+  "pqrsHeldBody": "Recibimos tu {kind}.",
+  "@pqrsHeldBody": {
+    "placeholders": {
+      "kind": {"type": "String"}
+    }
+  },
+  "pqrsAnother": "Escribir otra",
+  "pqrsFaqAccount": "¿Necesito una cuenta?",
+  "pqrsFaqAccountAnswer": "No. Tus libros y tu progreso se guardan en este dispositivo.",
+  "pqrsFaqAdd": "¿Cómo añado un libro?",
+  "pqrsFaqAddAnswer": "En Biblioteca, Importar abre un EPUB de este dispositivo. En Descubrimiento puedes bajar uno del catálogo.",
+  "pqrsFaqOffline": "¿Puedo leer sin internet?",
+  "pqrsFaqOfflineAnswer": "Un libro que ya está en la biblioteca se abre sin conexión. El catálogo necesita red para cargar y para descargar.",
+  "pqrsFaqHabit": "¿Cómo cambio la meta o la hora?",
+  "pqrsFaqHabitAnswer": "En Perfil, Hábito de lectura.",
+  "pqrsFaqTime": "¿Dónde veo cuánto he leído?",
+  "pqrsFaqTimeAnswer": "En Tiempo están la semana y el calendario.",
+  "pqrsFaqReader": "¿Cómo cambio el tamaño o el modo?",
+  "pqrsFaqReaderAnswer": "Dentro del libro: texto más grande o más pequeño, modo claro u oscuro, y páginas o scroll.",
+  "pqrsFaqDelete": "¿Qué pasa si elimino un libro?",
+  "pqrsFaqDeleteAnswer": "Sale de la biblioteca de este dispositivo, con su progreso y sus citas.",
+  "privacyPolicy": "Privacidad",
+  "termsOfUse": "Términos",
+  "legalPageFailed": "No se pudo abrir la página.",
+  "premiumTitle": "Premium",
+  "premiumLead": "Un pago abre las tres.",
+  "premiumPrice": "7 USD",
+  "premiumMonthBody": "El mes que cerraste: los días del plan, el tiempo y los libros.",
+  "premiumBooksBody": "El tiempo de cada libro, aparte de la semana y el calendario.",
+  "premiumAppearanceBody": "El papel, la tinta y la letra con la que se lee Liora.",
+  "premiumUnlock": "Desbloquear · 7 USD",
+  "premiumPurchaseUnavailable": "La compra no está disponible todavía."
+}

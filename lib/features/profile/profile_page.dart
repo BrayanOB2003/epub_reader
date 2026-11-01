@@ -1,8 +1,20 @@
+import 'package:epub_reader/app/app_logo.dart';
+import 'package:epub_reader/app/platform_dialog.dart';
 import 'package:epub_reader/app/providers.dart';
+import 'package:epub_reader/app/schedule_theme.dart';
+import 'package:epub_reader/app/schedule_widgets.dart';
+import 'package:epub_reader/core/database/app_database.dart';
+import 'package:epub_reader/features/focus/focus_mode.dart';
+import 'package:epub_reader/features/focus/focus_mode_tile.dart';
+import 'package:epub_reader/features/onboarding/onboarding_answers.dart';
 import 'package:epub_reader/features/profile/reader_profile_store.dart';
+import 'package:epub_reader/features/profile/reading_routine.dart';
+import 'package:epub_reader/features/reader/quote_highlight_default_tile.dart';
+import 'package:epub_reader/l10n/app_localizations.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:go_router/go_router.dart';
+import 'package:url_launcher/url_launcher.dart';
 
 class ProfilePage extends ConsumerWidget {
   const ProfilePage({super.key});
@@ -12,80 +24,324 @@ class ProfilePage extends ConsumerWidget {
     final profile = ref.watch(readerProfileProvider);
 
     return Scaffold(
-      appBar: AppBar(title: const Text('Perfil')),
-      body: profile.when(
-        loading: () => const Center(child: CircularProgressIndicator()),
-        error: (error, _) => Center(
-          child: Padding(
-            padding: const EdgeInsets.all(24),
-            child: Text(
-              'No se pudo cargar el perfil.\n$error',
-              textAlign: TextAlign.center,
-            ),
-          ),
+      body: SafeArea(
+        bottom: false,
+        child: profile.when(
+          loading: () => const Center(child: CircularProgressIndicator()),
+          error: (error, _) => const _ProfileLoadFailed(),
+          data: (saved) => _ProfileList(saved: saved),
         ),
-        data: (saved) {
-          final goal = saved == null
-              ? 'Sin definir'
-              : '${saved.dailyGoalMinutes} minutos';
-          return ListView(
-            children: [
-              const Divider(height: 1),
-              ListTile(
-                title: const Text('Hábito de lectura'),
-                trailing: Text(goal),
-                onTap: saved == null
-                    ? null
-                    : () => context.push('/onboarding?editar=1'),
-              ),
-              const Divider(height: 1),
-              ListTile(
-                title: const Text('Generar lecturas de ejemplo'),
-                subtitle: const Text(
-                  'Desde hoy, un mes y medio atrás, de 0 a 15 minutos.',
-                ),
-                onTap: () => _addSampleReadings(context, ref),
-              ),
-              const Divider(height: 1),
-            ],
-          );
-        },
       ),
+    );
+  }
+}
+
+class _ProfileLoadFailed extends StatelessWidget {
+  const _ProfileLoadFailed();
+
+  @override
+  Widget build(BuildContext context) {
+    final l10n = AppLocalizations.of(context);
+    return ListView(
+      children: [
+        ScheduleHeader(title: l10n.profile),
+        const ScheduleRule(),
+        Padding(
+          padding: const EdgeInsets.all(20),
+          child: ScheduleIssue(message: l10n.profileLoadFailed),
+        ),
+        const _AppNameplate(),
+      ],
+    );
+  }
+}
+
+class _ProfileList extends ConsumerWidget {
+  const _ProfileList({required this.saved});
+
+  final ReaderProfile? saved;
+
+  @override
+  Widget build(BuildContext context, WidgetRef ref) {
+    final l10n = AppLocalizations.of(context);
+    final colors = ScheduleColors.of(context);
+    final quoteCount = ref.watch(savedQuotesProvider).asData?.value.length;
+    final sampleCount =
+        ref.watch(sampleSessionCountProvider).asData?.value ?? 0;
+    final goal = saved == null
+        ? l10n.notSet
+        : l10n.minutes(saved!.dailyGoalMinutes);
+    final habit = saved == null
+        ? null
+        : OnboardingAnswers.fromStored(
+            motivations: saved!.motivations,
+            dailyGoalMinutes: saved!.dailyGoalMinutes,
+            routine: saved!.routine,
+            routineHour: saved!.routineHour,
+            routineDays: saved!.routineDays,
+          );
+    final muted = Theme.of(context).textTheme.bodyLarge
+        ?.copyWith(color: colors.muted);
+    return ListView(
+      children: [
+        ScheduleHeader(title: l10n.profile),
+        const ScheduleRule(),
+        _ProfileRow(
+          title: l10n.readingHabit,
+          subtitle: habit == null
+              ? null
+              : habitScheduleLine(
+                  l10n,
+                  period: habit.routine,
+                  hour: habit.routineHour,
+                  days: habit.weekdays,
+                ),
+          trailing: goal,
+          trailingStyle: muted,
+          onTap: saved == null ? null : () => context.push('/profile/habit'),
+        ),
+        _ProfileRow(
+          title: l10n.premiumTitle,
+          subtitle: l10n.premiumLead,
+          trailing: l10n.premiumPrice,
+          trailingStyle: muted,
+          onTap: () => context.push('/profile/premium'),
+        ),
+        _GroupLabel(title: l10n.profileRecords),
+        _ProfileRow(
+          title: l10n.savedQuotes,
+          trailing: quoteCount == null ? null : '$quoteCount',
+          trailingStyle: muted,
+          onTap: () => context.push('/profile/quotes'),
+        ),
+        _GroupLabel(title: l10n.profileDevice),
+        const QuoteHighlightDefaultTile(),
+        const Divider(height: 1),
+        if (saved != null && ref.watch(focusModeControllerProvider).offered)
+          const FocusModeTile(),
+        _ProfileRow(
+          title: l10n.pqrs,
+          onTap: () => context.push('/profile/pqrs'),
+        ),
+        _GroupLabel(title: l10n.profileSampleData),
+        _ProfileRow(
+          title: l10n.sampleReadings,
+          subtitle: l10n.sampleReadingsSubtitle,
+          onTap: () => _addSampleReadings(context, ref),
+        ),
+        if (sampleCount > 0) ...[
+          const Divider(height: 1),
+          _ProfileRow(
+            title: l10n.removeSampleReadings,
+            subtitle: l10n.sampleReadingsPresent(sampleCount),
+            onTap: () => _removeSampleReadings(context, ref),
+          ),
+        ],
+        const _AppNameplate(),
+      ],
     );
   }
 
   Future<void> _addSampleReadings(BuildContext context, WidgetRef ref) async {
-    final confirmed = await showDialog<bool>(
-      context: context,
-      builder: (context) => AlertDialog(
-        title: const Text('Generar lecturas de ejemplo'),
-        content: const Text(
-          'Se agregará una lectura al azar por cada día, desde hoy hasta un mes y medio atrás. Cada una dura entre 0 y 15 minutos.',
-        ),
-        actions: [
-          TextButton(
-            onPressed: () => Navigator.pop(context, false),
-            child: const Text('Cancelar'),
+    final l10n = AppLocalizations.of(context);
+    final continued = await showPlatformConfirm(
+      context,
+      title: l10n.sampleReadings,
+      message: l10n.sampleReadingsBody,
+      confirm: l10n.sampleReadingsContinue,
+      cancel: l10n.cancel,
+    );
+    if (!continued || !context.mounted) return;
+    final write = await showPlatformConfirm(
+      context,
+      title: l10n.sampleReadingsConfirmTitle,
+      message: l10n.sampleReadingsConfirmBody,
+      confirm: l10n.sampleReadingsWrite,
+      cancel: l10n.cancel,
+      destructive: true,
+    );
+    if (!write || !context.mounted) return;
+    final messenger = ScaffoldMessenger.of(context);
+    try {
+      final count = await ref
+          .read(bookRepositoryProvider)
+          .addSampleReadings(sampleTitle: l10n.sampleBookTitle);
+      if (!context.mounted) return;
+      messenger.showSnackBar(
+        SnackBar(content: Text(l10n.sampleReadingsAdded(count))),
+      );
+    } catch (_) {
+      if (!context.mounted) return;
+      messenger.showSnackBar(
+        SnackBar(content: Text(l10n.sampleReadingsFailed)),
+      );
+    }
+  }
+
+  Future<void> _removeSampleReadings(
+    BuildContext context,
+    WidgetRef ref,
+  ) async {
+    final l10n = AppLocalizations.of(context);
+    final confirmed = await showPlatformConfirm(
+      context,
+      title: l10n.removeSampleReadings,
+      message: l10n.removeSampleReadingsBody,
+      confirm: l10n.removeSampleReadingsAction,
+      cancel: l10n.cancel,
+      destructive: true,
+    );
+    if (!confirmed || !context.mounted) return;
+    final messenger = ScaffoldMessenger.of(context);
+    try {
+      await ref.read(bookRepositoryProvider).removeSampleReadings();
+      if (!context.mounted) return;
+      messenger.showSnackBar(
+        SnackBar(content: Text(l10n.sampleReadingsRemoved)),
+      );
+    } catch (_) {
+      if (!context.mounted) return;
+      messenger.showSnackBar(
+        SnackBar(content: Text(l10n.sampleReadingsRemoveFailed)),
+      );
+    }
+  }
+}
+
+class _AppNameplate extends StatelessWidget {
+  const _AppNameplate();
+
+  @override
+  Widget build(BuildContext context) {
+    final l10n = AppLocalizations.of(context);
+    final colors = ScheduleColors.of(context);
+    final linkStyle = TextButton.styleFrom(
+      foregroundColor: colors.station,
+      minimumSize: const Size(48, 48),
+      padding: const EdgeInsets.symmetric(horizontal: 12),
+      tapTargetSize: MaterialTapTargetSize.shrinkWrap,
+      textStyle: Theme.of(context).textTheme.labelLarge,
+    );
+    return Padding(
+      padding: const EdgeInsets.fromLTRB(8, 48, 8, 20),
+      child: Column(
+        crossAxisAlignment: CrossAxisAlignment.start,
+        children: [
+          Padding(
+            padding: const EdgeInsets.symmetric(horizontal: 12),
+            child: Row(
+              children: [
+                const AppLogo(size: 36),
+                const SizedBox(width: 12),
+                Text(
+                  'Liora',
+                  style: programTitle(context, colors.station, size: 22),
+                ),
+              ],
+            ),
           ),
-          TextButton(
-            onPressed: () => Navigator.pop(context, true),
-            child: const Text('Generar'),
+          Wrap(
+            children: [
+              TextButton(
+                style: linkStyle,
+                onPressed: () => _openLegalPage(
+                  context,
+                  _legalUrl(context, _LegalPage.privacy),
+                ),
+                child: Text(l10n.privacyPolicy),
+              ),
+              TextButton(
+                style: linkStyle,
+                onPressed: () => _openLegalPage(
+                  context,
+                  _legalUrl(context, _LegalPage.terms),
+                ),
+                child: Text(l10n.termsOfUse),
+              ),
+            ],
           ),
         ],
       ),
     );
-    if (confirmed != true || !context.mounted) return;
-    try {
-      final count = await ref.read(bookRepositoryProvider).addSampleReadings();
-      if (!context.mounted) return;
-      ScaffoldMessenger.of(context).showSnackBar(
-        SnackBar(content: Text('Se agregaron $count lecturas de ejemplo.')),
-      );
-    } catch (_) {
-      if (!context.mounted) return;
-      ScaffoldMessenger.of(context).showSnackBar(
-        const SnackBar(content: Text('No se pudieron generar las lecturas.')),
-      );
-    }
+  }
+}
+
+enum _LegalPage { privacy, terms }
+
+Uri _legalUrl(BuildContext context, _LegalPage page) {
+  final spanish = Localizations.localeOf(context).languageCode == 'es';
+  final path = switch (page) {
+    _LegalPage.privacy => spanish ? '/es/privacy' : '/privacy',
+    _LegalPage.terms => spanish ? '/es/terms' : '/terms',
+  };
+  return Uri.https('www.somosliora.app', path);
+}
+
+Future<void> _openLegalPage(BuildContext context, Uri url) async {
+  final l10n = AppLocalizations.of(context);
+  final messenger = ScaffoldMessenger.of(context);
+  var opened = false;
+  try {
+    opened = await launchUrl(url, mode: LaunchMode.externalApplication);
+  } catch (_) {
+    opened = false;
+  }
+  if (opened || !context.mounted) return;
+  messenger.showSnackBar(SnackBar(content: Text(l10n.legalPageFailed)));
+}
+
+class _GroupLabel extends StatelessWidget {
+  const _GroupLabel({required this.title});
+
+  final String title;
+
+  @override
+  Widget build(BuildContext context) {
+    return Padding(
+      padding: const EdgeInsets.fromLTRB(20, 28, 20, 8),
+      child: Text(
+        title,
+        style: Theme.of(context).textTheme.labelLarge
+            ?.copyWith(color: ScheduleColors.of(context).muted),
+      ),
+    );
+  }
+}
+
+class _ProfileRow extends StatelessWidget {
+  const _ProfileRow({
+    required this.title,
+    required this.onTap,
+    this.subtitle,
+    this.trailing,
+    this.trailingStyle,
+  });
+
+  final String title;
+  final String? subtitle;
+  final String? trailing;
+  final TextStyle? trailingStyle;
+  final VoidCallback? onTap;
+
+  @override
+  Widget build(BuildContext context) {
+    final value = trailing;
+    return ListTile(
+      contentPadding: const EdgeInsets.symmetric(horizontal: 20),
+      title: Text(title),
+      subtitle: subtitle == null ? null : Text(subtitle!),
+      enabled: onTap != null,
+      trailing: Row(
+        mainAxisSize: MainAxisSize.min,
+        children: [
+          if (value != null) Text(value, style: trailingStyle),
+          if (onTap != null) ...[
+            if (value != null) const SizedBox(width: 4),
+            const ScheduleDisclosure(),
+          ],
+        ],
+      ),
+      onTap: onTap,
+    );
   }
 }

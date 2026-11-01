@@ -3,6 +3,7 @@ name: Deploy iOS to Firebase Distribution
 on:
   push:
     branches:
+      - test
   workflow_dispatch:
 
 permissions:
@@ -11,9 +12,10 @@ permissions:
 env:
   FIREBASE_PROJECT_ID: epub-reader-6a972
   FIREBASE_IOS_APP_ID: "1:969465994480:ios:665f555c3d432fb585f635"
-  FIREBASE_TESTER_GROUPS: ${{ vars.FIREBASE_TESTER_GROUPS || 'testers' }}
+  FIREBASE_TESTER_GROUPS: IOS
   IOS_BUNDLE_ID: com.somosliora.app
-  APPLE_TEAM_ID: 9PAN8935L8
+  # Team del certificado y del perfil que genero match con la API key de App Store Connect.
+  APPLE_TEAM_ID: 6P775JHDM9
 
 jobs:
   ios-distribute:
@@ -73,8 +75,10 @@ jobs:
           test -s .env/.env
           grep -qE '^X_EPUB_KEY[:=]' .env/.env
 
-      - name: Install Dependencies
-        run: flutter pub get
+      # El lock fija un commit del fork. Este upgrade toma el ultimo commit
+      # de la rama prod antes de compilar, sin tocar el resto de dependencias.
+      - name: Instalar dependencias y sincronizar flutter_readium
+        run: flutter pub upgrade flutter_readium
 
       - name: Run Build Runner
         run: dart run build_runner build --delete-conflicting-outputs
@@ -98,6 +102,24 @@ jobs:
           bundler-cache: true
           working-directory: ios
 
+      # Diagnostico y calentamiento: en el run anterior fastlane agoto 3/6/12/24s
+      # en `xcodebuild -showBuildSettings` tras resolver los paquetes SPM en frio.
+      # Aqui lo corremos sin limite corto y medimos cuanto tarda de verdad.
+      # Si termina, es lentitud (y deja la cache lista para fastlane). Si se
+      # cuelga, el timeout del paso lo corta y sabemos que no es solo lentitud.
+      - name: Calentar workspace de Xcode y medir showBuildSettings
+        working-directory: ios
+        timeout-minutes: 12
+        run: |
+          set -euo pipefail
+          echo "== resolvePackageDependencies =="
+          time xcodebuild -resolvePackageDependencies -workspace Runner.xcworkspace -scheme Runner -configuration Release > "$RUNNER_TEMP/resolve.log" 2>&1 || { tail -40 "$RUNNER_TEMP/resolve.log"; exit 1; }
+          echo "== showBuildSettings (1ra vez, en frio) =="
+          time xcodebuild -showBuildSettings -workspace Runner.xcworkspace -scheme Runner -configuration Release > "$RUNNER_TEMP/settings.log" 2>&1 || { tail -40 "$RUNNER_TEMP/settings.log"; exit 1; }
+          echo "== showBuildSettings (2da vez, en caliente) =="
+          time xcodebuild -showBuildSettings -workspace Runner.xcworkspace -scheme Runner -configuration Release > /dev/null 2>&1
+          grep -E "^\s+(PRODUCT_BUNDLE_IDENTIFIER|MARKETING_VERSION|CURRENT_PROJECT_VERSION) =" "$RUNNER_TEMP/settings.log" | sort -u | head -5
+
       - name: Build and Distribute iOS
         working-directory: ios
         env:
@@ -106,8 +128,12 @@ jobs:
           FIREBASE_TESTER_GROUPS: ${{ env.FIREBASE_TESTER_GROUPS }}
           MATCH_PASSWORD: ${{ secrets.MATCH_PASSWORD }}
           MATCH_GIT_URL: ${{ secrets.MATCH_GIT_URL }}
+          MATCH_GIT_BASIC_AUTHORIZATION: ${{ secrets.MATCH_GIT_BASIC_AUTHORIZATION }}
           MATCH_KEYCHAIN_NAME: "ios-build.keychain-db"
           MATCH_KEYCHAIN_PASSWORD: "build_password_123"
+          # El timeout se duplica en cada reintento: 120+240+480s = 14 min maximo.
+          FASTLANE_XCODEBUILD_SETTINGS_TIMEOUT: "120"
+          FASTLANE_XCODEBUILD_SETTINGS_RETRIES: "3"
           IOS_BUNDLE_ID: ${{ env.IOS_BUNDLE_ID }}
           APPLE_TEAM_ID: ${{ env.APPLE_TEAM_ID }}
         run: |
@@ -115,6 +141,10 @@ jobs:
           if [ -z "${FIREBASE_SERVICE_ACCOUNT_JSON}" ] || [ -z "${MATCH_PASSWORD}" ] || [ -z "${MATCH_GIT_URL}" ]; then
             echo "::error::Faltan secrets de iOS: FIREBASE_SERVICE_ACCOUNT_JSON, MATCH_PASSWORD y MATCH_GIT_URL."
             exit 1
+          fi
+          # Si el secret no existe llega vacio; match lo interpretaria como un header invalido.
+          if [ -z "${MATCH_GIT_BASIC_AUTHORIZATION:-}" ]; then
+            unset MATCH_GIT_BASIC_AUTHORIZATION
           fi
           printf '%s' "$FIREBASE_SERVICE_ACCOUNT_JSON" > "$RUNNER_TEMP/firebase-sa.json"
           export GOOGLE_APPLICATION_CREDENTIALS="$RUNNER_TEMP/firebase-sa.json"

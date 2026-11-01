@@ -1,0 +1,197 @@
+{
+  "title": "El mundo visual de Liora",
+  "question": "Este mundo cubre toda la app. El lector, el hábito, el catálogo y el texto en español se quedan. Elige una dirección, pide otra mano, o toma el estándar.",
+  "options": [
+    {
+      "id": "assigned",
+      "label": "Tarjeta de sellos",
+      "kicker": "THE ROLL",
+      "lineage": "tarjeta de fidelidad de cafetería, sin premio",
+      "thesis": "La semana es una tarjeta. El libro de hoy va impreso en grande. Cada día leído recibe un sello, y no hay puntos ni premio.",
+      "palette": ["#e7eee9", "#17211c", "#c23b2e", "#c5d0c8"],
+      "materials": ["cartulina fría", "sello de goma", "filete"],
+      "viewport": "Siete círculos arriba, el título del libro ocupando el centro, y un solo botón: Leer.",
+      "risk": "Se lee como programa de puntos si el sello pesa más que el título.",
+      "raised": [
+        {
+          "from": "Osciloscopio",
+          "raise": "Cada día es una celda dibujada. Un día vacío es estructura, no un hueco."
+        },
+        {
+          "from": "Arcade",
+          "raise": "Una sola tinta de sello y tres presiones: vacío, a medias, cumplido. Ningún otro color tiene oficio."
+        },
+        {
+          "from": "Pliego Miura",
+          "raise": "Un solo gesto, Leer, abre el libro de hoy. La semana no compite con ese gesto."
+        },
+        {
+          "from": "Feed vertical",
+          "raise": "El libro en curso es la cara de la tarjeta. La fila de sellos es la única otra estructura."
+        },
+        {
+          "from": "Cartel de festival",
+          "raise": "Un solo tipo. El título es la línea grande. Las portadas no ordenan la biblioteca."
+        }
+      ],
+      "comp": ".impeccable/mocks/decision/assigned.webp",
+      "wireframe": {
+        "cols": 12,
+        "rows": 14,
+        "regions": [
+          {"label": "L M X J V S D", "x": 1, "y": 0, "w": 10, "h": 2},
+          {"label": "El libro de hoy", "x": 1, "y": 3, "w": 10, "h": 4, "accent": true},
+          {"label": "12 / 20 min", "x": 3, "y": 8, "w": 6, "h": 2},
+          {"label": "Leer", "x": 1, "y": 11, "w": 10, "h": 2, "accent": true},
+          {"label": "pestañas", "x": 0, "y": 13, "w": 12, "h": 1}
+        ]
+      }
+    },
+    {
+      "id": "model-pick",
+      "label": "Parrilla del día",
+      "kicker": "IMPECCABLE’S PICK",
+      "lineage": "guía impresa de una emisora, tres franjas",
+      "thesis": "El día son tres programas: mañana, tarde y noche. El libro está en la franja que elegiste.",
+      "palette": ["#f4f7fb", "#0e1a2b", "#0c4da2", "#d5dbe3"],
+      "materials": ["papel de programación", "regla", "una tinta de emisora"],
+      "viewport": "Tres bandas apiladas. La franja activa lleva el título y Leer. Las otras dos quedan en silencio.",
+      "risk": "Es el plano de una agenda, y muchas apps de hábito aterrizan ahí.",
+      "comp": ".impeccable/mocks/decision/model-pick.webp",
+      "wireframe": {
+        "cols": 12,
+        "rows": 14,
+        "regions": [
+          {"label": "Mañana", "x": 1, "y": 0, "w": 10, "h": 3},
+          {"label": "Tarde · el libro", "x": 1, "y": 3, "w": 10, "h": 5, "accent": true},
+          {"label": "Noche", "x": 1, "y": 8, "w": 10, "h": 3},
+          {"label": "Leer", "x": 1, "y": 11, "w": 10, "h": 2, "accent": true},
+          {"label": "pestañas", "x": 0, "y": 13, "w": 12, "h": 1}
+        ]
+      }
+    },
+    {
+      "id": "challenger-cyclorama",
+      "label": "Ciclorama",
+      "verdict": "competitive",
+      "lineage": "ciclorama de teatro, del negro al día",
+      "thesis": "La rutina es una franja de luz. El libro está de pie en la hora que elegiste, y el día se aclara solo cuando cumples los minutos.",
+      "palette": ["#050505", "#0a33ff", "#ff6aae", "#fff5ff"],
+      "materials": ["wash de horizonte", "cue en versalitas"],
+      "viewport": "Tres horizontes apilados, con el nombre de la franja. El libro y los minutos viven en la franja activa.",
+      "case": "Dice con claridad en qué parte del día cae la lectura. La persona no se reconoce en un plot de luces.",
+      "risk": "La atmósfera se come el libro y los minutos si el wash manda.",
+      "comp": ".impeccable/mocks/decision/challenger-cyclorama.webp",
+      "hero": "https://impeccable.style/worlds/cards/stagecraft-theater-lighting-cyclorama-dawn-hero.webp",
+      "board": "https://impeccable.style/worlds/cards/stagecraft-theater-lighting-cyclorama-dawn.webp",
+      "wireframe": {
+        "cols": 12,
+        "rows": 14,
+        "regions": [
+          {"label": "Noche", "x": 0, "y": 0, "w": 12, "h": 3},
+          {"label": "Tu hora · el libro", "x": 0, "y": 3, "w": 12, "h": 6, "accent": true},
+          {"label": "Día", "x": 0, "y": 9, "w": 12, "h": 2},
+          {"label": "Leer", "x": 1, "y": 11, "w": 10, "h": 2, "accent": true},
+          {"label": "pestañas", "x": 0, "y": 13, "w": 12, "h": 1}
+        ]
+      }
+    },
+    {
+      "id": "challenger-oscilloscope",
+      "label": "Osciloscopio",
+      "verdict": "declined",
+      "lineage": "banco de señales, trazo de fósforo",
+      "thesis": "Los minutos serían una traza sobre una retícula, y la meta un nivel de disparo.",
+      "palette": ["#0c120c", "#39ff14", "#8a8f86", "#e6a317"],
+      "materials": ["fósforo", "retícula grabada"],
+      "viewport": "Una pantalla de diez divisiones y perillas para la escala del día.",
+      "case": "Quien abre la app para leer un rato no se ve en un banco de señales, y la traza esconde el libro.",
+      "risk": "El instrumento sustituye a la lectura.",
+      "kept": "Cada celda significa una unidad, y lo vacío también se dibuja.",
+      "hero": "https://impeccable.style/worlds/cards/scientific-notation-oscilloscope-signal-bench-hero.webp"
+    },
+    {
+      "id": "challenger-arcade",
+      "label": "Arcade",
+      "verdict": "declined",
+      "lineage": "pantalla de cabinet, paleta de dieciséis colores",
+      "thesis": "La biblioteca sería un tablero de baldosas y cumplir la meta, un power-up.",
+      "palette": ["#0a0a0a", "#39ff6a", "#ff4fd8", "#ffe14a"],
+      "materials": ["píxel", "scanline"],
+      "viewport": "Una sala de juego, el libro como sprite, el marcador arriba.",
+      "case": "El hábito de Liora no es una partida, y el marcador miente sobre lo que la app hace.",
+      "risk": "Convierte la lectura en juego.",
+      "kept": "Ley de paleta: pocos estados, y cada color tiene un solo oficio.",
+      "hero": "https://impeccable.style/worlds/cards/medium-native-crt-arcade-pixel-glow-hero.webp"
+    },
+    {
+      "id": "challenger-miura",
+      "label": "Pliego Miura",
+      "verdict": "declined",
+      "lineage": "pliego plegado que se despliega de un tirón",
+      "thesis": "La biblioteca cabría en un paquete del tamaño de un libro y se abriría de un tirón.",
+      "palette": ["#f7f7f5", "#c6a15b", "#8a8680", "#9bb7d4"],
+      "materials": ["pliego", "pliegue de montaña", "pliegue de valle"],
+      "viewport": "Un paquete cerrado, y al tirar, la semana desplegada en celdas.",
+      "case": "El gesto es claro y el objeto no es de esta persona. El pliegue tapa importar, el catálogo y la lectura.",
+      "risk": "El mecanismo del papel compite con el del hábito.",
+      "kept": "Un solo gesto despliega el trabajo del día.",
+      "hero": "https://impeccable.style/worlds/cards/paper-folds-pleats-deployable-miura-orbit-sheet-hero.webp"
+    },
+    {
+      "id": "challenger-feed",
+      "label": "Feed vertical",
+      "verdict": "declined",
+      "lineage": "un ítem a pantalla completa, un flick al siguiente",
+      "thesis": "Un libro llenaría la pantalla y el siguiente estaría a un gesto.",
+      "palette": ["#111111", "#ffffff"],
+      "materials": ["medio a sangre", "riel de glifos"],
+      "viewport": "El libro a pantalla completa, acciones a la derecha, el siguiente ya cargado.",
+      "case": "Muestra un libro con claridad y esconde el hábito, que es lo que Liora tiene de propio.",
+      "risk": "La app se vuelve el feed del que la persona venía a salir.",
+      "kept": "Un solo sujeto ocupa la cara. Lo demás no compite.",
+      "hero": "https://impeccable.style/worlds/cards/pop-culture-shelf-vertical-video-feed-surface-hero.webp"
+    },
+    {
+      "id": "challenger-lineup",
+      "label": "Cartel de festival",
+      "verdict": "declined",
+      "lineage": "lineup donde el tamaño es la única jerarquía",
+      "thesis": "El libro en curso sería el headliner y el resto, un bloque denso de nombres.",
+      "palette": ["#111111", "#f4f4f4"],
+      "materials": ["una tinta", "un solo tipo"],
+      "viewport": "Un nombre enorme, y debajo la biblioteca justificada en un bloque.",
+      "case": "El tamaño dice importancia de cartel, y aquí el dato es si hoy leíste tus minutos.",
+      "risk": "Un libro corto parece menor, y eso es falso.",
+      "kept": "Un tipo, y la jerarquía la lleva la escala, no un collage de portadas.",
+      "hero": "https://impeccable.style/worlds/cards/posters-covers-sleeves-festival-lineup-poster-hero.webp"
+    }
+  ],
+  "reroll": {
+    "registers": ["safer", "bolder"]
+  },
+  "buildPath": {
+    "value": "code",
+    "toggle": true
+  },
+  "canon": true,
+  "canonCard": {
+    "label": "El estante de siempre",
+    "thesis": "Lo que esta categoría ya entrega: seguir leyendo arriba, y debajo la biblioteca en portadas.",
+    "palette": ["#ffffff", "#111827", "#2563eb"],
+    "materials": ["portadas", "filas", "pestañas"],
+    "viewport": "Una fila de continuar, una cuadrícula de libros, y las cuatro secciones abajo.",
+    "risk": "Indistinguible de Kindle o Apple Books, a propósito.",
+    "comp": ".impeccable/mocks/decision/canon.webp",
+    "wireframe": {
+      "cols": 12,
+      "rows": 14,
+      "regions": [
+        {"label": "Seguir leyendo", "x": 1, "y": 0, "w": 10, "h": 3, "accent": true},
+        {"label": "Estante", "x": 1, "y": 4, "w": 10, "h": 8},
+        {"label": "pestañas", "x": 0, "y": 13, "w": 12, "h": 1}
+      ]
+    }
+  },
+  "steer": true
+}

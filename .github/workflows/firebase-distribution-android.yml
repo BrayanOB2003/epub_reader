@@ -12,9 +12,7 @@ permissions:
 env:
   FIREBASE_PROJECT_ID: epub-reader-6a972
   FIREBASE_ANDROID_APP_ID: "1:969465994480:android:ab8c7310f649e4ea85f635"
-  # Grupo de testers creado en Firebase App Distribution. Se puede override
-  # con el repository variable FIREBASE_TESTER_GROUPS.
-  FIREBASE_TESTER_GROUPS: ${{ vars.FIREBASE_TESTER_GROUPS || 'testers' }}
+  FIREBASE_TESTER_GROUPS: ANDROID
 
 jobs:
   android-distribute:
@@ -65,8 +63,10 @@ jobs:
           test -s .env/.env
           grep -qE '^X_EPUB_KEY[:=]' .env/.env
 
-      - name: Install Dependencies
-        run: flutter pub get
+      # El lock fija un commit del fork. Este upgrade toma el ultimo commit
+      # de la rama prod antes de compilar, sin tocar el resto de dependencias.
+      - name: Instalar dependencias y sincronizar flutter_readium
+        run: flutter pub upgrade flutter_readium
 
       - name: Run Build Runner
         run: dart run build_runner build --delete-conflicting-outputs

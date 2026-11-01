@@ -19,15 +19,21 @@ class ImportResult {
 }
 
 class EpubImporter {
-  EpubImporter(this._repository, {Future<Directory> Function()? documentsDirectory})
-    : _documentsDirectory = documentsDirectory ?? getApplicationDocumentsDirectory;
+  EpubImporter(
+    this._repository, {
+    Future<Directory> Function()? documentsDirectory,
+  }) : _documentsDirectory =
+           documentsDirectory ?? getApplicationDocumentsDirectory;
 
   final BookRepository _repository;
   final Future<Directory> Function() _documentsDirectory;
 
-  Future<ImportOutcome> pickAndImport() async {
+  Future<ImportOutcome> pickAndImport({
+    required String dialogTitle,
+    required String untitled,
+  }) async {
     final file = await FilePicker.pickFile(
-      dialogTitle: 'Importar EPUB',
+      dialogTitle: dialogTitle,
       type: FileType.custom,
       allowedExtensions: const ['epub'],
     );
@@ -35,19 +41,31 @@ class EpubImporter {
 
     final bytes = await file.readAsBytes();
     final fallbackTitle = p.basenameWithoutExtension(file.name);
-    final result = await importBytes(bytes, fallbackTitle: fallbackTitle.isEmpty ? 'Sin título' : fallbackTitle);
+    final result = await importBytes(
+      bytes,
+      fallbackTitle: fallbackTitle.isEmpty ? untitled : fallbackTitle,
+    );
     return result.outcome;
   }
 
-  Future<ImportResult> importBytes(Uint8List bytes, {required String fallbackTitle}) async {
+  Future<ImportResult> importBytes(
+    Uint8List bytes, {
+    required String fallbackTitle,
+  }) async {
     final metadata = readEpubMetadata(bytes, fallbackTitle: fallbackTitle);
     final contentHash = sha256.convert(bytes).toString();
     final existing =
-        await _repository.findDuplicate(contentHash: contentHash, bookUid: metadata.bookUid) ??
+        await _repository.findDuplicate(
+          contentHash: contentHash,
+          bookUid: metadata.bookUid,
+        ) ??
         await _matchLegacyBook(contentHash, metadata.bookUid);
     if (existing != null) {
       await _keepCover(existing, metadata);
-      return ImportResult(outcome: ImportOutcome.alreadyInLibrary, bookId: existing.id);
+      return ImportResult(
+        outcome: ImportOutcome.alreadyInLibrary,
+        bookId: existing.id,
+      );
     }
 
     final bookId = await _store(bytes, metadata, contentHash);
@@ -61,7 +79,11 @@ class EpubImporter {
       if (!file.existsSync()) continue;
       final storedHash = sha256.convert(await file.readAsBytes()).toString();
       if (storedHash != contentHash) continue;
-      await _repository.saveIdentity(id: book.id, contentHash: contentHash, bookUid: bookUid);
+      await _repository.saveIdentity(
+        id: book.id,
+        contentHash: contentHash,
+        bookUid: bookUid,
+      );
       return book;
     }
     return null;
@@ -69,15 +91,29 @@ class EpubImporter {
 
   Future<void> _keepCover(Book existing, EpubMetadata metadata) async {
     final coverBytes = metadata.coverBytes;
-    final alreadyStored = existing.coverBytes != null && existing.coverBytes!.isNotEmpty;
+    final alreadyStored =
+        existing.coverBytes != null && existing.coverBytes!.isNotEmpty;
     if (coverBytes == null || coverBytes.isEmpty || alreadyStored) return;
 
     final documents = await _documentsDirectory();
-    final coverPath = await _writeCover(documents, existing.id, coverBytes, metadata.coverExtension);
-    await _repository.saveCover(id: existing.id, coverBytes: coverBytes, coverPath: coverPath);
+    final coverPath = await _writeCover(
+      documents,
+      existing.id,
+      coverBytes,
+      metadata.coverExtension,
+    );
+    await _repository.saveCover(
+      id: existing.id,
+      coverBytes: coverBytes,
+      coverPath: coverPath,
+    );
   }
 
-  Future<int> _store(Uint8List bytes, EpubMetadata metadata, String contentHash) async {
+  Future<int> _store(
+    Uint8List bytes,
+    EpubMetadata metadata,
+    String contentHash,
+  ) async {
     final documents = await _documentsDirectory();
     final stamp = DateTime.now().microsecondsSinceEpoch;
     final booksDir = Directory(p.join(documents.path, 'books'));
@@ -90,7 +126,12 @@ class EpubImporter {
     String? coverPath;
     final coverBytes = metadata.coverBytes;
     if (coverBytes != null && coverBytes.isNotEmpty) {
-      coverPath = await _writeCover(documents, stamp, coverBytes, metadata.coverExtension);
+      coverPath = await _writeCover(
+        documents,
+        stamp,
+        coverBytes,
+        metadata.coverExtension,
+      );
     }
 
     return _repository.insert(
@@ -104,7 +145,12 @@ class EpubImporter {
     );
   }
 
-  Future<String> _writeCover(Directory documents, Object name, Uint8List bytes, String? extension) async {
+  Future<String> _writeCover(
+    Directory documents,
+    Object name,
+    Uint8List bytes,
+    String? extension,
+  ) async {
     final coversDir = Directory(p.join(documents.path, 'covers'));
     await coversDir.create(recursive: true);
     final relativeCover = p.join('covers', '$name.${extension ?? 'jpg'}');

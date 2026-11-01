@@ -1,11 +1,11 @@
 {
-    "name": "epub_reader",
-    "short_name": "epub_reader",
+    "name": "Liora",
+    "short_name": "Liora",
     "start_url": ".",
     "display": "standalone",
-    "background_color": "#0175C2",
-    "theme_color": "#0175C2",
-    "description": "A new Flutter project.",
+    "background_color": "#014BA7",
+    "theme_color": "#014BA7",
+    "description": "Un lugar para leer un poco cada día y sostener ese hábito.",
     "orientation": "portrait-primary",
     "prefer_related_applications": false,
     "icons": [

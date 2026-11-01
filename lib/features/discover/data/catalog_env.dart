@@ -16,5 +16,5 @@ Future<String> loadCatalogApiKey({AssetBundle? bundle}) async {
     if (value.isEmpty) break;
     return value;
   }
-  throw const CatalogException('Falta X_EPUB_KEY en .env.');
+  throw const CatalogException(CatalogFailure.missingKey);
 }

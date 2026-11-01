@@ -57,6 +57,12 @@ void main() {
       isTrue,
     );
     expect(sessions.every((session) => session.engagedSeconds == 180), isTrue);
+    expect(sessions.every((session) => session.sample), isTrue);
+
+    final removed = await repository.removeSampleReadings();
+    expect(removed, count);
+    expect(await database.select(database.readingSessions).get(), isEmpty);
+    expect(await database.select(database.books).get(), isEmpty);
     expect(
       sessions.map((session) => session.startedAt.toLocal()).toSet(),
       hasLength(count),

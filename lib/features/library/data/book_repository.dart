@@ -7,6 +7,35 @@ import 'package:epub_reader/features/habits/sample_reading.dart';
 import 'package:epub_reader/features/library/data/book_paths.dart';
 import 'package:path_provider/path_provider.dart';
 
+class ReadingQuote {
+  const ReadingQuote({
+    required this.id,
+    required this.bookId,
+    required this.text,
+    required this.locatorJson,
+    required this.savedAt,
+    required this.bookTitle,
+    this.author,
+    this.highlightColor,
+  });
+
+  final int id;
+  final int bookId;
+  final String text;
+  final String locatorJson;
+  final DateTime savedAt;
+  final String bookTitle;
+  final String? author;
+  final String? highlightColor;
+}
+
+class QuoteSave {
+  const QuoteSave({required this.id, required this.created});
+
+  final int id;
+  final bool created;
+}
+
 class BookRepository {
   BookRepository(
     this._database, {
@@ -17,6 +46,28 @@ class BookRepository {
   final AppDatabase _database;
   final Future<Directory> Function() _documentsDirectory;
   Directory? _documents;
+
+  Future<List<ReadingSession>> loadReadingSessions() {
+    return _database.select(_database.readingSessions).get();
+  }
+
+  Future<int> engagedSecondsForBook(int bookId) async {
+    final rows = await (_database.select(
+      _database.readingSessions,
+    )..where((table) => table.bookId.equals(bookId))).get();
+    var total = 0;
+    for (final row in rows) {
+      total += row.engagedSeconds;
+    }
+    return total;
+  }
+
+  Future<int?> readingSessionSeconds(int id) async {
+    final row = await (_database.select(
+      _database.readingSessions,
+    )..where((table) => table.id.equals(id))).getSingleOrNull();
+    return row?.engagedSeconds;
+  }
 
   Stream<List<ReadingSession>> watchReadingSessions() {
     final query = _database.select(_database.readingSessions)
@@ -162,7 +213,11 @@ class BookRepository {
     );
   }
 
-  Future<int> addSampleReadings({DateTime? now, Random? random}) async {
+  Future<int> addSampleReadings({
+    DateTime? now,
+    Random? random,
+    String sampleTitle = 'Lectura de ejemplo',
+  }) async {
     final source = random ?? Random();
     final moment = now ?? DateTime.now();
     final books = await _database.select(_database.books).get();
@@ -173,8 +228,8 @@ class BookRepository {
             .into(_database.books)
             .insert(
               BooksCompanion.insert(
-                title: 'Lectura de ejemplo',
-                filePath: 'sample/lectura-de-ejemplo.epub',
+                title: sampleTitle,
+                filePath: sampleBookFilePath,
                 addedAt: moment.toUtc(),
               ),
             ),
@@ -189,10 +244,48 @@ class BookRepository {
           startedAt: reading.startedAt,
           endedAt: reading.endedAt,
           engagedSeconds: reading.engagedSeconds,
+          sample: true,
         );
       }
     });
     return readings.length;
+  }
+
+  Stream<int> watchSampleSessionCount() {
+    final query = _database.select(_database.readingSessions)
+      ..where((table) => table.sample.equals(true));
+    return query.watch().map((rows) => rows.length);
+  }
+
+  /// Removes sessions written as sample data. The placeholder book goes with
+  /// them when nothing else still points at it.
+  Future<int> removeSampleReadings() async {
+    final rows = await (_database.select(_database.readingSessions)
+          ..where((table) => table.sample.equals(true)))
+        .get();
+    if (rows.isEmpty) return 0;
+    await _database.transaction(() async {
+      await (_database.delete(_database.readingSessions)
+            ..where((table) => table.sample.equals(true)))
+          .go();
+      final placeholders = await (_database.select(_database.books)
+            ..where((table) => table.filePath.equals(sampleBookFilePath)))
+          .get();
+      for (final book in placeholders) {
+        final sessions = await (_database.select(_database.readingSessions)
+              ..where((table) => table.bookId.equals(book.id)))
+            .get();
+        final quotes = await (_database.select(_database.savedQuotes)
+              ..where((table) => table.bookId.equals(book.id)))
+            .get();
+        if (sessions.isEmpty && quotes.isEmpty) {
+          await (_database.delete(
+            _database.books,
+          )..where((table) => table.id.equals(book.id))).go();
+        }
+      }
+    });
+    return rows.length;
   }
 
   Future<int> insertReadingSession({
@@ -200,6 +293,7 @@ class BookRepository {
     required DateTime startedAt,
     required DateTime endedAt,
     required int engagedSeconds,
+    bool sample = false,
   }) {
     return _database
         .into(_database.readingSessions)
@@ -209,6 +303,7 @@ class BookRepository {
             startedAt: startedAt,
             endedAt: endedAt,
             engagedSeconds: engagedSeconds,
+            sample: Value(sample),
           ),
         );
   }
@@ -228,7 +323,104 @@ class BookRepository {
     );
   }
 
+  Future<QuoteSave> saveQuote({
+    required int bookId,
+    required String text,
+    required String locatorJson,
+    DateTime? savedAt,
+    String? highlightColor,
+  }) async {
+    final existing =
+        await (_database.select(_database.savedQuotes)
+              ..where(
+                (table) =>
+                    table.bookId.equals(bookId) & table.passage.equals(text),
+              )
+              ..orderBy([
+                (table) => OrderingTerm(
+                  expression: table.savedAt,
+                  mode: OrderingMode.desc,
+                ),
+              ])
+              ..limit(1))
+            .getSingleOrNull();
+    if (existing != null) return QuoteSave(id: existing.id, created: false);
+    final id = await _database
+        .into(_database.savedQuotes)
+        .insert(
+          SavedQuotesCompanion.insert(
+            bookId: bookId,
+            passage: text,
+            locatorJson: locatorJson,
+            savedAt: savedAt ?? DateTime.now(),
+            highlightColor: Value(highlightColor),
+          ),
+        );
+    return QuoteSave(id: id, created: true);
+  }
+
+  Future<void> setQuoteHighlightColor({
+    required int id,
+    required String colorId,
+  }) {
+    return (_database.update(_database.savedQuotes)
+          ..where((table) => table.id.equals(id)))
+        .write(SavedQuotesCompanion(highlightColor: Value(colorId)));
+  }
+
+  Future<void> deleteQuote(int id) {
+    return (_database.delete(
+      _database.savedQuotes,
+    )..where((table) => table.id.equals(id))).go();
+  }
+
+  Future<List<SavedQuote>> quotesForBook(int bookId) {
+    final query = _database.select(_database.savedQuotes)
+      ..where((table) => table.bookId.equals(bookId))
+      ..orderBy([(table) => OrderingTerm(expression: table.savedAt)]);
+    return query.get();
+  }
+
+  Future<SavedQuote?> quoteById(int id) {
+    final query = _database.select(_database.savedQuotes)
+      ..where((table) => table.id.equals(id));
+    return query.getSingleOrNull();
+  }
+
+  Stream<List<ReadingQuote>> watchQuotes() {
+    final query =
+        _database.select(_database.savedQuotes).join([
+          innerJoin(
+            _database.books,
+            _database.books.id.equalsExp(_database.savedQuotes.bookId),
+          ),
+        ])..orderBy([
+          OrderingTerm(
+            expression: _database.savedQuotes.savedAt,
+            mode: OrderingMode.desc,
+          ),
+        ]);
+    return query.watch().map((rows) {
+      return [
+        for (final row in rows)
+          ReadingQuote(
+            id: row.readTable(_database.savedQuotes).id,
+            bookId: row.readTable(_database.savedQuotes).bookId,
+            text: row.readTable(_database.savedQuotes).passage,
+            locatorJson: row.readTable(_database.savedQuotes).locatorJson,
+            savedAt: row.readTable(_database.savedQuotes).savedAt,
+            bookTitle: row.readTable(_database.books).title,
+            author: row.readTable(_database.books).author,
+            highlightColor: row.readTable(_database.savedQuotes).highlightColor,
+          ),
+      ];
+    });
+  }
+
   Future<void> delete(Book book) async {
+    await (_database.delete(
+      _database.savedQuotes,
+    )..where((table) => table.bookId.equals(book.id))).go();
     await (_database.delete(
       _database.readingSessions,
     )..where((table) => table.bookId.equals(book.id))).go();

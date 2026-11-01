@@ -1,0 +1,770 @@
+import 'dart:typed_data';
+
+import 'package:epub_reader/app/schedule_theme.dart';
+import 'package:epub_reader/l10n/app_localizations.dart';
+import 'package:flutter/cupertino.dart';
+import 'package:flutter/material.dart';
+
+const scheduleWeekdays = [
+  'lunes',
+  'martes',
+  'miércoles',
+  'jueves',
+  'viernes',
+  'sábado',
+  'domingo',
+];
+
+const _englishWeekdays = [
+  'Monday',
+  'Tuesday',
+  'Wednesday',
+  'Thursday',
+  'Friday',
+  'Saturday',
+  'Sunday',
+];
+
+const scheduleMonths = [
+  'enero',
+  'febrero',
+  'marzo',
+  'abril',
+  'mayo',
+  'junio',
+  'julio',
+  'agosto',
+  'septiembre',
+  'octubre',
+  'noviembre',
+  'diciembre',
+];
+
+const _englishMonths = [
+  'January',
+  'February',
+  'March',
+  'April',
+  'May',
+  'June',
+  'July',
+  'August',
+  'September',
+  'October',
+  'November',
+  'December',
+];
+
+String scheduleDate(DateTime day, String languageCode) {
+  final local = day.toLocal();
+  if (languageCode == 'en') {
+    final weekday = _englishWeekdays[local.weekday - 1];
+    final month = _englishMonths[local.month - 1];
+    return '$weekday, $month ${local.day}';
+  }
+  final weekday = scheduleWeekdays[local.weekday - 1];
+  final month = scheduleMonths[local.month - 1];
+  return '$weekday ${local.day} de $month';
+}
+
+/// Month name for a sentence. Spanish stays lowercase; English is capitalized.
+String scheduleMonthName(int month, String languageCode) {
+  final index = (month < 1 || month > 12 ? 1 : month) - 1;
+  if (languageCode == 'en') return _englishMonths[index];
+  return scheduleMonths[index];
+}
+
+/// Month name used as a title: the first letter is uppercase.
+String scheduleMonthTitle(int month, String languageCode) {
+  final name = scheduleMonthName(month, languageCode);
+  if (name.isEmpty) return name;
+  return name[0].toUpperCase() + name.substring(1);
+}
+
+const _shortMonths = [
+  'ene',
+  'feb',
+  'mar',
+  'abr',
+  'may',
+  'jun',
+  'jul',
+  'ago',
+  'sep',
+  'oct',
+  'nov',
+  'dic',
+];
+
+const _englishShortMonths = [
+  'Jan',
+  'Feb',
+  'Mar',
+  'Apr',
+  'May',
+  'Jun',
+  'Jul',
+  'Aug',
+  'Sep',
+  'Oct',
+  'Nov',
+  'Dec',
+];
+
+/// Day and month, short enough for the 64px column of a listing.
+String scheduleDay(DateTime day, String languageCode) {
+  final local = day.toLocal();
+  if (languageCode == 'en') {
+    return '${_englishShortMonths[local.month - 1]} ${local.day}';
+  }
+  return '${local.day} ${_shortMonths[local.month - 1]}';
+}
+
+class ScheduleHeader extends StatelessWidget {
+  const ScheduleHeader({
+    required this.title,
+    this.date,
+    this.leading,
+    super.key,
+  });
+
+  final String title;
+  final DateTime? date;
+
+  /// Mark beside the title. The library home uses the station logo.
+  final Widget? leading;
+
+  @override
+  Widget build(BuildContext context) {
+    final colors = ScheduleColors.of(context);
+    final ios = Theme.of(context).platform == TargetPlatform.iOS;
+    final heading = Semantics(
+      header: true,
+      child: Text(
+        title,
+        style: Theme.of(context).textTheme.headlineMedium?.copyWith(
+          fontSize: ios ? 34 : 28,
+          fontWeight: FontWeight.w700,
+          height: 1.05,
+          color: colors.ink,
+        ),
+      ),
+    );
+    final dateLine = date == null
+        ? null
+        : Text(
+            scheduleDate(date!, Localizations.localeOf(context).languageCode),
+            style: Theme.of(
+              context,
+            ).textTheme.bodyLarge?.copyWith(color: colors.muted),
+          );
+    final lines = Column(
+      crossAxisAlignment: CrossAxisAlignment.start,
+      children: [
+        heading,
+        if (dateLine != null) ...[const SizedBox(height: 8), dateLine],
+      ],
+    );
+    return Padding(
+      padding: const EdgeInsets.fromLTRB(20, 20, 20, 12),
+      child: leading == null
+          ? lines
+          : Row(
+              crossAxisAlignment: CrossAxisAlignment.start,
+              children: [
+                leading!,
+                const SizedBox(width: 12),
+                Expanded(child: lines),
+              ],
+            ),
+    );
+  }
+}
+
+/// The book as an object. The frame keeps its size when the file has no cover.
+class ScheduleCover extends StatelessWidget {
+  const ScheduleCover({
+    required this.bytes,
+    required this.width,
+    required this.height,
+    this.borderColor,
+    this.title = '',
+    this.onAir = false,
+    super.key,
+  });
+
+  final Uint8List bytes;
+  final double width;
+  final double height;
+  final Color? borderColor;
+  final String title;
+  final bool onAir;
+
+  @override
+  Widget build(BuildContext context) {
+    if (bytes.isEmpty) {
+      return ScheduleCoverPlaceholder(
+        width: width,
+        height: height,
+        title: title,
+        borderColor: borderColor,
+        onAir: onAir,
+      );
+    }
+    final ratio = MediaQuery.devicePixelRatioOf(context);
+    return _CoverFrame(
+      width: width,
+      height: height,
+      borderColor: borderColor ?? ScheduleColors.of(context).rule,
+      child: Image.memory(
+        bytes,
+        width: width,
+        height: height,
+        fit: BoxFit.cover,
+        gaplessPlayback: true,
+        filterQuality: FilterQuality.medium,
+        cacheWidth: (width * ratio).round(),
+        cacheHeight: (height * ratio).round(),
+        excludeFromSemantics: true,
+      ),
+    );
+  }
+}
+
+class ScheduleCoverPlaceholder extends StatelessWidget {
+  const ScheduleCoverPlaceholder({
+    required this.width,
+    required this.height,
+    required this.title,
+    this.borderColor,
+    this.onAir = false,
+    super.key,
+  });
+
+  final double width;
+  final double height;
+  final String title;
+  final Color? borderColor;
+  final bool onAir;
+
+  @override
+  Widget build(BuildContext context) {
+    final colors = ScheduleColors.of(context);
+    final border = borderColor ?? colors.rule;
+    final fill = onAir
+        ? colors.onStation.withValues(alpha: 0.16)
+        : colors.paper;
+    final ink = onAir ? colors.onStation : colors.ink;
+    final initial = coverInitial(title);
+    return _CoverFrame(
+      width: width,
+      height: height,
+      borderColor: border,
+      child: ColoredBox(
+        color: fill,
+        child: initial.isEmpty
+            ? null
+            : ExcludeSemantics(
+                child: Center(
+                  child: Text(
+                    initial,
+                    maxLines: 1,
+                    style: programTitle(context, ink, size: height * 0.46),
+                  ),
+                ),
+              ),
+      ),
+    );
+  }
+}
+
+class _CoverFrame extends StatelessWidget {
+  const _CoverFrame({
+    required this.width,
+    required this.height,
+    required this.borderColor,
+    required this.child,
+  });
+
+  final double width;
+  final double height;
+  final Color borderColor;
+  final Widget child;
+
+  @override
+  Widget build(BuildContext context) {
+    final radius = scheduleRadius(context);
+    return SizedBox(
+      width: width,
+      height: height,
+      child: DecoratedBox(
+        decoration: BoxDecoration(
+          border: Border.all(color: borderColor),
+          borderRadius: radius,
+        ),
+        child: ClipRRect(borderRadius: radius, child: child),
+      ),
+    );
+  }
+}
+
+class _NetworkCover extends StatefulWidget {
+  const _NetworkCover({
+    required this.url,
+    required this.width,
+    required this.height,
+    required this.title,
+  });
+
+  final String url;
+  final double width;
+  final double height;
+  final String title;
+
+  @override
+  State<_NetworkCover> createState() => _NetworkCoverState();
+}
+
+class _NetworkCoverState extends State<_NetworkCover> {
+  var _failed = false;
+
+  @override
+  void didUpdateWidget(_NetworkCover oldWidget) {
+    super.didUpdateWidget(oldWidget);
+    if (oldWidget.url != widget.url) _failed = false;
+  }
+
+  @override
+  Widget build(BuildContext context) {
+    if (_failed || widget.url.isEmpty) {
+      return ScheduleCoverPlaceholder(
+        width: widget.width,
+        height: widget.height,
+        title: widget.title,
+      );
+    }
+    final ratio = MediaQuery.devicePixelRatioOf(context);
+    return _CoverFrame(
+      width: widget.width,
+      height: widget.height,
+      borderColor: ScheduleColors.of(context).rule,
+      child: Image.network(
+        widget.url,
+        width: widget.width,
+        height: widget.height,
+        fit: BoxFit.cover,
+        gaplessPlayback: true,
+        filterQuality: FilterQuality.medium,
+        cacheWidth: (widget.width * ratio).round(),
+        cacheHeight: (widget.height * ratio).round(),
+        excludeFromSemantics: true,
+        errorBuilder: (context, error, stackTrace) {
+          WidgetsBinding.instance.addPostFrameCallback((_) {
+            if (mounted && !_failed) setState(() => _failed = true);
+          });
+          return const SizedBox.shrink();
+        },
+      ),
+    );
+  }
+}
+
+/// A 4px reading mark. The track is the hairline; the fill is the portion read.
+class ScheduleProgress extends StatelessWidget {
+  const ScheduleProgress({required this.value, this.onAir = false, super.key});
+
+  final double value;
+  final bool onAir;
+
+  @override
+  Widget build(BuildContext context) {
+    final colors = ScheduleColors.of(context);
+    final track = onAir ? colors.onStationMuted : colors.rule;
+    final fill = onAir ? colors.onStation : colors.station;
+    final fraction = value.clamp(0.0, 1.0);
+    return SizedBox(
+      height: 4,
+      width: double.infinity,
+      child: Stack(
+        fit: StackFit.expand,
+        children: [
+          ColoredBox(color: track),
+          if (fraction > 0)
+            Align(
+              alignment: Alignment.centerLeft,
+              child: FractionallySizedBox(
+                widthFactor: fraction,
+                heightFactor: 1,
+                child: ColoredBox(color: fill),
+              ),
+            ),
+        ],
+      ),
+    );
+  }
+}
+
+/// Inline title for a screen pushed from a root. The large title stays on the root.
+class ScheduleDetailTitle extends StatelessWidget {
+  const ScheduleDetailTitle({
+    required this.title,
+    required this.onBack,
+    super.key,
+  });
+
+  final String title;
+  final VoidCallback? onBack;
+
+  @override
+  Widget build(BuildContext context) {
+    final colors = ScheduleColors.of(context);
+    final ios = Theme.of(context).platform == TargetPlatform.iOS;
+    return SizedBox(
+      height: 56,
+      child: Row(
+        children: [
+          IconButton(
+            tooltip: AppLocalizations.of(context).back,
+            onPressed: onBack,
+            icon: Icon(ios ? CupertinoIcons.back : Icons.arrow_back),
+          ),
+          Expanded(
+            child: Semantics(
+              header: true,
+              child: Text(
+                title,
+                maxLines: 1,
+                overflow: TextOverflow.ellipsis,
+                style: Theme.of(context).textTheme.titleLarge?.copyWith(
+                  fontSize: ios ? 17 : 22,
+                  fontWeight: ios ? FontWeight.w600 : FontWeight.w500,
+                  letterSpacing: ios ? -0.41 : 0,
+                  color: colors.ink,
+                ),
+              ),
+            ),
+          ),
+        ],
+      ),
+    );
+  }
+}
+
+class ScheduleDisclosure extends StatelessWidget {
+  const ScheduleDisclosure({super.key});
+
+  @override
+  Widget build(BuildContext context) {
+    final ios = Theme.of(context).platform == TargetPlatform.iOS;
+    return Icon(
+      ios ? CupertinoIcons.chevron_forward : Icons.chevron_right,
+      color: ScheduleColors.of(context).muted,
+      size: ios ? 18 : 24,
+    );
+  }
+}
+
+/// A problem named in ink, with an icon, so it is not the station band.
+class ScheduleIssue extends StatelessWidget {
+  const ScheduleIssue({required this.message, super.key});
+
+  final String message;
+
+  @override
+  Widget build(BuildContext context) {
+    final colors = ScheduleColors.of(context);
+    final ios = Theme.of(context).platform == TargetPlatform.iOS;
+    return Semantics(
+      container: true,
+      liveRegion: true,
+      child: Row(
+        crossAxisAlignment: CrossAxisAlignment.start,
+        children: [
+          Icon(
+            ios ? CupertinoIcons.exclamationmark_circle : Icons.error_outline,
+            size: 20,
+            color: colors.ink,
+          ),
+          const SizedBox(width: 8),
+          Expanded(
+            child: Text(
+              message,
+              style: Theme.of(
+                context,
+              ).textTheme.bodyMedium?.copyWith(color: colors.ink, height: 1.4),
+            ),
+          ),
+        ],
+      ),
+    );
+  }
+}
+
+class ScheduleRule extends StatelessWidget {
+  const ScheduleRule({super.key});
+
+  @override
+  Widget build(BuildContext context) {
+    return ColoredBox(
+      color: ScheduleColors.of(context).rule,
+      child: const SizedBox(height: 1, width: double.infinity),
+    );
+  }
+}
+
+/// A row in the log. [onAir] paints the station band. No card.
+class ScheduleListing extends StatelessWidget {
+  const ScheduleListing({
+    required this.title,
+    this.subtitle,
+    this.caption,
+    this.progress,
+    this.trailing,
+    this.leading,
+    this.cover,
+    this.coverUrl,
+    this.artwork,
+    this.coverWidth = 36,
+    this.coverHeight = 52,
+    this.onTap,
+    this.onDelete,
+    this.onAir = false,
+    this.rule = true,
+    this.titleSize = 22,
+    this.programTrailing = false,
+    super.key,
+  });
+
+  final String title;
+  final String? subtitle;
+  final String? caption;
+
+  /// Portion of the book already read, from 0 to 1. Null hides the mark.
+  final double? progress;
+  final String? trailing;
+  final String? leading;
+  final Uint8List? cover;
+  final String? coverUrl;
+  final Widget? artwork;
+  final double coverWidth;
+  final double coverHeight;
+  final VoidCallback? onTap;
+  final VoidCallback? onDelete;
+  final bool onAir;
+  final bool rule;
+  final double titleSize;
+
+  /// The trailing figure is a program title. Used on the time log row.
+  final bool programTrailing;
+
+  @override
+  Widget build(BuildContext context) {
+    final colors = ScheduleColors.of(context);
+    final ink = onAir ? colors.onStation : colors.ink;
+    final muted = onAir ? colors.onStationMuted : colors.muted;
+    final coverBytes = cover;
+    final hasBytes = coverBytes != null && coverBytes.isNotEmpty;
+    final url = coverUrl;
+    final child = ConstrainedBox(
+      constraints: const BoxConstraints(minHeight: 48),
+      child: Padding(
+        padding: const EdgeInsets.symmetric(horizontal: 20, vertical: 8),
+        child: Row(
+          crossAxisAlignment: CrossAxisAlignment.center,
+          children: [
+            if (leading != null)
+              SizedBox(
+                width: 64,
+                child: Text(
+                  leading!,
+                  style: Theme.of(context).textTheme.labelLarge?.copyWith(
+                    color: muted,
+                    fontFeatures: const [FontFeature.tabularFigures()],
+                  ),
+                ),
+              ),
+            if (artwork != null)
+              artwork!
+            else if (hasBytes)
+              ScheduleCover(
+                bytes: coverBytes,
+                width: coverWidth,
+                height: coverHeight,
+              )
+            else if (url != null && url.isNotEmpty)
+              _NetworkCover(
+                url: url,
+                width: coverWidth,
+                height: coverHeight,
+                title: title,
+              )
+            else
+              ScheduleCoverPlaceholder(
+                width: coverWidth,
+                height: coverHeight,
+                title: title,
+              ),
+            const SizedBox(width: 12),
+            Expanded(
+              child: Column(
+                crossAxisAlignment: CrossAxisAlignment.start,
+                children: [
+                  Text(
+                    title,
+                    style: programTitle(context, ink, size: titleSize),
+                    maxLines: 2,
+                    overflow: TextOverflow.ellipsis,
+                  ),
+                  if (subtitle != null) ...[
+                    const SizedBox(height: 4),
+                    Text(
+                      subtitle!,
+                      style: Theme.of(
+                        context,
+                      ).textTheme.bodyMedium?.copyWith(color: muted),
+                      maxLines: 2,
+                      overflow: TextOverflow.ellipsis,
+                    ),
+                  ],
+                  if (caption != null) ...[
+                    const SizedBox(height: 4),
+                    Text(
+                      caption!,
+                      style: Theme.of(
+                        context,
+                      ).textTheme.labelLarge?.copyWith(color: muted),
+                      maxLines: 1,
+                      overflow: TextOverflow.ellipsis,
+                    ),
+                  ],
+                  if (progress != null) ...[
+                    const SizedBox(height: 8),
+                    ScheduleProgress(value: progress!, onAir: onAir),
+                  ],
+                ],
+              ),
+            ),
+            if (trailing != null || onDelete != null) ...[
+              const SizedBox(width: 12),
+              Column(
+                crossAxisAlignment: CrossAxisAlignment.end,
+                children: [
+                  if (trailing != null)
+                    Text(
+                      trailing!,
+                      textAlign: TextAlign.end,
+                      style: programTrailing
+                          ? programTitle(context, ink, size: 22).copyWith(
+                              fontFeatures: const [
+                                FontFeature.tabularFigures(),
+                              ],
+                            )
+                          : Theme.of(
+                              context,
+                            ).textTheme.labelLarge?.copyWith(color: ink),
+                    ),
+                  if (onDelete != null)
+                    TextButton(
+                      onPressed: onDelete,
+                      style: TextButton.styleFrom(
+                        foregroundColor: muted,
+                        minimumSize: const Size(44, 44),
+                        tapTargetSize: MaterialTapTargetSize.shrinkWrap,
+                        padding: const EdgeInsets.symmetric(horizontal: 4),
+                      ),
+                      child: Text(AppLocalizations.of(context).delete),
+                    ),
+                ],
+              ),
+            ],
+          ],
+        ),
+      ),
+    );
+
+    return ColoredBox(
+      color: onAir ? colors.station : colors.paper,
+      child: Column(
+        children: [
+          if (onTap == null)
+            child
+          else
+            Semantics(
+              button: true,
+              child: InkWell(onTap: onTap, child: child),
+            ),
+          if (rule) const ScheduleRule(),
+        ],
+      ),
+    );
+  }
+}
+
+class ScheduleAction extends StatelessWidget {
+  const ScheduleAction({
+    required this.label,
+    required this.onPressed,
+    this.onAir = false,
+    super.key,
+  });
+
+  final String label;
+  final VoidCallback? onPressed;
+  final bool onAir;
+
+  @override
+  Widget build(BuildContext context) {
+    final colors = ScheduleColors.of(context);
+    final ios = Theme.of(context).platform == TargetPlatform.iOS;
+    final background = onAir ? colors.onStation : colors.station;
+    final foreground = onAir ? colors.station : colors.onStation;
+    final radius = scheduleRadius(context);
+    if (ios) {
+      return SizedBox(
+        width: double.infinity,
+        height: 48,
+        child: CupertinoButton(
+          padding: EdgeInsets.zero,
+          color: onPressed == null ? colors.rule : background,
+          borderRadius: radius,
+          onPressed: onPressed,
+          child: Text(
+            label,
+            style: TextStyle(
+              color: onPressed == null ? colors.muted : foreground,
+              fontWeight: FontWeight.w600,
+            ),
+          ),
+        ),
+      );
+    }
+    return SizedBox(
+      width: double.infinity,
+      child: FilledButton(
+        onPressed: onPressed,
+        style: FilledButton.styleFrom(
+          backgroundColor: background,
+          foregroundColor: foreground,
+          disabledBackgroundColor: colors.rule,
+          disabledForegroundColor: colors.muted,
+          minimumSize: const Size.fromHeight(48),
+          shape: RoundedRectangleBorder(borderRadius: radius),
+        ),
+        child: Text(label),
+      ),
+    );
+  }
+}
+
+final _letter = RegExp(r'^\p{L}$', unicode: true);
+final _number = RegExp(r'^\p{N}$', unicode: true);
+
+String coverInitial(String title) {
+  for (final rune in title.trim().runes) {
+    final char = String.fromCharCode(rune);
+    if (_letter.hasMatch(char) || _number.hasMatch(char)) {
+      return char.toUpperCase();
+    }
+  }
+  return '';
+}

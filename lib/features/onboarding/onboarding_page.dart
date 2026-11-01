@@ -1,8 +1,18 @@
+import 'dart:async';
+
+import 'package:epub_reader/app/app_logo.dart';
+import 'package:epub_reader/app/schedule_theme.dart';
+import 'package:epub_reader/features/analytics/app_analytics.dart';
+import 'package:epub_reader/features/analytics/analytics_events.dart';
+import 'package:epub_reader/features/notifications/local_notifications.dart';
+import 'package:epub_reader/features/notifications/notification_destination.dart';
 import 'package:epub_reader/features/onboarding/onboarding_answers.dart';
 import 'package:epub_reader/features/profile/reader_profile_store.dart';
+import 'package:epub_reader/features/profile/reading_day_row.dart';
 import 'package:epub_reader/features/profile/reading_goal.dart';
 import 'package:epub_reader/features/profile/reading_routine.dart';
 import 'package:epub_reader/features/onboarding/onboarding_controller.dart';
+import 'package:epub_reader/l10n/app_localizations.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:go_router/go_router.dart';
@@ -22,7 +32,7 @@ class OnboardingRoute extends ConsumerWidget {
       error: (error, _) => Scaffold(
         body: Center(
           child: Text(
-            'No se pudo cargar el perfil.\n$error',
+            AppLocalizations.of(context).profileLoadFailed,
             textAlign: TextAlign.center,
           ),
         ),
@@ -69,6 +79,9 @@ class _OnboardingPageState extends ConsumerState<OnboardingPage> {
     super.initState();
     _step = widget.editing ? 1 : 0;
     _answers = widget.initial ?? const OnboardingAnswers();
+    if (!widget.editing) {
+      unawaited(ref.read(appAnalyticsProvider).logTutorialBegin());
+    }
   }
 
   bool get _canContinue {
@@ -91,7 +104,16 @@ class _OnboardingPageState extends ConsumerState<OnboardingPage> {
     setState(() => _step -= 1);
   }
 
+  Future<bool> _notificationsGranted() async {
+    try {
+      return await ref.read(localNotificationsProvider).hasPermission();
+    } catch (_) {
+      return false;
+    }
+  }
+
   Future<void> _forward() async {
+    final l10n = AppLocalizations.of(context);
     if (!_canContinue || _saving) return;
     if (_step < 3) {
       setState(() => _step += 1);
@@ -101,19 +123,52 @@ class _OnboardingPageState extends ConsumerState<OnboardingPage> {
     try {
       await ref.read(onboardingControllerProvider.notifier).complete(_answers);
       if (!mounted) return;
-      context.go(widget.editing ? '/profile' : '/library');
+      if (widget.editing) {
+        final pending = ref.read(pendingNotificationLocationProvider);
+        ref.read(pendingNotificationLocationProvider.notifier).clear();
+        if (pending != null) {
+          context.go(
+            routeOpenedFromNotification(
+              notificationLanding(editing: true, pendingLocation: pending),
+            ),
+          );
+          return;
+        }
+        final messenger = ScaffoldMessenger.of(context);
+        messenger.showSnackBar(SnackBar(content: Text(l10n.habitSaved)));
+        if (context.canPop()) {
+          context.pop();
+        } else {
+          context.go('/profile');
+        }
+        return;
+      }
+      final granted = await _notificationsGranted();
+      if (!mounted) return;
+      if (!granted) {
+        context.go('/notifications');
+        return;
+      }
+      final pending = ref.read(pendingNotificationLocationProvider);
+      ref.read(pendingNotificationLocationProvider.notifier).clear();
+      context.go(
+        routeOpenedFromNotification(
+          notificationLanding(editing: false, pendingLocation: pending),
+        ),
+      );
     } catch (_) {
       if (!mounted) return;
       setState(() => _saving = false);
-      ScaffoldMessenger.of(context).showSnackBar(
-        const SnackBar(content: Text('No se pudieron guardar tus respuestas.')),
-      );
+      ScaffoldMessenger.of(
+        context,
+      ).showSnackBar(SnackBar(content: Text(l10n.answersSaveFailed)));
     }
   }
 
   @override
   Widget build(BuildContext context) {
     final theme = Theme.of(context);
+    final l10n = AppLocalizations.of(context);
     return PopScope(
       canPop: _atStart,
       onPopInvokedWithResult: (didPop, _) {
@@ -131,32 +186,34 @@ class _OnboardingPageState extends ConsumerState<OnboardingPage> {
                   child: _step == 0
                       ? null
                       : IconButton(
-                          tooltip: 'Atrás',
+                          tooltip: l10n.back,
                           onPressed: _saving ? null : _back,
                           icon: const Icon(Icons.arrow_back),
                         ),
                 ),
+                Expanded(child: _stepBody(theme)),
+                const SizedBox(height: 16),
                 if (_step > 0) ...[
                   Text(
-                    '$_step de 3',
+                    l10n.stepOf(_step, 3),
                     style: theme.textTheme.labelLarge?.copyWith(
                       color: theme.colorScheme.onSurfaceVariant,
                     ),
                   ),
-                  const SizedBox(height: 12),
+                  const SizedBox(height: 8),
                 ],
-                Expanded(child: _stepBody(theme)),
-                const SizedBox(height: 16),
                 SizedBox(
                   width: double.infinity,
                   child: FilledButton(
                     onPressed: _canContinue && !_saving ? _forward : null,
                     child: Text(
                       _step == 0
-                          ? 'Empezar'
+                          ? l10n.start
                           : (_step == 3
-                                ? 'Quiero empezar a leer'
-                                : 'Siguiente'),
+                                ? (widget.editing
+                                      ? l10n.save
+                                      : l10n.startReading)
+                                : l10n.next),
                     ),
                   ),
                 ),
@@ -169,15 +226,16 @@ class _OnboardingPageState extends ConsumerState<OnboardingPage> {
   }
 
   Widget _stepBody(ThemeData theme) {
+    final l10n = AppLocalizations.of(context);
     return switch (_step) {
       0 => _Welcome(theme: theme),
       1 => _Question(
         theme: theme,
-        title: '¿Qué quieres conseguir con la lectura?',
+        title: l10n.motivationQuestion,
         children: [
           for (final motivation in ReadingMotivation.values)
             _ChoiceTile(
-              label: motivation.label,
+              label: motivation.label(l10n),
               selected: _answers.motivations.contains(motivation),
               onTap: () {
                 final next = {..._answers.motivations};
@@ -189,11 +247,11 @@ class _OnboardingPageState extends ConsumerState<OnboardingPage> {
       ),
       2 => _Question(
         theme: theme,
-        title: '¿Cuánto quieres leer?',
+        title: l10n.goalQuestion,
         children: [
           for (final minutes in readingGoalMinutes)
             _ChoiceTile(
-              label: '$minutes minutos',
+              label: l10n.minutes(minutes),
               selected: _answers.dailyGoalMinutes == minutes,
               onTap: () => setState(
                 () => _answers = _answers.copyWith(dailyGoalMinutes: minutes),
@@ -203,57 +261,36 @@ class _OnboardingPageState extends ConsumerState<OnboardingPage> {
       ),
       _ => _Question(
         theme: theme,
-        title: '¿Cuándo te gustaría leer?',
+        title: l10n.whenQuestion,
         children: [
           for (final routine in ReadingRoutine.values)
             _ChoiceTile(
-              label: routine.label,
+              label: routine.label(l10n),
               selected: _answers.routine == routine,
               onTap: () =>
                   setState(() => _answers = _answers.withRoutine(routine)),
             ),
           if (_answers.routine != null) ...[
             const SizedBox(height: 16),
-            Text('¿Qué días?', style: theme.textTheme.titleMedium),
+            Text(l10n.whichDays, style: theme.textTheme.titleMedium),
             const SizedBox(height: 12),
-            Row(
-              children: [
-                for (final day in ReadingWeekday.values)
-                  Expanded(
-                    child: Padding(
-                      padding: const EdgeInsets.symmetric(horizontal: 3),
-                      child: _DayLetter(
-                        letter: day.letter,
-                        label: day.label,
-                        selected: _answers.weekdays.contains(day),
-                        onTap: () {
-                          final next = {..._answers.weekdays};
-                          if (!next.add(day)) next.remove(day);
-                          setState(
-                            () => _answers = _answers.copyWith(weekdays: next),
-                          );
-                        },
-                      ),
-                    ),
-                  ),
-              ],
+            ReadingDayRow(
+              selected: _answers.weekdays,
+              onToggle: (day) {
+                final next = {..._answers.weekdays};
+                if (!next.add(day)) next.remove(day);
+                setState(() => _answers = _answers.copyWith(weekdays: next));
+              },
             ),
             const SizedBox(height: 16),
-            Text('¿A qué hora?', style: theme.textTheme.titleMedium),
+            Text(l10n.whatTime, style: theme.textTheme.titleMedium),
             const SizedBox(height: 12),
-            Wrap(
-              spacing: 8,
-              runSpacing: 8,
-              children: [
-                for (final hour in _answers.routine!.hours)
-                  _HourChip(
-                    label: readingHourLabel(hour),
-                    selected: _answers.routineHour == hour,
-                    onTap: () => setState(
-                      () => _answers = _answers.copyWith(routineHour: hour),
-                    ),
-                  ),
-              ],
+            ReadingHourWrap(
+              hours: _answers.routine!.hours,
+              selected: _answers.routineHour,
+              onSelected: (hour) => setState(
+                () => _answers = _answers.copyWith(routineHour: hour),
+              ),
             ),
           ],
         ],
@@ -269,24 +306,40 @@ class _Welcome extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) {
-    return Column(
-      crossAxisAlignment: CrossAxisAlignment.start,
-      children: [
-        const Spacer(),
-        Text('Crea el hábito de leer', style: theme.textTheme.headlineMedium),
-        const SizedBox(height: 16),
-        Text(
-          'Un lugar para leer un poco cada día y sostener ese hábito.',
-          style: theme.textTheme.bodyLarge,
-        ),
-        const SizedBox(height: 24),
-        Text(
-          'Sin cuenta. Tus libros y tu progreso se guardan en este dispositivo.',
-          style: theme.textTheme.bodyMedium?.copyWith(
-            color: theme.colorScheme.onSurfaceVariant,
+    final colors = ScheduleColors.of(context);
+    final l10n = AppLocalizations.of(context);
+    return CustomScrollView(
+      slivers: [
+        SliverFillRemaining(
+          hasScrollBody: false,
+          child: Column(
+            crossAxisAlignment: CrossAxisAlignment.start,
+            mainAxisAlignment: MainAxisAlignment.center,
+            children: [
+              const AppLogo(size: 72, semanticLabel: 'Liora'),
+              const SizedBox(height: 16),
+              ColoredBox(
+                color: colors.station,
+                child: Padding(
+                  padding: const EdgeInsets.fromLTRB(0, 20, 16, 20),
+                  child: Text(
+                    l10n.welcomeTitle,
+                    style: programTitle(context, colors.onStation, size: 44),
+                  ),
+                ),
+              ),
+              const SizedBox(height: 16),
+              Text(l10n.welcomeBody, style: theme.textTheme.bodyLarge),
+              const SizedBox(height: 24),
+              Text(
+                l10n.welcomeNext,
+                style: theme.textTheme.bodyMedium?.copyWith(
+                  color: theme.colorScheme.onSurfaceVariant,
+                ),
+              ),
+            ],
           ),
         ),
-        const Spacer(),
       ],
     );
   }
@@ -315,84 +368,6 @@ class _Question extends StatelessWidget {
   }
 }
 
-class _DayLetter extends StatelessWidget {
-  const _DayLetter({
-    required this.letter,
-    required this.label,
-    required this.selected,
-    required this.onTap,
-  });
-
-  final String letter;
-  final String label;
-  final bool selected;
-  final VoidCallback onTap;
-
-  @override
-  Widget build(BuildContext context) {
-    final theme = Theme.of(context);
-    final color = theme.colorScheme;
-    return Semantics(
-      button: true,
-      selected: selected,
-      label: label,
-      child: Material(
-        color: selected ? color.primaryContainer : color.surface,
-        shape: CircleBorder(
-          side: BorderSide(
-            color: selected ? color.primary : color.outlineVariant,
-          ),
-        ),
-        child: InkWell(
-          onTap: onTap,
-          customBorder: const CircleBorder(),
-          child: SizedBox(
-            height: 40,
-            child: Center(
-              child: Text(letter, style: theme.textTheme.titleMedium),
-            ),
-          ),
-        ),
-      ),
-    );
-  }
-}
-
-class _HourChip extends StatelessWidget {
-  const _HourChip({
-    required this.label,
-    required this.selected,
-    required this.onTap,
-  });
-
-  final String label;
-  final bool selected;
-  final VoidCallback onTap;
-
-  @override
-  Widget build(BuildContext context) {
-    final theme = Theme.of(context);
-    final color = theme.colorScheme;
-    return Material(
-      color: selected ? color.primaryContainer : color.surface,
-      shape: RoundedRectangleBorder(
-        borderRadius: BorderRadius.circular(20),
-        side: BorderSide(
-          color: selected ? color.primary : color.outlineVariant,
-        ),
-      ),
-      child: InkWell(
-        onTap: onTap,
-        borderRadius: BorderRadius.circular(20),
-        child: Padding(
-          padding: const EdgeInsets.symmetric(horizontal: 14, vertical: 10),
-          child: Text(label, style: theme.textTheme.bodyLarge),
-        ),
-      ),
-    );
-  }
-}
-
 class _ChoiceTile extends StatelessWidget {
   const _ChoiceTile({
     required this.label,
@@ -406,28 +381,34 @@ class _ChoiceTile extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) {
+    final colors = ScheduleColors.of(context);
     final theme = Theme.of(context);
-    final color = theme.colorScheme;
+    final ink = selected ? typeOnStation(context) : colors.ink;
     return Padding(
       padding: const EdgeInsets.only(bottom: 8),
       child: Material(
-        color: selected ? color.primaryContainer : color.surface,
+        color: selected ? colors.station : colors.paper,
         shape: RoundedRectangleBorder(
-          borderRadius: BorderRadius.circular(12),
-          side: BorderSide(
-            color: selected ? color.primary : color.outlineVariant,
-          ),
+          borderRadius: scheduleRadius(context),
+          side: BorderSide(color: selected ? colors.station : colors.rule),
         ),
         child: InkWell(
           onTap: onTap,
-          borderRadius: BorderRadius.circular(12),
-          child: Padding(
-            padding: const EdgeInsets.symmetric(horizontal: 16, vertical: 14),
-            child: Row(
-              children: [
-                Expanded(child: Text(label, style: theme.textTheme.bodyLarge)),
-                if (selected) Icon(Icons.check, color: color.primary),
-              ],
+          child: ConstrainedBox(
+            constraints: const BoxConstraints(minHeight: 48),
+            child: Padding(
+              padding: const EdgeInsets.symmetric(horizontal: 16, vertical: 14),
+              child: Row(
+                children: [
+                  Expanded(
+                    child: Text(
+                      label,
+                      style: theme.textTheme.bodyLarge?.copyWith(color: ink),
+                    ),
+                  ),
+                  if (selected) Icon(Icons.check, color: typeOnStation(context)),
+                ],
+              ),
             ),
           ),
         ),

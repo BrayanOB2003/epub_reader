@@ -1,62 +1,86 @@
 import 'package:epub_reader/app/providers.dart';
+import 'package:epub_reader/core/database/app_database.dart';
+import 'package:epub_reader/app/schedule_widgets.dart';
+import 'package:epub_reader/features/analytics/analytics_events.dart';
+import 'package:epub_reader/features/habits/book_reading_block.dart';
+import 'package:epub_reader/features/habits/month_reading.dart';
+import 'package:epub_reader/features/habits/month_report_store.dart';
 import 'package:epub_reader/features/habits/reading_calendar.dart';
 import 'package:epub_reader/features/habits/reading_time.dart';
 import 'package:epub_reader/features/habits/weekly_reading_chart.dart';
 import 'package:epub_reader/features/profile/reader_profile_store.dart';
+import 'package:epub_reader/l10n/app_localizations.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
+import 'package:go_router/go_router.dart';
 
 class ReadingTimePage extends ConsumerWidget {
   const ReadingTimePage({super.key});
 
   @override
   Widget build(BuildContext context, WidgetRef ref) {
-    final books = ref.watch(booksProvider);
     final sessions = ref.watch(readingSessionsProvider);
+    final plansAsync = ref.watch(readingPlanVersionsProvider);
     final goalMinutes = ref
         .watch(readerProfileProvider)
         .asData
         ?.value
         ?.dailyGoalMinutes;
 
+    final l10n = AppLocalizations.of(context);
     return Scaffold(
-      appBar: AppBar(title: const Text('Tiempo')),
-      body: books.when(
-        loading: () => const Center(child: CircularProgressIndicator()),
-        error: (error, _) =>
-            _Message(text: 'No se pudieron cargar los libros.\n$error'),
-        data: (bookList) => sessions.when(
+      body: SafeArea(
+        bottom: false,
+        child: sessions.when(
           loading: () => const Center(child: CircularProgressIndicator()),
           error: (error, _) =>
-              _Message(text: 'No se pudo cargar el tiempo de lectura.\n$error'),
+              _Message(text: l10n.readingTimeLoadFailed('$error')),
           data: (sessionList) {
-            final records = readingTimeByBook(
-              titles: {for (final book in bookList) book.id: book.title},
-              sessions: sessionList,
-            );
+            if (plansAsync.hasError) {
+              return _Message(
+                text: l10n.readingTimeLoadFailed('${plansAsync.error}'),
+              );
+            }
+            if (!plansAsync.hasValue) {
+              return const Center(child: CircularProgressIndicator());
+            }
+            final plans = [
+              for (final plan in plansAsync.requireValue)
+                MonthPlanVersion(
+                  effectiveAt: plan.effectiveAt,
+                  dailyGoalMinutes: plan.dailyGoalMinutes,
+                  routineHour: plan.routineHour,
+                  weekdays: monthPlanWeekdays(plan.routineDays),
+                ),
+            ];
             final now = DateTime.now();
-            return ListView(
-              padding: const EdgeInsets.fromLTRB(16, 8, 16, 24),
-              children: [
-                WeeklyReadingChart(
-                  days: weeklyReading(sessions: sessionList, now: now),
-                  goalSeconds: goalMinutes == null ? null : goalMinutes * 60,
-                  today: now,
-                ),
-                const SizedBox(height: 12),
-                ReadingCalendar(
-                  sessions: sessionList,
-                  goalSeconds: goalMinutes == null ? null : goalMinutes * 60,
-                  today: now,
-                ),
-                if (records.isEmpty)
-                  const _EmptyTime()
-                else
-                  for (final record in records) ...[
-                    const SizedBox(height: 12),
-                    _BookTimeCard(record: record),
-                  ],
-              ],
+            final books = ref.watch(booksProvider).asData?.value;
+            final quotes = ref.watch(savedQuotesProvider).asData?.value;
+            final reports = books == null
+                ? const <BookReadingReport>[]
+                : bookReadingReports(
+                    books: books,
+                    sessions: sessionList,
+                    now: now,
+                    quoteBookIds: [
+                      if (quotes != null)
+                        for (final quote in quotes) quote.bookId,
+                    ],
+                  );
+            final report = reports.isEmpty ? null : reports.first;
+            return _HabitLog(
+              title: l10n.time,
+              days: weeklyReading(sessions: sessionList, now: now),
+              goalSeconds: goalMinutes == null ? null : goalMinutes * 60,
+              today: now,
+              sessions: sessionList,
+              plans: plans,
+              report: report,
+              onRead: report == null
+                  ? null
+                  : () => context.push(
+                      readingRoute(report.book.id, readingSourceLibrary),
+                    ),
             );
           },
         ),
@@ -65,31 +89,78 @@ class ReadingTimePage extends ConsumerWidget {
   }
 }
 
-class _EmptyTime extends StatelessWidget {
-  const _EmptyTime();
+class _HabitLog extends StatefulWidget {
+  const _HabitLog({
+    required this.title,
+    required this.days,
+    required this.goalSeconds,
+    required this.today,
+    required this.sessions,
+    required this.plans,
+    required this.report,
+    required this.onRead,
+  });
+
+  final String title;
+  final List<DailyReading> days;
+  final int? goalSeconds;
+  final DateTime today;
+  final List<ReadingSession> sessions;
+  final List<MonthPlanVersion> plans;
+  final BookReadingReport? report;
+  final VoidCallback? onRead;
+
+  @override
+  State<_HabitLog> createState() => _HabitLogState();
+}
+
+class _HabitLogState extends State<_HabitLog> {
+  late DateTime _selected;
+
+  @override
+  void initState() {
+    super.initState();
+    _selected = widget.today;
+  }
+
+  void _select(DateTime day) {
+    final current = _selected.toLocal();
+    final next = day.toLocal();
+    if (current.year == next.year &&
+        current.month == next.month &&
+        current.day == next.day) {
+      return;
+    }
+    setState(() => _selected = day);
+  }
 
   @override
   Widget build(BuildContext context) {
-    final theme = Theme.of(context);
-    return Padding(
-      padding: const EdgeInsets.fromLTRB(16, 48, 16, 24),
-      child: Column(
-        children: [
-          Icon(
-            Icons.timer_outlined,
-            size: 56,
-            color: theme.colorScheme.primary,
-          ),
-          const SizedBox(height: 16),
-          Text('Todavía no hay registros', style: theme.textTheme.titleLarge),
-          const SizedBox(height: 8),
-          Text(
-            'El tiempo se guarda cuando una lectura pasa de 30 segundos.',
-            style: theme.textTheme.bodyMedium,
-            textAlign: TextAlign.center,
-          ),
-        ],
-      ),
+    final report = widget.report;
+    final onRead = widget.onRead;
+    return ListView(
+      padding: const EdgeInsets.only(bottom: 24),
+      children: [
+        ScheduleHeader(title: widget.title),
+        const ScheduleRule(),
+        WeeklyReadingChart(
+          days: widget.days,
+          goalSeconds: widget.goalSeconds,
+          today: widget.today,
+          selectedDay: _selected,
+          onDaySelected: _select,
+        ),
+        const ScheduleRule(),
+        ReadingCalendar(
+          sessions: widget.sessions,
+          plans: widget.plans,
+          today: widget.today,
+          selectedDate: _selected,
+          onDaySelected: _select,
+        ),
+        if (report != null && onRead != null)
+          BookReadingBlock(report: report, logRow: true, onRead: onRead),
+      ],
     );
   }
 }
@@ -105,64 +176,6 @@ class _Message extends StatelessWidget {
       child: Padding(
         padding: const EdgeInsets.all(24),
         child: Text(text, textAlign: TextAlign.center),
-      ),
-    );
-  }
-}
-
-class _BookTimeCard extends StatelessWidget {
-  const _BookTimeCard({required this.record});
-
-  final BookReadingTime record;
-
-  @override
-  Widget build(BuildContext context) {
-    final theme = Theme.of(context);
-    final now = DateTime.now();
-    return Card(
-      margin: EdgeInsets.zero,
-      child: Padding(
-        padding: const EdgeInsets.all(16),
-        child: Column(
-          crossAxisAlignment: CrossAxisAlignment.start,
-          children: [
-            Row(
-              crossAxisAlignment: CrossAxisAlignment.start,
-              children: [
-                Expanded(
-                  child: Text(record.title, style: theme.textTheme.titleMedium),
-                ),
-                const SizedBox(width: 12),
-                Text(
-                  formatReadingDuration(record.engagedSeconds),
-                  style: theme.textTheme.titleMedium?.copyWith(
-                    color: theme.colorScheme.primary,
-                  ),
-                ),
-              ],
-            ),
-            const SizedBox(height: 12),
-            for (final session in record.sessions) ...[
-              Row(
-                children: [
-                  Expanded(
-                    child: Text(
-                      formatReadingMoment(session.endedAt, now: now),
-                      style: theme.textTheme.bodyMedium?.copyWith(
-                        color: theme.colorScheme.onSurfaceVariant,
-                      ),
-                    ),
-                  ),
-                  Text(
-                    formatReadingDuration(session.engagedSeconds),
-                    style: theme.textTheme.bodyMedium,
-                  ),
-                ],
-              ),
-              const SizedBox(height: 6),
-            ],
-          ],
-        ),
       ),
     );
   }

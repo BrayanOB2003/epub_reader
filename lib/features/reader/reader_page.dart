@@ -2,24 +2,40 @@ import 'dart:async';
 import 'dart:convert';
 
 import 'package:epub_reader/app/providers.dart';
+import 'package:epub_reader/app/schedule_theme.dart';
 import 'package:epub_reader/core/database/app_database.dart';
 import 'package:epub_reader/core/reading/readium_reading_engine.dart';
+import 'package:epub_reader/features/analytics/analytics_events.dart';
+import 'package:epub_reader/features/analytics/app_analytics.dart';
 import 'package:epub_reader/features/library/data/book_repository.dart';
 import 'package:epub_reader/features/habits/reading_engagement.dart';
+import 'package:epub_reader/features/habits/reading_estimate.dart';
+import 'package:epub_reader/features/notifications/reading_notifications.dart';
+import 'package:epub_reader/features/profile/reader_profile_store.dart';
+import 'package:epub_reader/features/reader/chapter_finish_dialog.dart';
+import 'package:epub_reader/features/reader/contents.dart';
+import 'package:epub_reader/features/reader/contents_dialog.dart';
+import 'package:epub_reader/features/reader/quote_highlight.dart';
 import 'package:epub_reader/features/reader/reader_gestures.dart';
 import 'package:epub_reader/features/reader/reader_preferences.dart';
-import 'package:flutter/foundation.dart';
+import 'package:epub_reader/features/reader/table_view_page.dart';
+import 'package:epub_reader/l10n/app_localizations.dart';
 import 'package:flutter/material.dart';
-import 'package:flutter/services.dart';
 import 'package:flutter_readium/flutter_readium.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:go_router/go_router.dart';
-import 'package:share_plus/share_plus.dart';
 
 class ReaderPage extends ConsumerStatefulWidget {
-  const ReaderPage({required this.bookId, super.key});
+  const ReaderPage({
+    required this.bookId,
+    this.source = readingSourceLibrary,
+    this.quoteId,
+    super.key,
+  });
 
   final int bookId;
+  final String source;
+  final int? quoteId;
 
   @override
   ConsumerState<ReaderPage> createState() => _ReaderPageState();
@@ -29,15 +45,22 @@ class _ReaderPageState extends ConsumerState<ReaderPage>
     with WidgetsBindingObserver {
   late final BookRepository _repository;
   late final ReadiumReadingEngine _engine;
+  late final AppAnalytics _analytics;
+  late final ReaderProfileStore _profiles;
+  late final QuoteHighlightColorStore _highlightColors;
 
   Book? _book;
   Publication? _publication;
+  Locator? _initialLocator;
   Locator? _latestLocator;
   StreamSubscription<Locator>? _locatorSubscription;
   Timer? _saveTimer;
   var _progress = 0.0;
   var _loading = true;
   var _chromeVisible = false;
+  int? _chapterMinutes;
+  var _leaving = false;
+  var _askingLeave = false;
   var _dark = false;
   var _scroll = false;
   var _fontSize = readerFontSizeDefault;
@@ -48,6 +71,10 @@ class _ReaderPageState extends ConsumerState<ReaderPage>
   ReadingEngagement? _engagement;
   int? _readingSessionId;
   Future<void> _sessionWrite = Future<void>.value();
+  var _sessionReported = false;
+  var _pickingHighlight = false;
+  var _highlightsPainted = false;
+  Future<void> _highlightWrite = Future<void>.value();
 
   @override
   void initState() {
@@ -55,6 +82,9 @@ class _ReaderPageState extends ConsumerState<ReaderPage>
     WidgetsBinding.instance.addObserver(this);
     _repository = ref.read(bookRepositoryProvider);
     _engine = ref.read(readingEngineProvider);
+    _analytics = ref.read(appAnalyticsProvider);
+    _profiles = ref.read(readerProfileStoreProvider);
+    _highlightColors = ref.read(quoteHighlightColorStoreProvider);
     _open();
   }
 
@@ -76,15 +106,17 @@ class _ReaderPageState extends ConsumerState<ReaderPage>
   Future<void> _open() async {
     final book = await _repository.getBook(widget.bookId);
     if (!mounted) return;
+    final l10n = AppLocalizations.of(context);
     if (book == null) {
       setState(() {
         _loading = false;
-        _error = 'Este libro ya no está en la biblioteca.';
+        _error = l10n.bookGone;
       });
       return;
     }
 
     try {
+      _initialLocator = await _locatorForOpening(book);
       final publication = await _engine.open(book.filePath);
       final fixedLayout = publicationIsFixed(publication);
       _dark = book.darkMode;
@@ -109,25 +141,39 @@ class _ReaderPageState extends ConsumerState<ReaderPage>
         _book = book;
         _publication = publication;
         _fixedLayout = fixedLayout;
-        _progress = book.progress;
+        _progress = _bookProgress(_initialLocator) ?? book.progress;
         _loading = false;
       });
-    } catch (error) {
+      unawaited(_applyQuoteHighlights());
+    } catch (error, stack) {
+      unawaited(_analytics.recordUnexpected('reader_open_failed', stack));
       if (!mounted) return;
       setState(() {
         _loading = false;
-        _error = _openErrorMessage(error);
+        _error = _openErrorMessage(l10n, error);
       });
     }
   }
 
+  double? _bookProgress(Locator? locator) {
+    final order = _publication?.readingOrder;
+    return readingProgress(
+      locator: locator,
+      hrefs: [for (final link in order ?? const <Link>[]) link.href],
+    );
+  }
+
   void _onLocator(Locator locator) {
+    if (!_highlightsPainted) {
+      _highlightsPainted = true;
+      unawaited(_applyQuoteHighlights());
+    }
     final previous = _latestLocator;
     _latestLocator = locator;
     final leftChapter =
         _textSelected && previous != null && previous.href != locator.href;
     if (leftChapter) _textSelected = false;
-    final progression = locator.locations?.totalProgression;
+    final progression = _bookProgress(locator);
     final progressChanged = progression != null && progression != _progress;
     if (mounted && (leftChapter || progressChanged)) {
       setState(() {
@@ -143,30 +189,34 @@ class _ReaderPageState extends ConsumerState<ReaderPage>
   Future<void> _openContents() async {
     final publication = _publication;
     if (publication == null || !mounted) return;
-    final entries = _contentsOf(publication);
-    final selected = await showDialog<Link>(
-      context: context,
-      builder: (context) => _ContentsDialog(entries: entries),
+    final roots = contentsTree(
+      tableOfContents: publication.tableOfContents,
+      readingOrder: publication.readingOrder,
     );
-    if (selected == null || !mounted) return;
-    final locator = publication.locatorFromLink(selected);
-    if (locator == null) {
-      _showMessage('No se pudo abrir este capítulo.');
-      return;
-    }
+    await showDialog<void>(
+      context: context,
+      builder: (context) => ContentsDialog(
+        roots: roots,
+        currentHref: _latestLocator?.href,
+        onOpen: (link) => _openChapter(publication, link),
+      ),
+    );
+  }
+
+  Future<bool> _openChapter(Publication publication, Link link) async {
+    final locator = publication.locatorFromLink(link);
+    if (locator == null || !mounted) return false;
     _textSelected = false;
     final moved = await _engine.goToLocator(locator);
-    if (!mounted) return;
-    if (!moved) {
-      _showMessage('No se pudo abrir este capítulo.');
-      return;
-    }
-    setState(() => _chromeVisible = false);
+    if (!mounted) return false;
+    if (moved) setState(() => _chromeVisible = false);
+    return moved;
   }
 
   void _showMessage(String message) {
-    ScaffoldMessenger.of(context)
-        .showSnackBar(SnackBar(content: Text(message)));
+    ScaffoldMessenger.of(
+      context,
+    ).showSnackBar(SnackBar(content: Text(message)));
   }
 
   Future<void> _applyPreferences() async {
@@ -182,25 +232,24 @@ class _ReaderPageState extends ConsumerState<ReaderPage>
       );
     } catch (_) {
       if (mounted) {
-        _showMessage('No se pudieron aplicar los ajustes de lectura.');
+        _showMessage(AppLocalizations.of(context).preferencesFailed);
       }
     }
   }
 
   Future<void> _toggleDark() async {
     if (_fixedLayout) {
-      _showMessage(
-        'En un libro de maquetación fija el color del texto no cambia.',
-      );
+      _showMessage(AppLocalizations.of(context).fixedColor);
       return;
     }
     setState(() => _dark = !_dark);
+    unawaited(_applyQuoteHighlights());
     await _commitPreferences();
   }
 
   Future<void> _toggleScroll() async {
     if (_fixedLayout) {
-      _showMessage('Este libro se lee por páginas.');
+      _showMessage(AppLocalizations.of(context).fixedPages);
       return;
     }
     setState(() => _scroll = !_scroll);
@@ -209,9 +258,7 @@ class _ReaderPageState extends ConsumerState<ReaderPage>
 
   Future<void> _changeFontSize({required bool larger}) async {
     if (_fixedLayout) {
-      _showMessage(
-        'En un libro de maquetación fija el tamaño del texto no cambia.',
-      );
+      _showMessage(AppLocalizations.of(context).fixedSize);
       return;
     }
     final next = stepReaderFontSize(_fontSize, larger: larger);
@@ -222,9 +269,7 @@ class _ReaderPageState extends ConsumerState<ReaderPage>
 
   Future<void> _resetFontSize() async {
     if (_fixedLayout) {
-      _showMessage(
-        'En un libro de maquetación fija el tamaño del texto no cambia.',
-      );
+      _showMessage(AppLocalizations.of(context).fixedSize);
       return;
     }
     if (_fontSize == readerFontSizeDefault) return;
@@ -243,48 +288,188 @@ class _ReaderPageState extends ConsumerState<ReaderPage>
       );
     } catch (_) {
       if (mounted) {
-        _showMessage('No se pudieron guardar los ajustes de lectura.');
+        _showMessage(AppLocalizations.of(context).preferencesSaveFailed);
       }
     }
   }
 
+  void _hideChrome() {
+    if (!_chromeVisible || !mounted) return;
+    setState(() => _chromeVisible = false);
+  }
+
   void _onZone(ReaderZone zone) {
+    if (_textSelected) return;
     switch (zone) {
       case ReaderZone.previous:
         _turnPage(forward: false);
       case ReaderZone.next:
         _turnPage(forward: true);
       case ReaderZone.menu:
-        setState(() => _chromeVisible = !_chromeVisible);
+        setState(() {
+          _chromeVisible = !_chromeVisible;
+          if (_chromeVisible) _chapterMinutes = null;
+        });
+        if (_chromeVisible) unawaited(_refreshChapterMinutes());
     }
   }
 
   void _onTextSelected(TextSelectionEvent event) {
-    if (_textSelected || !mounted) return;
+    final text = event.selectedText?.trim();
+    if (text == null || text.isEmpty || !mounted || _textSelected) return;
     setState(() => _textSelected = true);
   }
 
-  void _onSelectionTap() {
+  void _onSelectionTap() => _clearSelection();
+
+  void _clearSelection() {
     if (!_textSelected || !mounted) return;
     setState(() => _textSelected = false);
   }
 
   Future<void> _onSelectionAction(SelectionActionEvent event) async {
-    if (mounted) setState(() => _textSelected = false);
+    if (event.actionId != 'save') return;
     final text = event.selectedText?.trim();
     if (text == null || text.isEmpty) return;
-    switch (event.actionId) {
-      case 'copy':
-        await Clipboard.setData(ClipboardData(text: text));
-      case 'share':
-        await SharePlus.instance.share(ShareParams(text: text));
+    final l10n = AppLocalizations.of(context);
+    try {
+      final colorId = await _highlightColors.read();
+      final saved = await _repository.saveQuote(
+        bookId: widget.bookId,
+        text: text,
+        locatorJson: jsonEncode(event.locator.toJson()),
+        highlightColor: colorId,
+      );
+      if (saved.created) unawaited(_applyQuoteHighlights());
+      if (!mounted) return;
+      _clearSelection();
+      _showMessage(saved.created ? l10n.quoteSaved : l10n.quoteAlreadySaved);
+    } catch (_) {
+      if (!mounted) return;
+      _showMessage(l10n.quoteSaveFailed);
+      return;
     }
+  }
+
+  /// Paints run one after another so a slow read cannot overwrite a newer list.
+  Future<void> _applyQuoteHighlights() {
+    final next = _highlightWrite.then((_) => _paintQuoteHighlights());
+    _highlightWrite = next;
+    return next;
+  }
+
+  Future<void> _paintQuoteHighlights() async {
+    if (_fixedLayout || !mounted) return;
+    try {
+      final quotes = await _repository.quotesForBook(widget.bookId);
+      if (!mounted) return;
+      final marks = [
+        for (final quote in quotes)
+          QuoteHighlightMark(
+            id: quote.id,
+            locatorJson: quote.locatorJson,
+            colorId: quote.highlightColor,
+          ),
+      ];
+      await _engine.applyDecorations(
+        quoteHighlightGroup,
+        quoteHighlightDecorations(
+          quotes: marks,
+          dark: _dark,
+          activeQuoteId: widget.quoteId,
+        ),
+      );
+    } catch (_) {}
+  }
+
+  Future<void> _onHighlightTap(DecorationInteractionEvent event) async {
+    if (event.type != DecorationInteractionType.tap || _pickingHighlight) {
+      return;
+    }
+    final quoteId = int.tryParse(event.decorationId);
+    if (quoteId == null || !mounted) return;
+    _pickingHighlight = true;
+    try {
+      await _editHighlight(quoteId);
+    } finally {
+      _pickingHighlight = false;
+    }
+  }
+
+  Future<void> _editHighlight(int quoteId) async {
+    final quote = await _repository.quoteById(quoteId);
+    if (quote == null || quote.bookId != widget.bookId || !mounted) return;
+    final choice = await showQuoteHighlightColors(
+      context,
+      selectedId: quote.highlightColor ?? quoteHighlightDefaultId,
+      dark: _dark && !_fixedLayout,
+      allowDelete: true,
+    );
+    if (!mounted) return;
+    switch (choice) {
+      case null:
+        return;
+      case QuoteHighlightRecolor(:final colorId):
+        await _recolorHighlight(quote, colorId);
+      case QuoteHighlightDelete():
+        await _deleteQuote(quote);
+    }
+  }
+
+  Future<void> _recolorHighlight(SavedQuote quote, String colorId) async {
+    final l10n = AppLocalizations.of(context);
+    try {
+      await recolorQuoteHighlight(
+        repository: _repository,
+        store: _highlightColors,
+        quoteId: quote.id,
+        currentColorId: quote.highlightColor,
+        colorId: colorId,
+      );
+      ref.invalidate(quoteHighlightDefaultProvider);
+      await _applyQuoteHighlights();
+    } catch (_) {
+      if (!mounted) return;
+      _showMessage(l10n.quoteHighlightFailed);
+    }
+  }
+
+  Future<void> _deleteQuote(SavedQuote quote) async {
+    final l10n = AppLocalizations.of(context);
+    final confirmed = await showDialog<bool>(
+      context: context,
+      builder: (context) => AlertDialog(
+        title: Text(l10n.deleteQuoteTitle),
+        content: Text(l10n.deleteQuoteBody),
+        actions: [
+          TextButton(
+            onPressed: () => Navigator.pop(context, false),
+            child: Text(l10n.cancel),
+          ),
+          TextButton(
+            onPressed: () => Navigator.pop(context, true),
+            child: Text(l10n.delete),
+          ),
+        ],
+      ),
+    );
+    if (confirmed != true || !mounted) return;
+    try {
+      await _repository.deleteQuote(quote.id);
+      await _applyQuoteHighlights();
+    } catch (_) {
+      if (!mounted) return;
+      _showMessage(l10n.quoteDeleteFailed);
+      return;
+    }
+    if (!mounted) return;
+    _showMessage(l10n.quoteDeleted);
   }
 
   Future<void> _persist() async {
     final locator = _latestLocator;
     if (locator == null) return;
-    final progress = locator.locations?.totalProgression ?? _progress;
+    final progress = _bookProgress(locator) ?? _progress;
     await _repository.saveProgress(
       id: widget.bookId,
       locatorJson: jsonEncode(locator.toJson()),
@@ -292,22 +477,122 @@ class _ReaderPageState extends ConsumerState<ReaderPage>
     );
   }
 
-  Locator? _savedLocator(Book book) {
-    final raw = book.locatorJson;
-    if (raw == null || raw.isEmpty) return null;
-    final decoded = jsonDecode(raw);
-    if (decoded is! Map) return null;
-    return Locator.fromJson(Map<String, dynamic>.from(decoded));
+  Future<Locator?> _locatorForOpening(Book book) async {
+    final quoteId = widget.quoteId;
+    if (quoteId != null) {
+      final quote = await _repository.quoteById(quoteId);
+      if (quote != null && quote.bookId == book.id) {
+        final locator = _locatorFromJson(quote.locatorJson);
+        if (locator != null) return locator;
+      }
+    }
+    return _savedLocator(book);
   }
 
-  void _close() {
+  Locator? _savedLocator(Book book) => _locatorFromJson(book.locatorJson);
+
+  Locator? _locatorFromJson(String? raw) {
+    if (raw == null || raw.isEmpty) return null;
+    try {
+      final decoded = jsonDecode(raw);
+      if (decoded is! Map) return null;
+      return Locator.fromJson(Map<String, dynamic>.from(decoded));
+    } catch (_) {
+      return null;
+    }
+  }
+
+  Future<void> _close() async {
+    if (_leaving || _askingLeave || !mounted) return;
+    _askingLeave = true;
+    final stay = await _offerToStay();
+    _askingLeave = false;
+    if (stay || !mounted) return;
+    setState(() => _leaving = true);
     _engagement?.close();
     _syncEngagement();
-    if (context.canPop()) {
-      context.pop();
-    } else {
-      context.go('/library');
+    WidgetsBinding.instance.addPostFrameCallback((_) {
+      if (!mounted) return;
+      if (context.canPop()) {
+        context.pop();
+      } else {
+        context.go('/library');
+      }
+    });
+  }
+
+  /// True when the reader stays open. Leaving is still one tap on Salir.
+  Future<bool> _offerToStay() async {
+    final minutes = (await _readingEstimate()).chapterMinutes;
+    if (!mounted || minutes == null || minutes > readingChapterFinishMinutes) {
+      return false;
     }
+    final l10n = AppLocalizations.of(context);
+    final publication = _publication;
+    final locator = _latestLocator ?? _initialLocator;
+    final chapterTitle = publication == null || locator == null
+        ? null
+        : finishChapterTitle(
+            locatorTitle: locator.title,
+            roots: contentsTree(
+              tableOfContents: publication.tableOfContents,
+              readingOrder: publication.readingOrder,
+            ),
+            href: locator.href,
+            untitled: l10n.untitled,
+            chapter: l10n.chapterLabel,
+          );
+    final leave = await showDialog<bool>(
+      context: context,
+      builder: (context) =>
+          ChapterFinishDialog(minutes: minutes, chapterTitle: chapterTitle),
+    );
+    return leave != true;
+  }
+
+  Future<void> _refreshChapterMinutes() async {
+    final minutes = (await _readingEstimate()).chapterMinutes;
+    if (!mounted || !_chromeVisible || minutes == _chapterMinutes) return;
+    setState(() => _chapterMinutes = minutes);
+  }
+
+  Future<ReadingEstimate> _readingEstimate() async {
+    if (_fixedLayout) return ReadingEstimate.none;
+    final publication = _publication;
+    final locator = _latestLocator ?? _initialLocator;
+    if (publication == null || locator == null) return ReadingEstimate.none;
+    final hrefs = [for (final link in publication.readingOrder) link.href];
+    final progress = spineProgress(
+      hrefs: hrefs,
+      href: locator.href,
+      progression: locator.locations?.progression,
+    );
+    if (progress == null) return ReadingEstimate.none;
+    final span = chapterSpan(
+      hrefs: hrefs,
+      contents: publication.tableOfContents,
+      href: locator.href,
+    );
+    final seconds = await _secondsRead();
+    if (!mounted) return ReadingEstimate.none;
+    return estimateReading(
+      engagedSeconds: seconds,
+      progress: progress,
+      chapterStart: span?.start,
+      chapterEnd: span?.end,
+    );
+  }
+
+  Future<int> _secondsRead() async {
+    final stored = await _repository.engagedSecondsForBook(widget.bookId);
+    final openId = _readingSessionId;
+    return engagedSecondsNow(
+      storedSeconds: stored,
+      openSessionSeconds: openId == null
+          ? null
+          : await _repository.readingSessionSeconds(openId),
+      liveSeconds: _engagement?.engagedSeconds ?? 0,
+    );
   }
 
   void _syncEngagement() {
@@ -335,6 +620,43 @@ class _ReaderPageState extends ConsumerState<ReaderPage>
         }
       } catch (_) {}
     });
+  }
+
+  Future<void> _reportSession() async {
+    if (_sessionReported) return;
+    _sessionReported = true;
+    await _sessionWrite;
+    final engagement = _engagement;
+    if (engagement == null ||
+        !engagement.shouldPersist ||
+        _readingSessionId == null) {
+      return;
+    }
+    await _analytics.logReadingSession(
+      engagedSeconds: engagement.engagedSeconds,
+      advanced: engagement.advanced,
+      source: widget.source,
+    );
+    final goalMinutes = (await _profiles.current())?.dailyGoalMinutes;
+    if (goalMinutes == null) return;
+    final rows = await _repository.loadReadingSessions();
+    final crossed = sessionCrossedReadingGoal(
+      sessions: [
+        for (final row in rows)
+          NotificationSession(
+            bookId: row.bookId,
+            startedAt: row.startedAt,
+            endedAt: row.endedAt,
+            engagedSeconds: row.engagedSeconds,
+          ),
+      ],
+      sessionStartedAt: engagement.startedAt,
+      sessionSeconds: engagement.engagedSeconds,
+      goalMinutes: goalMinutes,
+      now: DateTime.now(),
+    );
+    if (!crossed) return;
+    await _analytics.logDailyGoalReached();
   }
 
   Future<void> _turnPage({required bool forward}) async {
@@ -372,12 +694,14 @@ class _ReaderPageState extends ConsumerState<ReaderPage>
     if (index == null) return;
     final locator = publication.locatorFromLink(chapters[index]);
     if (locator == null) {
-      _showMessage('No se pudo abrir este capítulo.');
+      _showMessage(AppLocalizations.of(context).chapterFailed);
       return;
     }
     final moved = await _engine.goToLocator(locator);
     if (!mounted) return;
-    if (!moved) _showMessage('No se pudo abrir este capítulo.');
+    if (!moved) {
+      _showMessage(AppLocalizations.of(context).chapterFailed);
+    }
   }
 
   @override
@@ -385,6 +709,7 @@ class _ReaderPageState extends ConsumerState<ReaderPage>
     WidgetsBinding.instance.removeObserver(this);
     _engagement?.close();
     _syncEngagement();
+    unawaited(_reportSession());
     _saveTimer?.cancel();
     final locator = _latestLocator;
     if (locator != null) {
@@ -392,7 +717,7 @@ class _ReaderPageState extends ConsumerState<ReaderPage>
         _repository.saveProgress(
           id: widget.bookId,
           locatorJson: jsonEncode(locator.toJson()),
-          progress: locator.locations?.totalProgression ?? _progress,
+          progress: _bookProgress(locator) ?? _progress,
         ),
       );
     }
@@ -406,9 +731,16 @@ class _ReaderPageState extends ConsumerState<ReaderPage>
     final pageColor = _dark && !_fixedLayout
         ? readerDarkBackground
         : readerLightBackground;
-    return Scaffold(
-      backgroundColor: _loading || _error != null ? Colors.black : pageColor,
-      body: SafeArea(child: _buildBody()),
+    return PopScope(
+      canPop: _leaving,
+      onPopInvokedWithResult: (didPop, _) {
+        if (didPop) return;
+        unawaited(_close());
+      },
+      child: Scaffold(
+        backgroundColor: _loading || _error != null ? Colors.black : pageColor,
+        body: SafeArea(child: _buildBody()),
+      ),
     );
   }
 
@@ -427,11 +759,12 @@ class _ReaderPageState extends ConsumerState<ReaderPage>
     final publication = _publication;
     final book = _book;
     if (publication == null || book == null) {
-      return _statusLayer(child: const Text('No se pudo abrir el libro.'));
+      return _statusLayer(child: Text(AppLocalizations.of(context).openFailed));
     }
 
     final rtl =
         publication.metadata.readingProgression == ReadingProgression.rtl;
+    final l10n = AppLocalizations.of(context);
 
     return Stack(
       children: [
@@ -442,16 +775,26 @@ class _ReaderPageState extends ConsumerState<ReaderPage>
           bottom: 0,
           child: ReadiumReaderWidget(
             publication: publication,
-            initialLocator: _savedLocator(book),
+            initialLocator: _initialLocator,
             allowedDefaultActions: const {
               DefaultSelectionAction.copy,
               DefaultSelectionAction.share,
             },
-            selectionActions: defaultTargetPlatform == TargetPlatform.android
-                ? _androidSelectionActions
-                : const [],
+            selectionActions: [
+              SelectionAction(id: 'save', title: l10n.saveQuote),
+            ],
             onTextSelected: _onTextSelected,
             onSelectionAction: _onSelectionAction,
+            onDecorationInteraction: _onHighlightTap,
+            onTap: (point) =>
+                _onZone(readerZoneAt(x: point.dx, width: 1, rtl: rtl)),
+            onTableOpen: (event) {
+              Navigator.of(context).push(
+                MaterialPageRoute<void>(
+                  builder: (_) => TableViewPage(event: event),
+                ),
+              );
+            },
           ),
         ),
         Positioned(
@@ -460,11 +803,9 @@ class _ReaderPageState extends ConsumerState<ReaderPage>
           right: 0,
           bottom: 0,
           child: ReaderGestureLayer(
-            rtl: rtl,
             scroll: _scroll,
             textSelected: _textSelected,
-            onZone: _onZone,
-            onSwipe: (forward) => _turnPage(forward: forward),
+            onPageDrag: _hideChrome,
             onSelectionTap: _onSelectionTap,
           ),
         ),
@@ -478,7 +819,7 @@ class _ReaderPageState extends ConsumerState<ReaderPage>
       children: [
         Center(
           child: DefaultTextStyle.merge(
-            style: const TextStyle(color: Color(0xFFF7F1E8)),
+            style: const TextStyle(color: Color(0xFFF4F7FB)),
             child: child,
           ),
         ),
@@ -493,6 +834,8 @@ class _ReaderPageState extends ConsumerState<ReaderPage>
   }
 
   Widget _readerChrome({bool forceVisible = false}) {
+    final l10n = AppLocalizations.of(context);
+    final colors = ScheduleColors.of(context);
     final visible = forceVisible || _chromeVisible;
     return Column(
       mainAxisSize: MainAxisSize.min,
@@ -501,8 +844,8 @@ class _ReaderPageState extends ConsumerState<ReaderPage>
           child: LinearProgressIndicator(
             minHeight: 3,
             value: _loading ? null : _progress.clamp(0, 1),
-            backgroundColor: const Color(0x33000000),
-            color: const Color(0xFF6B4F3A),
+            backgroundColor: colors.ink.withValues(alpha: 0.2),
+            color: colors.station,
           ),
         ),
         ClipRect(
@@ -512,62 +855,83 @@ class _ReaderPageState extends ConsumerState<ReaderPage>
             duration: const Duration(milliseconds: 180),
             curve: Curves.easeOut,
             child: Material(
-              color: const Color(0xF2F7F1E8),
+              color: colors.paper.withValues(alpha: 0.95),
               child: SafeArea(
                 bottom: false,
-                child: Row(
-                  children: [
-                    if (_publication != null) ...[
-                      IconButton(
-                        tooltip: 'Índice',
-                        onPressed: _openContents,
-                        icon: const Icon(Icons.format_list_bulleted),
+                child: IconTheme(
+                  data: IconThemeData(color: colors.ink),
+                  child: Column(
+                    mainAxisSize: MainAxisSize.min,
+                    crossAxisAlignment: CrossAxisAlignment.start,
+                    children: [
+                      Row(
+                        children: [
+                          if (_publication != null) ...[
+                            IconButton(
+                              tooltip: l10n.contents,
+                              onPressed: _openContents,
+                              icon: const Icon(Icons.format_list_bulleted),
+                            ),
+                            IconButton(
+                              tooltip: _fixedLayout
+                                  ? l10n.fixedColorShort
+                                  : (_dark ? l10n.lightMode : l10n.darkMode),
+                              onPressed: _toggleDark,
+                              icon: Icon(
+                                _dark ? Icons.light_mode : Icons.dark_mode,
+                              ),
+                            ),
+                            IconButton(
+                              tooltip: _fixedLayout
+                                  ? l10n.fixedPagesShort
+                                  : (_scroll ? l10n.pageMode : l10n.scrollMode),
+                              onPressed: _toggleScroll,
+                              icon: Icon(
+                                _scroll ? Icons.menu_book : Icons.swap_vert,
+                              ),
+                            ),
+                            IconButton(
+                              tooltip: _fixedLayout
+                                  ? l10n.fixedSizeShort
+                                  : l10n.smallerText,
+                              onPressed: () => _changeFontSize(larger: false),
+                              icon: const Icon(Icons.text_decrease),
+                            ),
+                            IconButton(
+                              tooltip: _fixedLayout
+                                  ? l10n.fixedSizeShort
+                                  : l10n.originalSize,
+                              onPressed: _resetFontSize,
+                              icon: const _OriginalFontMark(),
+                            ),
+                            IconButton(
+                              tooltip: _fixedLayout
+                                  ? l10n.fixedSizeShort
+                                  : l10n.largerText,
+                              onPressed: () => _changeFontSize(larger: true),
+                              icon: const Icon(Icons.text_increase),
+                            ),
+                          ],
+                          const Spacer(),
+                          IconButton(
+                            tooltip: l10n.close,
+                            onPressed: () => unawaited(_close()),
+                            icon: const Icon(Icons.close),
+                          ),
+                        ],
                       ),
-                      IconButton(
-                        tooltip: _fixedLayout
-                            ? 'En este libro el color del texto no cambia'
-                            : (_dark ? 'Modo claro' : 'Modo oscuro'),
-                        onPressed: _toggleDark,
-                        icon: Icon(_dark ? Icons.light_mode : Icons.dark_mode),
-                      ),
-                      IconButton(
-                        tooltip: _fixedLayout
-                            ? 'Este libro se lee por páginas'
-                            : (_scroll
-                                  ? 'Lectura por páginas'
-                                  : 'Lectura con scroll'),
-                        onPressed: _toggleScroll,
-                        icon: Icon(_scroll ? Icons.menu_book : Icons.swap_vert),
-                      ),
-                      IconButton(
-                        tooltip: _fixedLayout
-                            ? 'En este libro el tamaño del texto no cambia'
-                            : 'Reducir texto',
-                        onPressed: () => _changeFontSize(larger: false),
-                        icon: const Icon(Icons.text_decrease),
-                      ),
-                      IconButton(
-                        tooltip: _fixedLayout
-                            ? 'En este libro el tamaño del texto no cambia'
-                            : 'Tamaño original',
-                        onPressed: _resetFontSize,
-                        icon: const _OriginalFontMark(),
-                      ),
-                      IconButton(
-                        tooltip: _fixedLayout
-                            ? 'En este libro el tamaño del texto no cambia'
-                            : 'Aumentar texto',
-                        onPressed: () => _changeFontSize(larger: true),
-                        icon: const Icon(Icons.text_increase),
-                      ),
+                      if (_chapterMinutes != null)
+                        Padding(
+                          padding: const EdgeInsets.fromLTRB(20, 0, 20, 12),
+                          child: Text(
+                            _chapterMinutes == 1
+                                ? l10n.chapterMinuteLeft
+                                : l10n.chapterMinutesLeft(_chapterMinutes!),
+                            style: TextStyle(color: colors.muted, fontSize: 13),
+                          ),
+                        ),
                     ],
-                    const Spacer(),
-                    IconButton(
-                      tooltip: 'Cerrar',
-                      onPressed: _close,
-                      icon: const Icon(Icons.close),
-                    ),
-                  ],
+                  ),
                 ),
               ),
             ),
@@ -595,87 +959,11 @@ class _OriginalFontMark extends StatelessWidget {
   }
 }
 
-/// Android ignores [DefaultSelectionAction] and only reports a selection when
-/// custom actions replace its system menu.
-const _androidSelectionActions = [
-  SelectionAction(id: 'copy', title: 'Copiar'),
-  SelectionAction(id: 'share', title: 'Compartir'),
-];
-
-class _TocEntry {
-  const _TocEntry({required this.link, required this.depth});
-
-  final Link link;
-  final int depth;
-
-  String get title {
-    final title = link.title?.trim();
-    if (title != null && title.isNotEmpty) return title;
-    return 'Sin título';
-  }
-}
-
-List<_TocEntry> _contentsOf(Publication publication) {
-  final source = publication.tableOfContents.isNotEmpty
-      ? publication.tableOfContents
-      : publication.readingOrder;
-  final entries = <_TocEntry>[];
-  void walk(List<Link> links, int depth) {
-    for (final link in links) {
-      entries.add(_TocEntry(link: link, depth: depth));
-      walk(link.children, depth + 1);
-    }
-  }
-
-  walk(source, 0);
-  return entries;
-}
-
-class _ContentsDialog extends StatelessWidget {
-  const _ContentsDialog({required this.entries});
-
-  final List<_TocEntry> entries;
-
-  @override
-  Widget build(BuildContext context) {
-    final height = MediaQuery.sizeOf(context).height * 0.6;
-    return AlertDialog(
-      title: const Text('Índice'),
-      content: SizedBox(
-        width: double.maxFinite,
-        height: height,
-        child: entries.isEmpty
-            ? const Text('Este libro no tiene índice.')
-            : ListView.builder(
-                itemCount: entries.length,
-                itemBuilder: (context, index) {
-                  final entry = entries[index];
-                  return ListTile(
-                    contentPadding: EdgeInsets.only(
-                      left: 16 + entry.depth * 16,
-                      right: 16,
-                    ),
-                    title: Text(entry.title),
-                    onTap: () => Navigator.pop(context, entry.link),
-                  );
-                },
-              ),
-      ),
-      actions: [
-        TextButton(
-          onPressed: () => Navigator.pop(context),
-          child: const Text('Cerrar'),
-        ),
-      ],
-    );
-  }
-}
-
-String _openErrorMessage(Object error) {
+String _openErrorMessage(AppLocalizations l10n, Object error) {
   final text = error.toString();
   if (text.contains('MethodNotImplemented') ||
       text.contains('not implemented')) {
-    return 'El lector funciona en iOS y Android. En el escritorio de macOS Readium no abre el EPUB.';
+    return l10n.readerDesktopOnly;
   }
-  return 'No se pudo abrir el libro.';
+  return l10n.openFailed;
 }

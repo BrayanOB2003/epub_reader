@@ -3,11 +3,13 @@ import 'package:flutter_readium/flutter_readium.dart';
 /// Thin wrapper around [FlutterReadium] so the rest of the app does not
 /// depend on the plugin singleton directly.
 class ReadiumReadingEngine {
-  ReadiumReadingEngine({FlutterReadium? readium}) : _readium = readium ?? FlutterReadium();
+  ReadiumReadingEngine({FlutterReadium? readium})
+    : _readium = readium ?? FlutterReadium();
 
   final FlutterReadium _readium;
 
-  Future<Publication> open(String filePath) => _readium.openPublication(filePath);
+  Future<Publication> open(String filePath) =>
+      _readium.openPublication(filePath);
 
   Future<void> close() => _readium.closePublication();
 
@@ -17,7 +19,13 @@ class ReadiumReadingEngine {
 
   Future<bool> goToLocator(Locator locator) => _readium.goToLocator(locator);
 
-  Future<void> setPreferences(EPUBPreferences preferences) => _readium.setEPUBPreferences(preferences);
+  Future<void> setPreferences(EPUBPreferences preferences) =>
+      _readium.setEPUBPreferences(preferences);
+
+  Future<void> applyDecorations(
+    String id,
+    List<ReaderDecoration> decorations,
+  ) => _readium.applyDecorations(id, decorations);
 
   Stream<Locator> get onLocator => _readium.onTextLocatorChanged;
 }

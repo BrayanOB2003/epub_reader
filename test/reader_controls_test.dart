@@ -1,9 +1,39 @@
 import 'package:epub_reader/features/reader/reader_gestures.dart';
 import 'package:epub_reader/features/reader/reader_preferences.dart';
+import 'package:flutter/material.dart';
 import 'package:flutter_readium/flutter_readium.dart';
 import 'package:flutter_test/flutter_test.dart';
 
 void main() {
+  test('book progress uses the chapter when the locator has no total', () {
+    const hrefs = ['c1.xhtml', 'c2.xhtml#start', 'c3.xhtml'];
+    Locator at(String href, {double? total, double? within}) => Locator(
+      href: href,
+      type: 'application/xhtml+xml',
+      locations: Locations(totalProgression: total, progression: within),
+    );
+
+    expect(
+      readingProgress(locator: at('c1.xhtml', total: 0.42), hrefs: hrefs),
+      0.42,
+    );
+    expect(
+      readingProgress(locator: at('c2.xhtml', within: 0.5), hrefs: hrefs),
+      closeTo(0.5, 0.001),
+    );
+    expect(
+      readingProgress(
+        locator: at('file:///books/c3.xhtml', within: 1),
+        hrefs: hrefs,
+      ),
+      1,
+    );
+    expect(
+      readingProgress(locator: at('missing.xhtml', within: 0.2), hrefs: hrefs),
+      isNull,
+    );
+  });
+
   test('side taps follow reading direction and the center opens the menu', () {
     expect(readerZoneAt(x: 10, width: 100, rtl: false), ReaderZone.previous);
     expect(readerZoneAt(x: 50, width: 100, rtl: false), ReaderZone.menu);
@@ -12,69 +42,59 @@ void main() {
     expect(readerZoneAt(x: 90, width: 100, rtl: true), ReaderZone.previous);
   });
 
-  test(
-    'taps go to Readium while text is selected, so the page does not turn',
-    () {
-      expect(readerClaimsTap(textSelected: true), isFalse);
-      expect(readerClaimsTap(textSelected: false), isTrue);
-    },
-  );
+  testWidgets('taps pass through to the reader and a drag is reported', (
+    tester,
+  ) async {
+    var readerTaps = 0;
+    var drags = 0;
+    await tester.pumpWidget(
+      MaterialApp(
+        home: Stack(
+          children: [
+            Positioned.fill(child: GestureDetector(onTap: () => readerTaps++)),
+            Positioned.fill(
+              child: ReaderGestureLayer(
+                scroll: false,
+                textSelected: false,
+                onPageDrag: () => drags++,
+                onSelectionTap: () {},
+              ),
+            ),
+          ],
+        ),
+      ),
+    );
+    final box = tester.getRect(find.byType(ReaderGestureLayer));
+    await tester.tapAt(Offset(box.left + 8, box.center.dy));
+    expect(readerTaps, 1);
 
-  test('a flick turns the page and a held swipe does not', () {
-    expect(
-      pageTurnSwipe(
-        dx: -80,
-        dy: 4,
-        elapsed: const Duration(milliseconds: 180),
-        rtl: false,
-      ),
-      isTrue,
+    await tester.timedDragFrom(
+      box.center,
+      const Offset(-120, 0),
+      const Duration(milliseconds: 300),
     );
-    expect(
-      pageTurnSwipe(
-        dx: 80,
-        dy: 4,
-        elapsed: const Duration(milliseconds: 180),
-        rtl: false,
+    expect(drags, 1);
+  });
+
+  testWidgets('scrolling does not report a page drag', (tester) async {
+    var drags = 0;
+    await tester.pumpWidget(
+      MaterialApp(
+        home: ReaderGestureLayer(
+          scroll: true,
+          textSelected: false,
+          onPageDrag: () => drags++,
+          onSelectionTap: () {},
+        ),
       ),
-      isFalse,
     );
-    expect(
-      pageTurnSwipe(
-        dx: 80,
-        dy: 4,
-        elapsed: const Duration(milliseconds: 180),
-        rtl: true,
-      ),
-      isTrue,
+    final box = tester.getRect(find.byType(ReaderGestureLayer));
+    await tester.timedDragFrom(
+      box.center,
+      const Offset(-120, 0),
+      const Duration(milliseconds: 300),
     );
-    expect(
-      pageTurnSwipe(
-        dx: -80,
-        dy: 4,
-        elapsed: const Duration(milliseconds: 700),
-        rtl: false,
-      ),
-      isNull,
-    );
-    expect(
-      pageTurnSwipe(
-        dx: -20,
-        dy: 0,
-        elapsed: const Duration(milliseconds: 120),
-        rtl: false,
-      ),
-      isNull,
-    );
-    expect(
-      pageTurnSwipe(
-        dx: 30,
-        dy: 90,
-        elapsed: const Duration(milliseconds: 180),
-        rtl: false,
-      ),
-      isNull,
-    );
+    expect(drags, 0);
   });
 
   test('a side tap while scrolling opens the neighboring chapter', () {

@@ -1,11 +1,14 @@
-import 'package:drift/drift.dart';
+import 'package:drift/drift.dart' hide Column;
 import 'package:drift/native.dart';
 import 'package:epub_reader/app/app.dart';
 import 'package:epub_reader/app/providers.dart';
+import 'package:epub_reader/app/schedule_theme.dart';
+import 'package:epub_reader/app/schedule_widgets.dart';
 import 'package:epub_reader/core/database/app_database.dart';
 import 'package:epub_reader/features/discover/data/catalog.dart';
 import 'package:epub_reader/features/habits/reading_time.dart';
 import 'package:epub_reader/features/library/home_page.dart';
+import 'package:epub_reader/l10n/app_localizations.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:flutter_test/flutter_test.dart';
@@ -21,7 +24,12 @@ void main() {
             return database;
           }),
         ],
-        child: const MaterialApp(home: HomePage()),
+        child: const MaterialApp(
+          locale: Locale('es'),
+          localizationsDelegates: AppLocalizations.localizationsDelegates,
+          supportedLocales: AppLocalizations.supportedLocales,
+          home: HomePage(),
+        ),
       ),
     );
     await tester.pumpAndSettle();
@@ -48,6 +56,8 @@ void main() {
             completedAt: DateTime.utc(2026, 9, 26),
           ),
         );
+    tester.platformDispatcher.localesTestValue = const [Locale('es')];
+    addTearDown(tester.platformDispatcher.clearLocalesTestValue);
     await tester.pumpWidget(
       ProviderScope(
         overrides: [
@@ -85,32 +95,38 @@ void main() {
     expect(find.text('Dom'), findsNWidgets(2));
     expect(find.text(formatReadingMonth(DateTime.now())), findsOneWidget);
     expect(find.text('Meta · 10 min'), findsOneWidget);
-    await tester.scrollUntilVisible(find.text('Todavía no hay registros'), 200);
-    expect(find.text('Todavía no hay registros'), findsOneWidget);
-    await tester.scrollUntilVisible(find.text('Esta semana'), -200);
 
     await tester.tap(find.text('Perfil'));
     await tester.pumpAndSettle();
 
     expect(find.text('Hábito de lectura'), findsOneWidget);
-    expect(find.text('Generar lecturas de ejemplo'), findsOneWidget);
+    expect(find.text('Registros'), findsOneWidget);
+    expect(find.text('Dispositivo'), findsOneWidget);
+    await tester.scrollUntilVisible(
+      find.text('Lecturas de ejemplo'),
+      200,
+    );
+    expect(find.text('Lecturas de ejemplo'), findsOneWidget);
+    expect(find.text('Datos de muestra'), findsOneWidget);
+    expect(find.text('Ayuda'), findsOneWidget);
     expect(find.text('Resetear onboarding'), findsNothing);
 
+    await tester.scrollUntilVisible(find.text('Hábito de lectura'), -300);
     await tester.tap(find.text('Hábito de lectura'));
     await tester.pumpAndSettle();
     expect(find.text('Crea el hábito de leer'), findsNothing);
-    expect(find.text('¿Qué quieres conseguir con la lectura?'), findsOneWidget);
-    await tester.tap(find.text('Siguiente'));
-    await tester.pumpAndSettle();
-    expect(find.text('2 de 3'), findsOneWidget);
-    await tester.tap(find.text('30 minutos'));
-    await tester.pump();
-    await tester.tap(find.text('Siguiente'));
-    await tester.pumpAndSettle();
+    expect(find.text('¿Qué quieres conseguir con la lectura?'), findsNothing);
+    expect(find.text('1 de 3'), findsNothing);
+    expect(find.text('¿Cuánto quieres leer?'), findsOneWidget);
+    await tester.scrollUntilVisible(find.text('21:00'), 200);
     expect(find.text('Noche'), findsOneWidget);
     expect(find.text('21:00'), findsOneWidget);
-    await tester.tap(find.text('Quiero empezar a leer'));
+    await tester.scrollUntilVisible(find.text('30 minutos'), -200);
+    await tester.tap(find.text('30 minutos'));
+    await tester.pump();
+    await tester.tap(find.text('Guardar'));
     await tester.pumpAndSettle();
+    expect(find.text('Hábito guardado.'), findsOneWidget);
     expect(find.text('Hábito de lectura'), findsOneWidget);
     final saved = await database.select(database.readerProfiles).getSingle();
     expect(saved.dailyGoalMinutes, 30);
@@ -118,7 +134,53 @@ void main() {
     expect(saved.routine, 'night');
     expect(saved.routineHour, 21);
 
+    await tester.scrollUntilVisible(find.text('Citas'), 200);
+    await tester.tap(find.text('Citas'));
+    await tester.pumpAndSettle();
+    expect(find.text('Todavía no hay citas'), findsOneWidget);
+    expect(find.text('Perfil'), findsWidgets);
+    await tester.tap(find.widgetWithText(FilledButton, 'Biblioteca'));
+    await tester.pumpAndSettle();
+    expect(find.text('Todavía no hay libros'), findsOneWidget);
+    await tester.binding.handlePopRoute();
+    await tester.pumpAndSettle();
+    expect(find.text('Todavía no hay citas'), findsOneWidget);
+
     await tester.pumpWidget(const SizedBox.shrink());
     await tester.pump(Duration.zero);
+  });
+
+  test('cover initial skips marks and keeps a leading number', () {
+    expect(coverInitial('¿Hábitos?'), 'H');
+    expect(coverInitial('100 hábitos'), '1');
+    expect(coverInitial('   '), '');
+  });
+
+  testWidgets('a missing cover shows the title initial', (tester) async {
+    await tester.pumpWidget(
+      MaterialApp(
+        theme: scheduleTheme(Brightness.light),
+        home: Scaffold(
+          body: Column(
+            children: [
+              const ScheduleCoverPlaceholder(
+                width: 72,
+                height: 108,
+                title: '¿Hábitos?',
+                onAir: true,
+              ),
+              ScheduleListing(
+                title: 'Frankenstein',
+                subtitle: 'Mary Shelley',
+                onTap: () {},
+              ),
+            ],
+          ),
+        ),
+      ),
+    );
+
+    expect(find.text('H'), findsOneWidget);
+    expect(find.text('F'), findsOneWidget);
   });
 }

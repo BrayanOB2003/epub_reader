@@ -10,4 +10,11 @@ class AppDelegate: FlutterAppDelegate {
   override func applicationSupportsSecureRestorableState(_ app: NSApplication) -> Bool {
     return true
   }
+
+  override func application(_ application: NSApplication, open urls: [URL]) {
+    let remaining = urls.filter { !OpenedEpubRelay.shared.handle(url: $0) }
+    if !remaining.isEmpty {
+      super.application(application, open: remaining)
+    }
+  }
 }

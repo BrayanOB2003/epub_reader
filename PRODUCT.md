@@ -43,7 +43,7 @@ Open: whether the interface itself is offered in English as well as Spanish. Whe
 
 ## Brand Commitments
 
-The product name is Liora. The current welcome states the promise in Spanish: “Crea el hábito de leer.” “Un lugar para leer un poco cada día y sostener ese hábito.” “Sin cuenta. Tus libros y tu progreso se guardan en este dispositivo.”
+The product name is Liora. The current welcome states the promise in Spanish: “Crea el hábito de leer.” “Un lugar para leer un poco cada día y sostener ese hábito.” “Unos minutos, a la hora que elijas.”
 
 The in-app window title is still “Lector.”
 
