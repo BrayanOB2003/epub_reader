@@ -620,10 +620,24 @@
   "legalPageFailed": "No se pudo abrir la página.",
   "premiumTitle": "Premium",
   "premiumLead": "Un pago abre las tres.",
-  "premiumPrice": "7 USD",
+  "premiumHeadline": "Potencia tu hábito de lectura",
+  "premiumOnePayment": "Un solo pago.",
   "premiumMonthBody": "El mes que cerraste: los días del plan, el tiempo y los libros.",
   "premiumBooksBody": "El tiempo de cada libro, aparte de la semana y el calendario.",
   "premiumAppearanceBody": "El papel, la tinta y la letra con la que se lee Liora.",
-  "premiumUnlock": "Desbloquear · 7 USD",
-  "premiumPurchaseUnavailable": "La compra no está disponible todavía."
+  "premiumUnlock": "Desbloquear",
+  "premiumUnlockPrice": "Desbloquear · {price}",
+  "@premiumUnlockPrice": {
+    "placeholders": {
+      "price": {"type": "String"}
+    }
+  },
+  "premiumActive": "Activo",
+  "premiumActiveNote": "Ya tienes Premium. Gracias por apoyar Liora.",
+  "premiumRestore": "Restaurar compra",
+  "premiumRestored": "Compra restaurada.",
+  "premiumNothingToRestore": "No encontramos una compra para restaurar con esta cuenta de la tienda.",
+  "premiumPurchasePending": "La compra está pendiente de aprobación. Se activará sola cuando se confirme.",
+  "premiumPurchaseFailed": "No se pudo completar la compra. Inténtalo de nuevo.",
+  "premiumPurchaseUnavailable": "La compra no está disponible en este momento. Inténtalo más tarde."
 }

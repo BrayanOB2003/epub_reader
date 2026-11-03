@@ -13,6 +13,7 @@ import 'package:epub_reader/features/notifications/notification_prompt.dart';
 import 'package:epub_reader/features/onboarding/onboarding_answers.dart';
 import 'package:epub_reader/features/onboarding/onboarding_controller.dart';
 import 'package:epub_reader/features/onboarding/onboarding_page.dart';
+import 'package:epub_reader/features/premium/premium_controller.dart';
 import 'package:epub_reader/features/profile/appearance_page.dart';
 import 'package:epub_reader/features/profile/habit_edit_page.dart';
 import 'package:epub_reader/features/profile/pqrs_page.dart';
@@ -34,6 +35,9 @@ final appRouterProvider = Provider<GoRouter>((ref) {
   ref.listen(readerProfileProvider, (_, _) => refresh.bump());
   ref.listen(notificationPermissionGrantedProvider, (_, _) => refresh.bump());
   ref.listen(notificationPromptShownProvider, (_, _) => refresh.bump());
+  ref.listen(premiumProvider.select((state) => state.unlocked), (_, _) {
+    refresh.bump();
+  });
 
   final router = GoRouter(
     initialLocation: '/library',
@@ -73,11 +77,16 @@ final appRouterProvider = Provider<GoRouter>((ref) {
         shownOn: shown,
         now: DateTime.now(),
       );
-      return onboardingRedirect(
+      final onboarding = onboardingRedirect(
         completed: completed,
         location: location,
         editing: state.uri.queryParameters['editar'] == '1',
         notificationPromptDue: due,
+      );
+      if (onboarding != null) return onboarding;
+      return premiumRedirect(
+        location: location,
+        unlocked: ref.read(premiumProvider).unlocked,
       );
     },
     routes: [

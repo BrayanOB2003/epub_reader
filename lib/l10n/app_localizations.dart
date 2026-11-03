@@ -2282,11 +2282,17 @@ abstract class AppLocalizations {
   /// **'Un pago abre las tres.'**
   String get premiumLead;
 
-  /// No description provided for @premiumPrice.
+  /// No description provided for @premiumHeadline.
   ///
   /// In es, this message translates to:
-  /// **'7 USD'**
-  String get premiumPrice;
+  /// **'Potencia tu hábito de lectura'**
+  String get premiumHeadline;
+
+  /// No description provided for @premiumOnePayment.
+  ///
+  /// In es, this message translates to:
+  /// **'Un solo pago.'**
+  String get premiumOnePayment;
 
   /// No description provided for @premiumMonthBody.
   ///
@@ -2309,13 +2315,61 @@ abstract class AppLocalizations {
   /// No description provided for @premiumUnlock.
   ///
   /// In es, this message translates to:
-  /// **'Desbloquear · 7 USD'**
+  /// **'Desbloquear'**
   String get premiumUnlock;
+
+  /// No description provided for @premiumUnlockPrice.
+  ///
+  /// In es, this message translates to:
+  /// **'Desbloquear · {price}'**
+  String premiumUnlockPrice(String price);
+
+  /// No description provided for @premiumActive.
+  ///
+  /// In es, this message translates to:
+  /// **'Activo'**
+  String get premiumActive;
+
+  /// No description provided for @premiumActiveNote.
+  ///
+  /// In es, this message translates to:
+  /// **'Ya tienes Premium. Gracias por apoyar Liora.'**
+  String get premiumActiveNote;
+
+  /// No description provided for @premiumRestore.
+  ///
+  /// In es, this message translates to:
+  /// **'Restaurar compra'**
+  String get premiumRestore;
+
+  /// No description provided for @premiumRestored.
+  ///
+  /// In es, this message translates to:
+  /// **'Compra restaurada.'**
+  String get premiumRestored;
+
+  /// No description provided for @premiumNothingToRestore.
+  ///
+  /// In es, this message translates to:
+  /// **'No encontramos una compra para restaurar con esta cuenta de la tienda.'**
+  String get premiumNothingToRestore;
+
+  /// No description provided for @premiumPurchasePending.
+  ///
+  /// In es, this message translates to:
+  /// **'La compra está pendiente de aprobación. Se activará sola cuando se confirme.'**
+  String get premiumPurchasePending;
+
+  /// No description provided for @premiumPurchaseFailed.
+  ///
+  /// In es, this message translates to:
+  /// **'No se pudo completar la compra. Inténtalo de nuevo.'**
+  String get premiumPurchaseFailed;
 
   /// No description provided for @premiumPurchaseUnavailable.
   ///
   /// In es, this message translates to:
-  /// **'La compra no está disponible todavía.'**
+  /// **'La compra no está disponible en este momento. Inténtalo más tarde.'**
   String get premiumPurchaseUnavailable;
 }
 
