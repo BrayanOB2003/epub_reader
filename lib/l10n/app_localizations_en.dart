@@ -1237,6 +1237,12 @@ class AppLocalizationsEn extends AppLocalizations {
   String get premiumLead => 'One payment opens all three.';
 
   @override
+  String get premiumHeadline => 'Power up your reading habit';
+
+  @override
+  String get premiumOnePayment => 'One payment.';
+
+  @override
   String get premiumPrice => '7 USD';
 
   @override

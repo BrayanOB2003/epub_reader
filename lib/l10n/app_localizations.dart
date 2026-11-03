@@ -2282,6 +2282,18 @@ abstract class AppLocalizations {
   /// **'Un pago abre las tres.'**
   String get premiumLead;
 
+  /// No description provided for @premiumHeadline.
+  ///
+  /// In es, this message translates to:
+  /// **'Potencia tu hábito de lectura'**
+  String get premiumHeadline;
+
+  /// No description provided for @premiumOnePayment.
+  ///
+  /// In es, this message translates to:
+  /// **'Un solo pago.'**
+  String get premiumOnePayment;
+
   /// No description provided for @premiumPrice.
   ///
   /// In es, this message translates to:

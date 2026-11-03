@@ -418,6 +418,8 @@
   "legalPageFailed": "The page could not be opened.",
   "premiumTitle": "Premium",
   "premiumLead": "One payment opens all three.",
+  "premiumHeadline": "Power up your reading habit",
+  "premiumOnePayment": "One payment.",
   "premiumPrice": "7 USD",
   "premiumMonthBody": "The month you closed: the plan's days, the time, and the books.",
   "premiumBooksBody": "The time in each book, apart from the week and the calendar.",

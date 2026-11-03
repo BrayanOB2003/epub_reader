@@ -11,6 +11,11 @@ import 'package:go_router/go_router.dart';
 
 void main() {
   testWidgets('premium is a profile row that opens the offer', (tester) async {
+    // Tall enough that the lazy list builds all three sections.
+    tester.view.physicalSize = const Size(1200, 2400);
+    tester.view.devicePixelRatio = 1;
+    addTearDown(tester.view.reset);
+
     final router = GoRouter(
       initialLocation: '/profile',
       routes: [
@@ -74,6 +79,8 @@ void main() {
       find.text('El papel, la tinta y la letra con la que se lee Liora.'),
       findsOneWidget,
     );
+    expect(find.text('Potencia tu hábito de lectura'), findsOneWidget);
+    expect(find.text('Un solo pago.'), findsOneWidget);
     expect(find.text('Desbloquear · 7 USD'), findsOneWidget);
 
     await tester.tap(find.text('Desbloquear · 7 USD'));

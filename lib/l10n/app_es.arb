@@ -620,6 +620,8 @@
   "legalPageFailed": "No se pudo abrir la página.",
   "premiumTitle": "Premium",
   "premiumLead": "Un pago abre las tres.",
+  "premiumHeadline": "Potencia tu hábito de lectura",
+  "premiumOnePayment": "Un solo pago.",
   "premiumPrice": "7 USD",
   "premiumMonthBody": "El mes que cerraste: los días del plan, el tiempo y los libros.",
   "premiumBooksBody": "El tiempo de cada libro, aparte de la semana y el calendario.",
