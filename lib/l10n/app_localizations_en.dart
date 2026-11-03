@@ -1243,9 +1243,6 @@ class AppLocalizationsEn extends AppLocalizations {
   String get premiumOnePayment => 'One payment.';
 
   @override
-  String get premiumPrice => '7 USD';
-
-  @override
   String get premiumMonthBody =>
       'The month you closed: the plan\'s days, the time, and the books.';
 
@@ -1258,8 +1255,39 @@ class AppLocalizationsEn extends AppLocalizations {
       'The paper, the ink, and the type Liora is read in.';
 
   @override
-  String get premiumUnlock => 'Unlock · 7 USD';
+  String get premiumUnlock => 'Unlock';
 
   @override
-  String get premiumPurchaseUnavailable => 'The purchase is not available yet.';
+  String premiumUnlockPrice(String price) {
+    return 'Unlock · $price';
+  }
+
+  @override
+  String get premiumActive => 'Active';
+
+  @override
+  String get premiumActiveNote =>
+      'You have Premium. Thank you for supporting Liora.';
+
+  @override
+  String get premiumRestore => 'Restore purchase';
+
+  @override
+  String get premiumRestored => 'Purchase restored.';
+
+  @override
+  String get premiumNothingToRestore =>
+      'We found no purchase to restore with this store account.';
+
+  @override
+  String get premiumPurchasePending =>
+      'The purchase is waiting for approval. It turns on by itself once it is confirmed.';
+
+  @override
+  String get premiumPurchaseFailed =>
+      'The purchase could not be completed. Try again.';
+
+  @override
+  String get premiumPurchaseUnavailable =>
+      'The purchase is not available right now. Try again later.';
 }

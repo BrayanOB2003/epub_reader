@@ -1,26 +1,49 @@
 import 'package:epub_reader/app/schedule_theme.dart';
+import 'package:epub_reader/features/premium/premium_controller.dart';
+import 'package:epub_reader/features/premium/premium_gateway.dart';
 import 'package:epub_reader/l10n/app_localizations.dart';
 import 'package:flutter/cupertino.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter/services.dart';
+import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:go_router/go_router.dart';
 
 /// The one payment. The profile only lists it; this page is the card that
 /// carries the pitch, the three sections and the price.
-class PremiumPage extends StatefulWidget {
+class PremiumPage extends ConsumerStatefulWidget {
   const PremiumPage({super.key});
 
   @override
-  State<PremiumPage> createState() => _PremiumPageState();
+  ConsumerState<PremiumPage> createState() => _PremiumPageState();
 }
 
-class _PremiumPageState extends State<PremiumPage> {
+class _PremiumPageState extends ConsumerState<PremiumPage> {
   String? _issue;
+  bool _busy = false;
 
-  void _buy() {
-    final message = AppLocalizations.of(context).premiumPurchaseUnavailable;
-    if (_issue == message) return;
-    setState(() => _issue = message);
+  Future<void> _buy() => _run(ref.read(premiumProvider.notifier).buy);
+
+  Future<void> _restore() => _run(ref.read(premiumProvider.notifier).restore);
+
+  Future<void> _run(Future<PremiumOutcome> Function() action) async {
+    if (_busy) return;
+    setState(() {
+      _busy = true;
+      _issue = null;
+    });
+    final outcome = await action();
+    if (!mounted) return;
+    final l10n = AppLocalizations.of(context);
+    setState(() {
+      _busy = false;
+      _issue = switch (outcome) {
+        PremiumOutcome.unlocked || PremiumOutcome.cancelled => null,
+        PremiumOutcome.pending => l10n.premiumPurchasePending,
+        PremiumOutcome.nothingToRestore => l10n.premiumNothingToRestore,
+        PremiumOutcome.failed => l10n.premiumPurchaseFailed,
+        PremiumOutcome.unavailable => l10n.premiumPurchaseUnavailable,
+      };
+    });
   }
 
   @override
@@ -28,6 +51,7 @@ class _PremiumPageState extends State<PremiumPage> {
     final l10n = AppLocalizations.of(context);
     final colors = ScheduleColors.of(context);
     final ink = typeOnStation(context);
+    final premium = ref.watch(premiumProvider);
     final issue = _issue;
     // On short screens the headline gives up height so the three sections
     // and the stamp stay in view.
@@ -84,10 +108,18 @@ class _PremiumPageState extends State<PremiumPage> {
                 ),
               ),
               _StampBar(
-                onePayment: l10n.premiumOnePayment,
-                label: l10n.premiumUnlock,
+                onePayment: premium.unlocked == true
+                    ? l10n.premiumActive
+                    : l10n.premiumOnePayment,
+                note: premium.unlocked == true ? l10n.premiumActiveNote : null,
+                label: premium.price == null
+                    ? l10n.premiumUnlock
+                    : l10n.premiumUnlockPrice(premium.price!),
+                restoreLabel: l10n.premiumRestore,
                 issue: issue,
+                busy: _busy,
                 onPressed: _buy,
+                onRestore: _restore,
               ),
             ],
           ),
@@ -210,15 +242,25 @@ class _Feature extends StatelessWidget {
 class _StampBar extends StatelessWidget {
   const _StampBar({
     required this.onePayment,
+    required this.note,
     required this.label,
+    required this.restoreLabel,
     required this.issue,
+    required this.busy,
     required this.onPressed,
+    required this.onRestore,
   });
 
   final String onePayment;
+
+  /// Shown instead of the stamp once premium is on.
+  final String? note;
   final String label;
+  final String restoreLabel;
   final String? issue;
+  final bool busy;
   final VoidCallback onPressed;
+  final VoidCallback onRestore;
 
   @override
   Widget build(BuildContext context) {
@@ -250,7 +292,27 @@ class _StampBar extends StatelessWidget {
               ),
             ),
             const SizedBox(height: 10),
-            _Stamp(label: label, onPressed: onPressed),
+            if (note != null)
+              Padding(
+                padding: const EdgeInsets.only(bottom: 8),
+                child: Text(
+                  note!,
+                  style: Theme.of(context).textTheme.bodyLarge
+                      ?.copyWith(color: ink, height: 1.4),
+                ),
+              )
+            else ...[
+              _Stamp(label: label, busy: busy, onPressed: onPressed),
+              TextButton(
+                onPressed: onRestore,
+                style: TextButton.styleFrom(
+                  foregroundColor: ink,
+                  minimumSize: const Size.fromHeight(48),
+                  textStyle: Theme.of(context).textTheme.labelLarge,
+                ),
+                child: Text(restoreLabel),
+              ),
+            ],
           ],
         ),
       ),
@@ -282,9 +344,8 @@ class _StampIssue extends StatelessWidget {
           Expanded(
             child: Text(
               message,
-              style: Theme.of(
-                context,
-              ).textTheme.bodyMedium?.copyWith(color: ink, height: 1.4),
+              style: Theme.of(context).textTheme.bodyMedium
+                  ?.copyWith(color: ink, height: 1.4),
             ),
           ),
         ],
@@ -295,9 +356,14 @@ class _StampIssue extends StatelessWidget {
 
 /// The stamp: the paper tone on the station band. It lands once when the card opens, then holds still.
 class _Stamp extends StatelessWidget {
-  const _Stamp({required this.label, required this.onPressed});
+  const _Stamp({
+    required this.label,
+    required this.busy,
+    required this.onPressed,
+  });
 
   final String label;
+  final bool busy;
   final VoidCallback onPressed;
 
   @override
@@ -313,15 +379,17 @@ class _Stamp extends StatelessWidget {
               color: colors.onStation,
               borderRadius: BorderRadius.zero,
               onPressed: onPressed,
-              child: Text(
-                label,
-                style: TextStyle(
-                  color: colors.station,
-                  fontSize: 19,
-                  fontWeight: FontWeight.w700,
-                  letterSpacing: -0.41,
-                ),
-              ),
+              child: busy
+                  ? CupertinoActivityIndicator(color: colors.station)
+                  : Text(
+                      label,
+                      style: TextStyle(
+                        color: colors.station,
+                        fontSize: 19,
+                        fontWeight: FontWeight.w700,
+                        letterSpacing: -0.41,
+                      ),
+                    ),
             ),
           )
         : FilledButton(
@@ -337,7 +405,15 @@ class _Stamp extends StatelessWidget {
                 letterSpacing: 0.2,
               ),
             ),
-            child: Text(label),
+            child: busy
+                ? SizedBox.square(
+                    dimension: 22,
+                    child: CircularProgressIndicator(
+                      strokeWidth: 2.5,
+                      color: colors.station,
+                    ),
+                  )
+                : Text(label),
           );
     if (still) return button;
     return TweenAnimationBuilder<double>(

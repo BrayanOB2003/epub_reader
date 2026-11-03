@@ -293,12 +293,14 @@ jobs:
         run: |
           set -euo pipefail
           if [ -z "${APP_ENV_FILE}" ]; then
-            echo "::error::Falta el secret APP_ENV_FILE (contenido de .env/.env, incluida la linea X_EPUB_KEY)."
+            echo "::error::Falta el secret APP_ENV_FILE (contenido de .env/.env, incluidas las lineas X_EPUB_KEY, REVENUECAT_KEY_IOS y REVENUECAT_KEY_ANDROID)."
             exit 1
           fi
           mkdir -p .env
           printf '%s\n' "$APP_ENV_FILE" > .env/.env
           grep -qE '^X_EPUB_KEY[:=]' .env/.env
+          grep -qE '^REVENUECAT_KEY_IOS[:=]' .env/.env
+          grep -qE '^REVENUECAT_KEY_ANDROID[:=]' .env/.env
 
       - name: Install dependencies and generate code
         shell: bash
@@ -399,12 +401,14 @@ jobs:
         run: |
           set -euo pipefail
           if [ -z "${APP_ENV_FILE}" ]; then
-            echo "::error::Falta el secret APP_ENV_FILE (contenido de .env/.env, incluida la linea X_EPUB_KEY)."
+            echo "::error::Falta el secret APP_ENV_FILE (contenido de .env/.env, incluidas las lineas X_EPUB_KEY, REVENUECAT_KEY_IOS y REVENUECAT_KEY_ANDROID)."
             exit 1
           fi
           mkdir -p .env
           printf '%s\n' "$APP_ENV_FILE" > .env/.env
           grep -qE '^X_EPUB_KEY[:=]' .env/.env
+          grep -qE '^REVENUECAT_KEY_IOS[:=]' .env/.env
+          grep -qE '^REVENUECAT_KEY_ANDROID[:=]' .env/.env
 
       - name: Install Flutter dependencies and generate code
         if: ${{ inputs.mode != 'submit_tested' && steps.android-preflight.outputs.build_required != 'false' }}
@@ -588,12 +592,14 @@ jobs:
         run: |
           set -euo pipefail
           if [ -z "${APP_ENV_FILE}" ]; then
-            echo "::error::Falta el secret APP_ENV_FILE (contenido de .env/.env, incluida la linea X_EPUB_KEY)."
+            echo "::error::Falta el secret APP_ENV_FILE (contenido de .env/.env, incluidas las lineas X_EPUB_KEY, REVENUECAT_KEY_IOS y REVENUECAT_KEY_ANDROID)."
             exit 1
           fi
           mkdir -p .env
           printf '%s\n' "$APP_ENV_FILE" > .env/.env
           grep -qE '^X_EPUB_KEY[:=]' .env/.env
+          grep -qE '^REVENUECAT_KEY_IOS[:=]' .env/.env
+          grep -qE '^REVENUECAT_KEY_ANDROID[:=]' .env/.env
 
       - name: Install Flutter dependencies and generate code
         if: ${{ inputs.mode != 'submit_tested' && steps.ios-preflight.outputs.build_required != 'false' }}

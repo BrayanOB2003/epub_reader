@@ -420,10 +420,17 @@
   "premiumLead": "One payment opens all three.",
   "premiumHeadline": "Power up your reading habit",
   "premiumOnePayment": "One payment.",
-  "premiumPrice": "7 USD",
   "premiumMonthBody": "The month you closed: the plan's days, the time, and the books.",
   "premiumBooksBody": "The time in each book, apart from the week and the calendar.",
   "premiumAppearanceBody": "The paper, the ink, and the type Liora is read in.",
-  "premiumUnlock": "Unlock · 7 USD",
-  "premiumPurchaseUnavailable": "The purchase is not available yet."
+  "premiumUnlock": "Unlock",
+  "premiumUnlockPrice": "Unlock · {price}",
+  "premiumActive": "Active",
+  "premiumActiveNote": "You have Premium. Thank you for supporting Liora.",
+  "premiumRestore": "Restore purchase",
+  "premiumRestored": "Purchase restored.",
+  "premiumNothingToRestore": "We found no purchase to restore with this store account.",
+  "premiumPurchasePending": "The purchase is waiting for approval. It turns on by itself once it is confirmed.",
+  "premiumPurchaseFailed": "The purchase could not be completed. Try again.",
+  "premiumPurchaseUnavailable": "The purchase is not available right now. Try again later."
 }
