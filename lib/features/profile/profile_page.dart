@@ -7,6 +7,7 @@ import 'package:epub_reader/core/database/app_database.dart';
 import 'package:epub_reader/features/focus/focus_mode.dart';
 import 'package:epub_reader/features/focus/focus_mode_tile.dart';
 import 'package:epub_reader/features/onboarding/onboarding_answers.dart';
+import 'package:epub_reader/features/premium/premium_controller.dart';
 import 'package:epub_reader/features/profile/reader_profile_store.dart';
 import 'package:epub_reader/features/profile/reading_routine.dart';
 import 'package:epub_reader/features/reader/quote_highlight_default_tile.dart';
@@ -65,6 +66,8 @@ class _ProfileList extends ConsumerWidget {
   Widget build(BuildContext context, WidgetRef ref) {
     final l10n = AppLocalizations.of(context);
     final colors = ScheduleColors.of(context);
+    final premium = ref.watch(premiumProvider);
+    final unlocked = premium.unlocked == true;
     final quoteCount = ref.watch(savedQuotesProvider).asData?.value.length;
     final sampleCount =
         ref.watch(sampleSessionCountProvider).asData?.value ?? 0;
@@ -102,11 +105,25 @@ class _ProfileList extends ConsumerWidget {
         ),
         _ProfileRow(
           title: l10n.premiumTitle,
-          subtitle: l10n.premiumLead,
-          trailing: l10n.premiumPrice,
+          subtitle: unlocked ? null : l10n.premiumLead,
+          trailing: unlocked ? l10n.premiumActive : premium.price,
           trailingStyle: muted,
           onTap: () => context.push('/profile/premium'),
         ),
+        if (unlocked) ...[
+          _ProfileRow(
+            title: l10n.monthReading,
+            onTap: () => context.push('/profile/month'),
+          ),
+          _ProfileRow(
+            title: l10n.readingByBook,
+            onTap: () => context.push('/time/books'),
+          ),
+          _ProfileRow(
+            title: l10n.appearance,
+            onTap: () => context.push('/profile/appearance'),
+          ),
+        ],
         _GroupLabel(title: l10n.profileRecords),
         _ProfileRow(
           title: l10n.savedQuotes,
