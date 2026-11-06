@@ -12,6 +12,7 @@ import 'package:epub_reader/features/profile/reader_profile_store.dart';
 import 'package:epub_reader/features/profile/reading_routine.dart';
 import 'package:epub_reader/features/reader/quote_highlight_default_tile.dart';
 import 'package:epub_reader/l10n/app_localizations.dart';
+import 'package:flutter/foundation.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:go_router/go_router.dart';
@@ -69,8 +70,6 @@ class _ProfileList extends ConsumerWidget {
     final premium = ref.watch(premiumProvider);
     final unlocked = premium.unlocked == true;
     final quoteCount = ref.watch(savedQuotesProvider).asData?.value.length;
-    final sampleCount =
-        ref.watch(sampleSessionCountProvider).asData?.value ?? 0;
     final goal = saved == null
         ? l10n.notSet
         : l10n.minutes(saved!.dailyGoalMinutes);
@@ -140,6 +139,25 @@ class _ProfileList extends ConsumerWidget {
           title: l10n.pqrs,
           onTap: () => context.push('/profile/pqrs'),
         ),
+        if (kDebugMode) const _SampleDataSection(),
+        const _AppNameplate(),
+      ],
+    );
+  }
+}
+
+class _SampleDataSection extends ConsumerWidget {
+  const _SampleDataSection();
+
+  @override
+  Widget build(BuildContext context, WidgetRef ref) {
+    final l10n = AppLocalizations.of(context);
+    final sampleCount =
+        ref.watch(sampleSessionCountProvider).asData?.value ?? 0;
+    return Column(
+      mainAxisSize: MainAxisSize.min,
+      crossAxisAlignment: CrossAxisAlignment.stretch,
+      children: [
         _GroupLabel(title: l10n.profileSampleData),
         _ProfileRow(
           title: l10n.sampleReadings,
@@ -154,7 +172,6 @@ class _ProfileList extends ConsumerWidget {
             onTap: () => _removeSampleReadings(context, ref),
           ),
         ],
-        const _AppNameplate(),
       ],
     );
   }
