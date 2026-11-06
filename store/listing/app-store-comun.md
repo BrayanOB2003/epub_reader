@@ -3,9 +3,11 @@
 ## Información de la app
 - Categoría principal: Libros
 - Categoría secundaria: Educación (opcional; si dudas, déjala vacía)
-- Clasificación por edades: 4+ (sin contenido sensible, sin web abierta, sin cuentas)
+- Clasificación por edades (App Store): 4+ (sin contenido sensible, sin web abierta, sin cuentas)
+- Clasificación por edades (Google Play, cuestionario IARC rellenado el 5 nov 2026, guardado y pendiente de enviar a revisión): ESRB Everyone, PEGI 3, USK todas las edades, IARC / Rusia / Corea del Sur 3+. Brasil queda ClassInd 14 solo por las compras dentro de la app (Liora Plus); no hay descriptores de violencia, sexo, lenguaje ni drogas. No se puede bajar Brasil sin ocultar la compra.
 - Derechos de uso (Copyright): `2026 <tu nombre o el de tu empresa>` (pendiente de confirmar)
 - Idioma principal: el de tu elección. Los textos de `app-store-es.md` y `app-store-en.md` se cargan como localizaciones.
+- Google Play no tiene español (México). La ficha usa English (United States) en-US, Spanish (Latin America) es-419 y Spanish (Spain) es-ES. El subtítulo de App Store va en la descripción corta de Play (máx. 80). Borrador guardado el 5 nov 2026; faltan icono 512×512, gráfico destacado 1024×500 y capturas de teléfono (las de iPhone 1320×2868 superan la relación 2:1 de Play).
 
 ## URLs
 - Privacidad: `https://www.somosliora.app/privacy` (EN) y `https://www.somosliora.app/es/privacy` (ES)

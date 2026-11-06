@@ -1,12 +1,12 @@
-# Ficha App Store · Español (es-MX o es-ES)
+# Ficha App Store · Español (es-MX y es-ES)
 
 Campo: App Store Connect → tu app → Distribución → iOS → Información de la versión / Información de la app.
 
-## Nombre (21/30)
-Liora: Lector de EPUB
+## Nombre (26/30)
+Liora: Lector EPUB y eBook
 
-## Subtítulo (20/30)
-Lee un poco cada día
+## Subtítulo (24/30)
+Hábito de lectura diaria
 
 ## Texto promocional (132/170)
 Elige cuántos minutos, a qué hora y qué días. Liora te acompaña a leer un poco cada día, sin cuenta y con tus libros en tu teléfono.

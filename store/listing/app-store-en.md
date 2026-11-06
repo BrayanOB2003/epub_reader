@@ -2,11 +2,11 @@
 
 Campo: App Store Connect → tu app → Distribución → iOS → Información de la versión / Información de la app.
 
-## Nombre (18/30)
-Liora: EPUB Reader
+## Nombre (26/30)
+Liora: EPUB & Ebook Reader
 
-## Subtítulo (23/30)
-Read a little every day
+## Subtítulo (20/30)
+Daily reading habit
 
 ## Texto promocional (141/170)
 Pick how many minutes, at what time and on which days. Liora helps you read a little every day, with no account and your books on your phone.
