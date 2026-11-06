@@ -432,5 +432,10 @@
   "premiumNothingToRestore": "We found no purchase to restore with this store account.",
   "premiumPurchasePending": "The purchase is waiting for approval. It turns on by itself once it is confirmed.",
   "premiumPurchaseFailed": "The purchase could not be completed. Try again.",
-  "premiumPurchaseUnavailable": "The purchase is not available right now. Try again later."
+  "premiumPurchaseUnavailable": "The purchase is not available right now. Try again later.",
+  "appVersion": "Version {version}",
+  "updateRequiredTitle": "Update Liora",
+  "updateRequiredBody": "To keep reading, install the new version from the store.",
+  "updateRequiredAction": "Go to the store",
+  "updateRequiredStoreFailed": "The store could not be opened."
 }

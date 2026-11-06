@@ -2371,6 +2371,36 @@ abstract class AppLocalizations {
   /// In es, this message translates to:
   /// **'La compra no está disponible en este momento. Inténtalo más tarde.'**
   String get premiumPurchaseUnavailable;
+
+  /// No description provided for @appVersion.
+  ///
+  /// In es, this message translates to:
+  /// **'Versión {version}'**
+  String appVersion(String version);
+
+  /// No description provided for @updateRequiredTitle.
+  ///
+  /// In es, this message translates to:
+  /// **'Actualiza Liora'**
+  String get updateRequiredTitle;
+
+  /// No description provided for @updateRequiredBody.
+  ///
+  /// In es, this message translates to:
+  /// **'Para seguir leyendo, instala la versión nueva desde la tienda.'**
+  String get updateRequiredBody;
+
+  /// No description provided for @updateRequiredAction.
+  ///
+  /// In es, this message translates to:
+  /// **'Ir a la tienda'**
+  String get updateRequiredAction;
+
+  /// No description provided for @updateRequiredStoreFailed.
+  ///
+  /// In es, this message translates to:
+  /// **'No se pudo abrir la tienda.'**
+  String get updateRequiredStoreFailed;
 }
 
 class _AppLocalizationsDelegate

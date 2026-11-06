@@ -1298,4 +1298,22 @@ class AppLocalizationsEs extends AppLocalizations {
   @override
   String get premiumPurchaseUnavailable =>
       'La compra no está disponible en este momento. Inténtalo más tarde.';
+
+  @override
+  String appVersion(String version) {
+    return 'Versión $version';
+  }
+
+  @override
+  String get updateRequiredTitle => 'Actualiza Liora';
+
+  @override
+  String get updateRequiredBody =>
+      'Para seguir leyendo, instala la versión nueva desde la tienda.';
+
+  @override
+  String get updateRequiredAction => 'Ir a la tienda';
+
+  @override
+  String get updateRequiredStoreFailed => 'No se pudo abrir la tienda.';
 }

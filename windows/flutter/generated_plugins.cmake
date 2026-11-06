@@ -5,6 +5,7 @@
 list(APPEND FLUTTER_PLUGIN_LIST
   cloud_firestore
   firebase_core
+  firebase_remote_config
   flutter_timezone
   gal
   share_plus

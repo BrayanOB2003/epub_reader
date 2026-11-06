@@ -3,6 +3,7 @@ import 'package:epub_reader/app/app_locale.dart';
 import 'package:epub_reader/app/app_theme_store.dart';
 import 'package:epub_reader/app/router.dart';
 import 'package:epub_reader/app/schedule_theme.dart';
+import 'package:epub_reader/features/app_update/app_update.dart';
 import 'package:epub_reader/features/focus/focus_binding.dart';
 import 'package:epub_reader/features/library/opened_epub.dart';
 import 'package:epub_reader/features/notifications/notification_binding.dart';
@@ -44,7 +45,7 @@ class EpubReaderApp extends ConsumerWidget {
                   barBackgroundColor: colors.paper,
                   textTheme: _cupertinoText(colors, fontId),
                 ),
-                child: child ?? const SizedBox.shrink(),
+                child: AppUpdateGate(child: child ?? const SizedBox.shrink()),
               ),
             ),
           ),

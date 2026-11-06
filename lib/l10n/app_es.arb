@@ -639,5 +639,15 @@
   "premiumNothingToRestore": "No encontramos una compra para restaurar con esta cuenta de la tienda.",
   "premiumPurchasePending": "La compra está pendiente de aprobación. Se activará sola cuando se confirme.",
   "premiumPurchaseFailed": "No se pudo completar la compra. Inténtalo de nuevo.",
-  "premiumPurchaseUnavailable": "La compra no está disponible en este momento. Inténtalo más tarde."
+  "premiumPurchaseUnavailable": "La compra no está disponible en este momento. Inténtalo más tarde.",
+  "appVersion": "Versión {version}",
+  "@appVersion": {
+    "placeholders": {
+      "version": {"type": "String"}
+    }
+  },
+  "updateRequiredTitle": "Actualiza Liora",
+  "updateRequiredBody": "Para seguir leyendo, instala la versión nueva desde la tienda.",
+  "updateRequiredAction": "Ir a la tienda",
+  "updateRequiredStoreFailed": "No se pudo abrir la tienda."
 }
