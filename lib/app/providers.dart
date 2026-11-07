@@ -2,6 +2,7 @@ import 'package:epub_reader/core/database/app_database.dart';
 import 'package:epub_reader/core/reading/readium_reading_engine.dart';
 import 'package:epub_reader/features/library/data/book_repository.dart';
 import 'package:epub_reader/features/library/data/epub_importer.dart';
+import 'package:epub_reader/features/library/data/pdf_describer.dart';
 import 'package:epub_reader/features/quotes/quote_background_store.dart';
 import 'package:epub_reader/features/quotes/quote_card_style_store.dart';
 import 'package:epub_reader/features/quotes/quote_image_export.dart';
@@ -44,7 +45,10 @@ final savedQuotesProvider = StreamProvider<List<ReadingQuote>>((ref) {
 });
 
 final epubImporterProvider = Provider<EpubImporter>((ref) {
-  return EpubImporter(ref.watch(bookRepositoryProvider));
+  return EpubImporter(
+    ref.watch(bookRepositoryProvider),
+    pdfDescriber: ReadiumPdfDescriber(ref.watch(readingEngineProvider)),
+  );
 });
 
 final quoteBackgroundStoreProvider = Provider<QuoteBackgroundStore>((ref) {

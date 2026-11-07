@@ -74,11 +74,51 @@ String contentsTitle(
   return untitled;
 }
 
+/// Index shown in the reader.
+///
+/// A navigation document wins. A PDF without one lists its pages. Anything
+/// else falls back to the reading order.
+List<Link> readerContents({
+  required List<Link> tableOfContents,
+  required List<Link> readingOrder,
+  required List<Link> pdfPages,
+  required bool pdf,
+  required String Function(int page) pageLabel,
+}) {
+  if (tableOfContents.isNotEmpty) return tableOfContents;
+  if (!pdf) return readingOrder;
+  return [
+    for (var index = 0; index < pdfPages.length; index++)
+      Link(href: pdfPages[index].href, title: pageLabel(index + 1)),
+  ];
+}
+
+/// Href that [contentsHrefMatches] can compare with a PDF page link.
+///
+/// Page links look like `book.pdf#page=4`. The locator often keeps that page
+/// in [Locations.fragments] or [Locations.position] instead of the href.
+String? pdfContentsHref(Locator? locator) {
+  if (locator == null) return null;
+  final resource = _resource(locator.href);
+  if (resource.isEmpty) return locator.href;
+  final page =
+      _pageFragment(locator.href) ??
+      _pageFragmentFrom(locator.locations?.fragments ?? const []) ??
+      _pageFromPosition(locator.locations?.position);
+  if (page == null) return locator.href;
+  return '$resource#$page';
+}
+
 /// Whether [linkHref] is the resource the reader is on.
 ///
-/// Fragments and query strings are ignored. A full file URI still matches
-/// the spine path it ends with.
+/// Fragments and query strings are ignored, except a `page=` fragment, which
+/// must be the same page. A full file URI still matches the spine path it
+/// ends with.
 bool contentsHrefMatches(String linkHref, String locatorHref) {
+  final linkPage = _pageFragment(linkHref);
+  if (linkPage != null && linkPage != _pageFragment(locatorHref)) {
+    return false;
+  }
   final link = _resource(linkHref);
   final locator = _resource(locatorHref);
   if (link.isEmpty || locator.isEmpty) return false;
@@ -198,3 +238,23 @@ String contentsFold(String value) {
 }
 
 String _resource(String href) => href.split('#').first.split('?').first;
+
+String? _pageFragment(String href) {
+  final hash = href.indexOf('#');
+  if (hash < 0 || hash >= href.length - 1) return null;
+  final fragment = href.substring(hash + 1).split('&').first;
+  if (!fragment.startsWith('page=')) return null;
+  return fragment;
+}
+
+String? _pageFragmentFrom(List<String> fragments) {
+  for (final fragment in fragments) {
+    if (fragment.startsWith('page=')) return fragment.split('&').first;
+  }
+  return null;
+}
+
+String? _pageFromPosition(int? position) {
+  if (position == null || position <= 0) return null;
+  return 'page=$position';
+}

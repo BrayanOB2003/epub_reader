@@ -131,7 +131,7 @@ abstract class AppLocalizations {
   /// No description provided for @epubOnDevice.
   ///
   /// In es, this message translates to:
-  /// **'Un EPUB de este dispositivo'**
+  /// **'Un EPUB o PDF de este dispositivo'**
   String get epubOnDevice;
 
   /// No description provided for @import.
@@ -149,7 +149,7 @@ abstract class AppLocalizations {
   /// No description provided for @importEpub.
   ///
   /// In es, this message translates to:
-  /// **'Importar EPUB'**
+  /// **'Importar EPUB o PDF'**
   String get importEpub;
 
   /// No description provided for @read.
@@ -197,7 +197,7 @@ abstract class AppLocalizations {
   /// No description provided for @importFailed.
   ///
   /// In es, this message translates to:
-  /// **'No se pudo importar el EPUB.'**
+  /// **'No se pudo importar el libro.'**
   String get importFailed;
 
   /// No description provided for @deleteFailed.
@@ -221,8 +221,20 @@ abstract class AppLocalizations {
   /// No description provided for @notAnEpub.
   ///
   /// In es, this message translates to:
-  /// **'El archivo no es un EPUB válido.'**
+  /// **'El archivo no es un EPUB o PDF válido.'**
   String get notAnEpub;
+
+  /// No description provided for @pdfUnreadable.
+  ///
+  /// In es, this message translates to:
+  /// **'No se pudo leer el PDF.'**
+  String get pdfUnreadable;
+
+  /// No description provided for @pdfPage.
+  ///
+  /// In es, this message translates to:
+  /// **'Página {page}'**
+  String pdfPage(int page);
 
   /// No description provided for @epubMissingRoot.
   ///
@@ -581,7 +593,7 @@ abstract class AppLocalizations {
   /// No description provided for @readerDesktopOnly.
   ///
   /// In es, this message translates to:
-  /// **'El lector funciona en iOS y Android. En el escritorio de macOS Readium no abre el EPUB.'**
+  /// **'El lector funciona en iOS y Android. En el escritorio de macOS Readium no abre el libro.'**
   String get readerDesktopOnly;
 
   /// No description provided for @openFailed.
@@ -2189,7 +2201,7 @@ abstract class AppLocalizations {
   /// No description provided for @pqrsFaqAddAnswer.
   ///
   /// In es, this message translates to:
-  /// **'En Biblioteca, Importar abre un EPUB de este dispositivo. En Descubrimiento puedes bajar uno del catálogo.'**
+  /// **'En Biblioteca, Importar abre un EPUB o PDF de este dispositivo. En Descubrimiento puedes bajar uno del catálogo.'**
   String get pqrsFaqAddAnswer;
 
   /// No description provided for @pqrsFaqOffline.
@@ -2371,6 +2383,36 @@ abstract class AppLocalizations {
   /// In es, this message translates to:
   /// **'La compra no está disponible en este momento. Inténtalo más tarde.'**
   String get premiumPurchaseUnavailable;
+
+  /// No description provided for @appVersion.
+  ///
+  /// In es, this message translates to:
+  /// **'Versión {version}'**
+  String appVersion(String version);
+
+  /// No description provided for @updateRequiredTitle.
+  ///
+  /// In es, this message translates to:
+  /// **'Actualiza Liora'**
+  String get updateRequiredTitle;
+
+  /// No description provided for @updateRequiredBody.
+  ///
+  /// In es, this message translates to:
+  /// **'Para seguir leyendo, instala la versión nueva desde la tienda.'**
+  String get updateRequiredBody;
+
+  /// No description provided for @updateRequiredAction.
+  ///
+  /// In es, this message translates to:
+  /// **'Ir a la tienda'**
+  String get updateRequiredAction;
+
+  /// No description provided for @updateRequiredStoreFailed.
+  ///
+  /// In es, this message translates to:
+  /// **'No se pudo abrir la tienda.'**
+  String get updateRequiredStoreFailed;
 }
 
 class _AppLocalizationsDelegate
