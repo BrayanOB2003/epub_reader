@@ -54,8 +54,9 @@ bool versionIsBelow(String? installed, String minimum) {
   return current < requiredBuild;
 }
 
-/// A phone is blocked only when its build is older and that store has a
-/// link. Without a link the reader would be stuck, so the app stays open.
+/// A phone is blocked when its build is older. The store link can be missing;
+/// the screen still covers the app and the button reports that it could not
+/// open the store.
 AppUpdateStatus decideAppUpdate({
   required String? installedVersion,
   required String minimumVersion,
@@ -67,9 +68,7 @@ AppUpdateStatus decideAppUpdate({
   if (!versionIsBelow(installedVersion, minimumVersion)) {
     return const AppUpdateStatus.clear();
   }
-  final storeUrl = storeListingUri(platform);
-  if (storeUrl == null) return const AppUpdateStatus.clear();
-  return AppUpdateStatus(blocked: true, storeUrl: storeUrl);
+  return AppUpdateStatus(blocked: true, storeUrl: storeListingUri(platform));
 }
 
 /// The store page for [platform].
@@ -100,9 +99,19 @@ String? _buildText(String? raw) {
 }
 
 String? _integerText(String raw) {
+  final value = _wholeNumber(raw);
+  return value?.toString();
+}
+
+/// A Remote Config number often arrives as `4.0`. That is build 4.
+int? _wholeNumber(String raw) {
   final text = raw.trim();
-  if (text.isEmpty || int.tryParse(text) == null) return null;
-  return text;
+  if (text.isEmpty) return null;
+  final whole = int.tryParse(text);
+  if (whole != null) return whole;
+  final decimal = double.tryParse(text);
+  if (decimal == null || decimal != decimal.roundToDouble()) return null;
+  return decimal.toInt();
 }
 
 Uri? _storeUri(String raw) {

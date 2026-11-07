@@ -52,16 +52,24 @@ final appUpdateStatusProvider = FutureProvider<AppUpdateStatus>((ref) async {
   final config = ref.watch(appUpdateConfigProvider);
   final platform = ref.watch(appUpdatePlatformProvider);
   try {
+    final installed = await version;
     final policy = await config.load();
     final status = decideAppUpdate(
-      installedVersion: await version,
+      installedVersion: installed,
       minimumVersion: policy.minimumVersion,
       platform: platform,
     );
+    if (kDebugMode) {
+      debugPrint(
+        '[update] build=$installed minimum=${policy.minimumVersion} '
+        'blocked=${status.blocked}',
+      );
+    }
     memory.status = status;
     memory.hasStatus = true;
     return status;
-  } catch (_) {
+  } catch (error) {
+    if (kDebugMode) debugPrint('[update] consulta falló $error');
     return memory.hasStatus ? memory.status : const AppUpdateStatus.clear();
   }
 });
@@ -75,7 +83,7 @@ final class FirebaseAppUpdateConfig implements AppUpdateConfig {
       RemoteConfigSettings(
         fetchTimeout: const Duration(seconds: 10),
         minimumFetchInterval: kDebugMode
-            ? Duration.zero
+            ? const Duration(minutes: 1)
             : const Duration(hours: 1),
       ),
     );
@@ -129,16 +137,18 @@ class _AppUpdateGateState extends ConsumerState<AppUpdateGate>
   @override
   Widget build(BuildContext context) {
     final status = ref.watch(appUpdateStatusProvider).value;
-    final url = status != null && status.blocked ? status.storeUrl : null;
+    final blocked = status?.blocked == true;
     return Stack(
       fit: StackFit.expand,
       children: [
         IgnorePointer(
-          ignoring: url != null,
-          child: ExcludeSemantics(excluding: url != null, child: widget.child),
+          ignoring: blocked,
+          child: ExcludeSemantics(excluding: blocked, child: widget.child),
         ),
-        if (url != null)
-          Positioned.fill(child: _UpdateRequiredScreen(storeUrl: url)),
+        if (blocked)
+          Positioned.fill(
+            child: _UpdateRequiredScreen(storeUrl: status?.storeUrl),
+          ),
       ],
     );
   }
@@ -147,7 +157,7 @@ class _AppUpdateGateState extends ConsumerState<AppUpdateGate>
 class _UpdateRequiredScreen extends ConsumerStatefulWidget {
   const _UpdateRequiredScreen({required this.storeUrl});
 
-  final Uri storeUrl;
+  final Uri? storeUrl;
 
   @override
   ConsumerState<_UpdateRequiredScreen> createState() =>
@@ -162,11 +172,14 @@ class _UpdateRequiredScreenState extends ConsumerState<_UpdateRequiredScreen> {
     setState(() => _busy = true);
     final l10n = AppLocalizations.of(context);
     final messenger = ScaffoldMessenger.of(context);
+    final url = widget.storeUrl;
     var opened = false;
-    try {
-      opened = await ref.read(storeLauncherProvider)(widget.storeUrl);
-    } catch (_) {
-      opened = false;
+    if (url != null) {
+      try {
+        opened = await ref.read(storeLauncherProvider)(url);
+      } catch (_) {
+        opened = false;
+      }
     }
     if (!mounted) return;
     setState(() => _busy = false);

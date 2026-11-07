@@ -25,7 +25,7 @@ class AppLocalizationsEs extends AppLocalizations {
   String get noBooksYet => 'Todavía no hay libros';
 
   @override
-  String get epubOnDevice => 'Un EPUB de este dispositivo';
+  String get epubOnDevice => 'Un EPUB o PDF de este dispositivo';
 
   @override
   String get import => 'Importar';
@@ -34,7 +34,7 @@ class AppLocalizationsEs extends AppLocalizations {
   String get importing => 'Importando';
 
   @override
-  String get importEpub => 'Importar EPUB';
+  String get importEpub => 'Importar EPUB o PDF';
 
   @override
   String get read => 'Leer';
@@ -60,7 +60,7 @@ class AppLocalizationsEs extends AppLocalizations {
   String get alreadyInLibrary => 'Este libro ya está en la biblioteca.';
 
   @override
-  String get importFailed => 'No se pudo importar el EPUB.';
+  String get importFailed => 'No se pudo importar el libro.';
 
   @override
   String get deleteFailed => 'No se pudo eliminar el libro.';
@@ -72,7 +72,15 @@ class AppLocalizationsEs extends AppLocalizations {
   String get untitled => 'Sin título';
 
   @override
-  String get notAnEpub => 'El archivo no es un EPUB válido.';
+  String get notAnEpub => 'El archivo no es un EPUB o PDF válido.';
+
+  @override
+  String get pdfUnreadable => 'No se pudo leer el PDF.';
+
+  @override
+  String pdfPage(int page) {
+    return 'Página $page';
+  }
 
   @override
   String get epubMissingRoot => 'El EPUB no indica su archivo de contenido.';
@@ -267,7 +275,7 @@ class AppLocalizationsEs extends AppLocalizations {
 
   @override
   String get readerDesktopOnly =>
-      'El lector funciona en iOS y Android. En el escritorio de macOS Readium no abre el EPUB.';
+      'El lector funciona en iOS y Android. En el escritorio de macOS Readium no abre el libro.';
 
   @override
   String get openFailed => 'No se pudo abrir el libro.';
@@ -1194,7 +1202,7 @@ class AppLocalizationsEs extends AppLocalizations {
 
   @override
   String get pqrsFaqAddAnswer =>
-      'En Biblioteca, Importar abre un EPUB de este dispositivo. En Descubrimiento puedes bajar uno del catálogo.';
+      'En Biblioteca, Importar abre un EPUB o PDF de este dispositivo. En Descubrimiento puedes bajar uno del catálogo.';
 
   @override
   String get pqrsFaqOffline => '¿Puedo leer sin internet?';

@@ -1,3 +1,5 @@
+import 'dart:typed_data';
+
 import 'package:flutter_readium/flutter_readium.dart';
 
 /// Thin wrapper around [FlutterReadium] so the rest of the app does not
@@ -11,6 +13,13 @@ class ReadiumReadingEngine {
   Future<Publication> open(String filePath) =>
       _readium.openPublication(filePath);
 
+  Future<Publication> load(String filePath) =>
+      _readium.loadPublication(filePath);
+
+  /// PNG cover. For a PDF this is the first page. Null when there is none.
+  Future<Uint8List?> cover(String filePath) =>
+      _readium.publicationCover(filePath);
+
   Future<void> close() => _readium.closePublication();
 
   Future<void> goForward() => _readium.goForward();
@@ -21,6 +30,9 @@ class ReadiumReadingEngine {
 
   Future<void> setPreferences(EPUBPreferences preferences) =>
       _readium.setEPUBPreferences(preferences);
+
+  Future<void> setPdfPreferences(PDFPreferences preferences) =>
+      _readium.setPDFPreferences(preferences);
 
   Future<void> applyDecorations(
     String id,

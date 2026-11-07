@@ -24,6 +24,28 @@ void main() {
     expect(tree.single.link.title, 'Nav');
   });
 
+  test('a pdf without an index lists its pages', () {
+    final links = readerContents(
+      tableOfContents: const [],
+      readingOrder: [_link('book.pdf', title: 'Book')],
+      pdfPages: [_link('book.pdf#page=1'), _link('book.pdf#page=2')],
+      pdf: true,
+      pageLabel: (page) => 'Página $page',
+    );
+
+    expect(links.map((link) => link.title), ['Página 1', 'Página 2']);
+    expect(
+      pdfContentsHref(
+        const Locator(
+          href: 'book.pdf',
+          type: 'application/pdf',
+          locations: Locations(fragments: ['page=2'], position: 2),
+        ),
+      ),
+      'book.pdf#page=2',
+    );
+  });
+
   test('an empty navigation document falls back to the reading order', () {
     final tree = contentsTree(
       tableOfContents: const [],
@@ -50,6 +72,9 @@ void main() {
     expect(contentsHrefMatches('c1.xhtml', 'c1.xhtml#p3'), isTrue);
     expect(contentsHrefMatches('c1.xhtml', 'file:///books/c1.xhtml'), isTrue);
     expect(contentsHrefMatches('c1.xhtml', 'c2.xhtml'), isFalse);
+    expect(contentsHrefMatches('book.pdf#page=2', 'book.pdf#page=2'), isTrue);
+    expect(contentsHrefMatches('book.pdf#page=2', 'book.pdf#page=3'), isFalse);
+    expect(contentsHrefMatches('book.pdf#page=2', 'book.pdf'), isFalse);
 
     final tree = _tree([
       _link(

@@ -20,6 +20,7 @@ void main() {
     expect(versionIsBelow('4', '1.2.0+5'), isTrue);
     expect(versionIsBelow('1.0.1+1', '1.0.0+9'), isTrue);
     expect(versionIsBelow('9', '10'), isTrue);
+    expect(versionIsBelow('1', '4.0'), isTrue);
   });
 
   test('the same or a newer build stays', () {
@@ -54,8 +55,8 @@ void main() {
       minimumVersion: '5',
       platform: TargetPlatform.iOS,
     );
+    expect(ios.blocked, isTrue);
     expect(ios.storeUrl, storeListingUri(TargetPlatform.iOS));
-    expect(ios.blocked, ios.storeUrl != null);
 
     final desktop = decideAppUpdate(
       installedVersion: '1',

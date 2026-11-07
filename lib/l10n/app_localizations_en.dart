@@ -25,7 +25,7 @@ class AppLocalizationsEn extends AppLocalizations {
   String get noBooksYet => 'No books yet';
 
   @override
-  String get epubOnDevice => 'An EPUB from this device';
+  String get epubOnDevice => 'An EPUB or PDF from this device';
 
   @override
   String get import => 'Import';
@@ -34,7 +34,7 @@ class AppLocalizationsEn extends AppLocalizations {
   String get importing => 'Importing';
 
   @override
-  String get importEpub => 'Import EPUB';
+  String get importEpub => 'Import EPUB or PDF';
 
   @override
   String get read => 'Read';
@@ -60,7 +60,7 @@ class AppLocalizationsEn extends AppLocalizations {
   String get alreadyInLibrary => 'This book is already in the library.';
 
   @override
-  String get importFailed => 'The EPUB could not be imported.';
+  String get importFailed => 'The book could not be imported.';
 
   @override
   String get deleteFailed => 'The book could not be deleted.';
@@ -72,7 +72,15 @@ class AppLocalizationsEn extends AppLocalizations {
   String get untitled => 'Untitled';
 
   @override
-  String get notAnEpub => 'The file is not a valid EPUB.';
+  String get notAnEpub => 'The file is not a valid EPUB or PDF.';
+
+  @override
+  String get pdfUnreadable => 'The PDF could not be read.';
+
+  @override
+  String pdfPage(int page) {
+    return 'Page $page';
+  }
 
   @override
   String get epubMissingRoot => 'The EPUB does not name its content file.';
@@ -263,7 +271,7 @@ class AppLocalizationsEn extends AppLocalizations {
 
   @override
   String get readerDesktopOnly =>
-      'The reader works on iOS and Android. On the macOS desktop, Readium does not open the EPUB.';
+      'The reader works on iOS and Android. On the macOS desktop, Readium does not open the book.';
 
   @override
   String get openFailed => 'The book could not be opened.';
@@ -1186,7 +1194,7 @@ class AppLocalizationsEn extends AppLocalizations {
 
   @override
   String get pqrsFaqAddAnswer =>
-      'In Library, Import opens an EPUB from this device. In Discover you can download one from the catalog.';
+      'In Library, Import opens an EPUB or PDF from this device. In Discover you can download one from the catalog.';
 
   @override
   String get pqrsFaqOffline => 'Can I read without internet?';
