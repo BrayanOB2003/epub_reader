@@ -307,7 +307,14 @@ jobs:
         run: |
           set -euo pipefail
           flutter pub upgrade flutter_readium
-          grep -A12 '^  flutter_readium:' pubspec.lock | grep -q "resolved-ref: \"${READIUM_SHA}\"" || {
+          # Pub cita el SHA solo si no parece un identificador YAML. Un commit
+          # que empieza por a-f queda sin comillas; uno que empieza por 0-9, con.
+          awk -v sha="$READIUM_SHA" '
+            /^  flutter_readium:/ { seen = 1; next }
+            seen && /^  [^ ]/ { exit !found }
+            seen && $0 ~ ("resolved-ref: \"?" sha "\"?$") { found = 1 }
+            END { exit !found }
+          ' pubspec.lock || {
             echo "::error::flutter_readium no resolvio el commit fijado en prepare (${READIUM_SHA}). La rama prod cambio durante el run; vuelve a ejecutar."
             exit 1
           }
@@ -416,7 +423,14 @@ jobs:
         run: |
           set -euo pipefail
           flutter pub upgrade flutter_readium
-          grep -A12 '^  flutter_readium:' pubspec.lock | grep -q "resolved-ref: \"${READIUM_SHA}\"" || {
+          # Pub cita el SHA solo si no parece un identificador YAML. Un commit
+          # que empieza por a-f queda sin comillas; uno que empieza por 0-9, con.
+          awk -v sha="$READIUM_SHA" '
+            /^  flutter_readium:/ { seen = 1; next }
+            seen && /^  [^ ]/ { exit !found }
+            seen && $0 ~ ("resolved-ref: \"?" sha "\"?$") { found = 1 }
+            END { exit !found }
+          ' pubspec.lock || {
             echo "::error::flutter_readium no resolvio el commit fijado en prepare (${READIUM_SHA}). La rama prod cambio durante el run; vuelve a ejecutar."
             exit 1
           }
@@ -607,7 +621,14 @@ jobs:
         run: |
           set -euo pipefail
           flutter pub upgrade flutter_readium
-          grep -A12 '^  flutter_readium:' pubspec.lock | grep -q "resolved-ref: \"${READIUM_SHA}\"" || {
+          # Pub cita el SHA solo si no parece un identificador YAML. Un commit
+          # que empieza por a-f queda sin comillas; uno que empieza por 0-9, con.
+          awk -v sha="$READIUM_SHA" '
+            /^  flutter_readium:/ { seen = 1; next }
+            seen && /^  [^ ]/ { exit !found }
+            seen && $0 ~ ("resolved-ref: \"?" sha "\"?$") { found = 1 }
+            END { exit !found }
+          ' pubspec.lock || {
             echo "::error::flutter_readium no resolvio el commit fijado en prepare (${READIUM_SHA}). La rama prod cambio durante el run; vuelve a ejecutar."
             exit 1
           }
