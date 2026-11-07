@@ -11,6 +11,24 @@ import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:flutter_test/flutter_test.dart';
 
 void main() {
+  test('opening a notification uses an event name Analytics accepts', () {
+    const reserved = {
+      'error',
+      'first_open',
+      'notification_dismiss',
+      'notification_foreground',
+      'notification_open',
+      'notification_receive',
+      'session_start',
+      'user_engagement',
+    };
+    expect(reserved.contains(notificationOpenEvent), isFalse);
+    expect(
+      RegExp(r'^[a-zA-Z][a-zA-Z0-9_]{0,39}$').hasMatch(notificationOpenEvent),
+      isTrue,
+    );
+  });
+
   test('screen names drop the book id', () {
     expect(analyticsScreenName(const RouteSettings(name: 'read')), 'read');
     expect(analyticsScreenName(const RouteSettings(name: '/read/12')), 'read');

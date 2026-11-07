@@ -7,7 +7,9 @@ const bookAddedEvent = 'book_added';
 const readingSessionEvent = 'reading_session';
 const dailyGoalReachedEvent = 'daily_goal_reached';
 const focusModeSetEvent = 'focus_mode_set';
-const notificationOpenEvent = 'notification_open';
+/// Not `notification_open`: Firebase Analytics reserves that name and
+/// rejects it before the event is sent.
+const notificationOpenEvent = 'opened_notification';
 
 const bookSourceImport = 'import';
 const bookSourceCatalog = 'catalog';

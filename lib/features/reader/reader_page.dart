@@ -137,6 +137,7 @@ class _ReaderPageState extends ConsumerState<ReaderPage>
         );
       }
       _engagement = ReadingEngagement();
+      await _engine.prepareLocator();
       _locatorSubscription = _engine.onLocator.listen(_onLocator);
       if (!mounted) {
         _engagement?.abandon();
@@ -487,6 +488,12 @@ class _ReaderPageState extends ConsumerState<ReaderPage>
     _showMessage(l10n.quoteDeleted);
   }
 
+  Future<void> _releaseEngine() async {
+    try {
+      await _engine.close();
+    } catch (_) {}
+  }
+
   Future<void> _persist() async {
     final locator = _latestLocator;
     if (locator == null) return;
@@ -743,7 +750,7 @@ class _ReaderPageState extends ConsumerState<ReaderPage>
       );
     }
     unawaited(_locatorSubscription?.cancel());
-    unawaited(_engine.close());
+    unawaited(_releaseEngine());
     super.dispose();
   }
 

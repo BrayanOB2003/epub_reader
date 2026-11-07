@@ -22,6 +22,9 @@ class ReadiumReadingEngine {
 
   Future<void> close() => _readium.closePublication();
 
+  /// Registers the native locator channel on this engine before [onLocator] is listened to.
+  Future<void> prepareLocator() => _readium.ensureEventChannels();
+
   Future<void> goForward() => _readium.goForward();
 
   Future<void> goBackward() => _readium.goBackward();
