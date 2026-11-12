@@ -884,6 +884,28 @@ class $ReadingSessionsTable extends ReadingSessions
     ),
     defaultValue: const Constant(false),
   );
+  static const VerificationMeta _paceSecondsMeta = const VerificationMeta(
+    'paceSeconds',
+  );
+  @override
+  late final GeneratedColumn<int> paceSeconds = GeneratedColumn<int>(
+    'pace_seconds',
+    aliasedName,
+    true,
+    type: DriftSqlType.int,
+    requiredDuringInsert: false,
+  );
+  static const VerificationMeta _paceProgressMeta = const VerificationMeta(
+    'paceProgress',
+  );
+  @override
+  late final GeneratedColumn<double> paceProgress = GeneratedColumn<double>(
+    'pace_progress',
+    aliasedName,
+    true,
+    type: DriftSqlType.double,
+    requiredDuringInsert: false,
+  );
   @override
   List<GeneratedColumn> get $columns => [
     id,
@@ -892,6 +914,8 @@ class $ReadingSessionsTable extends ReadingSessions
     endedAt,
     engagedSeconds,
     sample,
+    paceSeconds,
+    paceProgress,
   ];
   @override
   String get aliasedName => _alias ?? actualTableName;
@@ -949,6 +973,24 @@ class $ReadingSessionsTable extends ReadingSessions
         sample.isAcceptableOrUnknown(data['sample']!, _sampleMeta),
       );
     }
+    if (data.containsKey('pace_seconds')) {
+      context.handle(
+        _paceSecondsMeta,
+        paceSeconds.isAcceptableOrUnknown(
+          data['pace_seconds']!,
+          _paceSecondsMeta,
+        ),
+      );
+    }
+    if (data.containsKey('pace_progress')) {
+      context.handle(
+        _paceProgressMeta,
+        paceProgress.isAcceptableOrUnknown(
+          data['pace_progress']!,
+          _paceProgressMeta,
+        ),
+      );
+    }
     return context;
   }
 
@@ -982,6 +1024,14 @@ class $ReadingSessionsTable extends ReadingSessions
         DriftSqlType.bool,
         data['${effectivePrefix}sample'],
       )!,
+      paceSeconds: attachedDatabase.typeMapping.read(
+        DriftSqlType.int,
+        data['${effectivePrefix}pace_seconds'],
+      ),
+      paceProgress: attachedDatabase.typeMapping.read(
+        DriftSqlType.double,
+        data['${effectivePrefix}pace_progress'],
+      ),
     );
   }
 
@@ -1000,6 +1050,13 @@ class ReadingSession extends DataClass implements Insertable<ReadingSession> {
 
   /// True when the session was written by "Lecturas de ejemplo".
   final bool sample;
+
+  /// Seconds of steady forward reading, the part that sets the pace.
+  /// Null for sessions written before the pace was measured page by page.
+  final int? paceSeconds;
+
+  /// Book fraction read in [paceSeconds], on the reading-order scale.
+  final double? paceProgress;
   const ReadingSession({
     required this.id,
     required this.bookId,
@@ -1007,6 +1064,8 @@ class ReadingSession extends DataClass implements Insertable<ReadingSession> {
     required this.endedAt,
     required this.engagedSeconds,
     required this.sample,
+    this.paceSeconds,
+    this.paceProgress,
   });
   @override
   Map<String, Expression> toColumns(bool nullToAbsent) {
@@ -1017,6 +1076,12 @@ class ReadingSession extends DataClass implements Insertable<ReadingSession> {
     map['ended_at'] = Variable<DateTime>(endedAt);
     map['engaged_seconds'] = Variable<int>(engagedSeconds);
     map['sample'] = Variable<bool>(sample);
+    if (!nullToAbsent || paceSeconds != null) {
+      map['pace_seconds'] = Variable<int>(paceSeconds);
+    }
+    if (!nullToAbsent || paceProgress != null) {
+      map['pace_progress'] = Variable<double>(paceProgress);
+    }
     return map;
   }
 
@@ -1028,6 +1093,12 @@ class ReadingSession extends DataClass implements Insertable<ReadingSession> {
       endedAt: Value(endedAt),
       engagedSeconds: Value(engagedSeconds),
       sample: Value(sample),
+      paceSeconds: paceSeconds == null && nullToAbsent
+          ? const Value.absent()
+          : Value(paceSeconds),
+      paceProgress: paceProgress == null && nullToAbsent
+          ? const Value.absent()
+          : Value(paceProgress),
     );
   }
 
@@ -1043,6 +1114,8 @@ class ReadingSession extends DataClass implements Insertable<ReadingSession> {
       endedAt: serializer.fromJson<DateTime>(json['endedAt']),
       engagedSeconds: serializer.fromJson<int>(json['engagedSeconds']),
       sample: serializer.fromJson<bool>(json['sample']),
+      paceSeconds: serializer.fromJson<int?>(json['paceSeconds']),
+      paceProgress: serializer.fromJson<double?>(json['paceProgress']),
     );
   }
   @override
@@ -1055,6 +1128,8 @@ class ReadingSession extends DataClass implements Insertable<ReadingSession> {
       'endedAt': serializer.toJson<DateTime>(endedAt),
       'engagedSeconds': serializer.toJson<int>(engagedSeconds),
       'sample': serializer.toJson<bool>(sample),
+      'paceSeconds': serializer.toJson<int?>(paceSeconds),
+      'paceProgress': serializer.toJson<double?>(paceProgress),
     };
   }
 
@@ -1065,6 +1140,8 @@ class ReadingSession extends DataClass implements Insertable<ReadingSession> {
     DateTime? endedAt,
     int? engagedSeconds,
     bool? sample,
+    Value<int?> paceSeconds = const Value.absent(),
+    Value<double?> paceProgress = const Value.absent(),
   }) => ReadingSession(
     id: id ?? this.id,
     bookId: bookId ?? this.bookId,
@@ -1072,6 +1149,8 @@ class ReadingSession extends DataClass implements Insertable<ReadingSession> {
     endedAt: endedAt ?? this.endedAt,
     engagedSeconds: engagedSeconds ?? this.engagedSeconds,
     sample: sample ?? this.sample,
+    paceSeconds: paceSeconds.present ? paceSeconds.value : this.paceSeconds,
+    paceProgress: paceProgress.present ? paceProgress.value : this.paceProgress,
   );
   ReadingSession copyWithCompanion(ReadingSessionsCompanion data) {
     return ReadingSession(
@@ -1083,6 +1162,12 @@ class ReadingSession extends DataClass implements Insertable<ReadingSession> {
           ? data.engagedSeconds.value
           : this.engagedSeconds,
       sample: data.sample.present ? data.sample.value : this.sample,
+      paceSeconds: data.paceSeconds.present
+          ? data.paceSeconds.value
+          : this.paceSeconds,
+      paceProgress: data.paceProgress.present
+          ? data.paceProgress.value
+          : this.paceProgress,
     );
   }
 
@@ -1094,14 +1179,24 @@ class ReadingSession extends DataClass implements Insertable<ReadingSession> {
           ..write('startedAt: $startedAt, ')
           ..write('endedAt: $endedAt, ')
           ..write('engagedSeconds: $engagedSeconds, ')
-          ..write('sample: $sample')
+          ..write('sample: $sample, ')
+          ..write('paceSeconds: $paceSeconds, ')
+          ..write('paceProgress: $paceProgress')
           ..write(')'))
         .toString();
   }
 
   @override
-  int get hashCode =>
-      Object.hash(id, bookId, startedAt, endedAt, engagedSeconds, sample);
+  int get hashCode => Object.hash(
+    id,
+    bookId,
+    startedAt,
+    endedAt,
+    engagedSeconds,
+    sample,
+    paceSeconds,
+    paceProgress,
+  );
   @override
   bool operator ==(Object other) =>
       identical(this, other) ||
@@ -1111,7 +1206,9 @@ class ReadingSession extends DataClass implements Insertable<ReadingSession> {
           other.startedAt == this.startedAt &&
           other.endedAt == this.endedAt &&
           other.engagedSeconds == this.engagedSeconds &&
-          other.sample == this.sample);
+          other.sample == this.sample &&
+          other.paceSeconds == this.paceSeconds &&
+          other.paceProgress == this.paceProgress);
 }
 
 class ReadingSessionsCompanion extends UpdateCompanion<ReadingSession> {
@@ -1121,6 +1218,8 @@ class ReadingSessionsCompanion extends UpdateCompanion<ReadingSession> {
   final Value<DateTime> endedAt;
   final Value<int> engagedSeconds;
   final Value<bool> sample;
+  final Value<int?> paceSeconds;
+  final Value<double?> paceProgress;
   const ReadingSessionsCompanion({
     this.id = const Value.absent(),
     this.bookId = const Value.absent(),
@@ -1128,6 +1227,8 @@ class ReadingSessionsCompanion extends UpdateCompanion<ReadingSession> {
     this.endedAt = const Value.absent(),
     this.engagedSeconds = const Value.absent(),
     this.sample = const Value.absent(),
+    this.paceSeconds = const Value.absent(),
+    this.paceProgress = const Value.absent(),
   });
   ReadingSessionsCompanion.insert({
     this.id = const Value.absent(),
@@ -1136,6 +1237,8 @@ class ReadingSessionsCompanion extends UpdateCompanion<ReadingSession> {
     required DateTime endedAt,
     required int engagedSeconds,
     this.sample = const Value.absent(),
+    this.paceSeconds = const Value.absent(),
+    this.paceProgress = const Value.absent(),
   }) : bookId = Value(bookId),
        startedAt = Value(startedAt),
        endedAt = Value(endedAt),
@@ -1147,6 +1250,8 @@ class ReadingSessionsCompanion extends UpdateCompanion<ReadingSession> {
     Expression<DateTime>? endedAt,
     Expression<int>? engagedSeconds,
     Expression<bool>? sample,
+    Expression<int>? paceSeconds,
+    Expression<double>? paceProgress,
   }) {
     return RawValuesInsertable({
       if (id != null) 'id': id,
@@ -1155,6 +1260,8 @@ class ReadingSessionsCompanion extends UpdateCompanion<ReadingSession> {
       if (endedAt != null) 'ended_at': endedAt,
       if (engagedSeconds != null) 'engaged_seconds': engagedSeconds,
       if (sample != null) 'sample': sample,
+      if (paceSeconds != null) 'pace_seconds': paceSeconds,
+      if (paceProgress != null) 'pace_progress': paceProgress,
     });
   }
 
@@ -1165,6 +1272,8 @@ class ReadingSessionsCompanion extends UpdateCompanion<ReadingSession> {
     Value<DateTime>? endedAt,
     Value<int>? engagedSeconds,
     Value<bool>? sample,
+    Value<int?>? paceSeconds,
+    Value<double?>? paceProgress,
   }) {
     return ReadingSessionsCompanion(
       id: id ?? this.id,
@@ -1173,6 +1282,8 @@ class ReadingSessionsCompanion extends UpdateCompanion<ReadingSession> {
       endedAt: endedAt ?? this.endedAt,
       engagedSeconds: engagedSeconds ?? this.engagedSeconds,
       sample: sample ?? this.sample,
+      paceSeconds: paceSeconds ?? this.paceSeconds,
+      paceProgress: paceProgress ?? this.paceProgress,
     );
   }
 
@@ -1197,6 +1308,12 @@ class ReadingSessionsCompanion extends UpdateCompanion<ReadingSession> {
     if (sample.present) {
       map['sample'] = Variable<bool>(sample.value);
     }
+    if (paceSeconds.present) {
+      map['pace_seconds'] = Variable<int>(paceSeconds.value);
+    }
+    if (paceProgress.present) {
+      map['pace_progress'] = Variable<double>(paceProgress.value);
+    }
     return map;
   }
 
@@ -1208,7 +1325,9 @@ class ReadingSessionsCompanion extends UpdateCompanion<ReadingSession> {
           ..write('startedAt: $startedAt, ')
           ..write('endedAt: $endedAt, ')
           ..write('engagedSeconds: $engagedSeconds, ')
-          ..write('sample: $sample')
+          ..write('sample: $sample, ')
+          ..write('paceSeconds: $paceSeconds, ')
+          ..write('paceProgress: $paceProgress')
           ..write(')'))
         .toString();
   }
@@ -3537,6 +3656,8 @@ typedef $$ReadingSessionsTableCreateCompanionBuilder =
       required DateTime endedAt,
       required int engagedSeconds,
       Value<bool> sample,
+      Value<int?> paceSeconds,
+      Value<double?> paceProgress,
     });
 typedef $$ReadingSessionsTableUpdateCompanionBuilder =
     ReadingSessionsCompanion Function({
@@ -3546,6 +3667,8 @@ typedef $$ReadingSessionsTableUpdateCompanionBuilder =
       Value<DateTime> endedAt,
       Value<int> engagedSeconds,
       Value<bool> sample,
+      Value<int?> paceSeconds,
+      Value<double?> paceProgress,
     });
 
 final class $$ReadingSessionsTableReferences
@@ -3609,6 +3732,16 @@ class $$ReadingSessionsTableFilterComposer
     builder: (column) => ColumnFilters(column),
   );
 
+  ColumnFilters<int> get paceSeconds => $composableBuilder(
+    column: $table.paceSeconds,
+    builder: (column) => ColumnFilters(column),
+  );
+
+  ColumnFilters<double> get paceProgress => $composableBuilder(
+    column: $table.paceProgress,
+    builder: (column) => ColumnFilters(column),
+  );
+
   $$BooksTableFilterComposer get bookId {
     final $$BooksTableFilterComposer composer = $composerBuilder(
       composer: this,
@@ -3667,6 +3800,16 @@ class $$ReadingSessionsTableOrderingComposer
     builder: (column) => ColumnOrderings(column),
   );
 
+  ColumnOrderings<int> get paceSeconds => $composableBuilder(
+    column: $table.paceSeconds,
+    builder: (column) => ColumnOrderings(column),
+  );
+
+  ColumnOrderings<double> get paceProgress => $composableBuilder(
+    column: $table.paceProgress,
+    builder: (column) => ColumnOrderings(column),
+  );
+
   $$BooksTableOrderingComposer get bookId {
     final $$BooksTableOrderingComposer composer = $composerBuilder(
       composer: this,
@@ -3716,6 +3859,16 @@ class $$ReadingSessionsTableAnnotationComposer
 
   GeneratedColumn<bool> get sample =>
       $composableBuilder(column: $table.sample, builder: (column) => column);
+
+  GeneratedColumn<int> get paceSeconds => $composableBuilder(
+    column: $table.paceSeconds,
+    builder: (column) => column,
+  );
+
+  GeneratedColumn<double> get paceProgress => $composableBuilder(
+    column: $table.paceProgress,
+    builder: (column) => column,
+  );
 
   $$BooksTableAnnotationComposer get bookId {
     final $$BooksTableAnnotationComposer composer = $composerBuilder(
@@ -3777,6 +3930,8 @@ class $$ReadingSessionsTableTableManager
                 Value<DateTime> endedAt = const Value.absent(),
                 Value<int> engagedSeconds = const Value.absent(),
                 Value<bool> sample = const Value.absent(),
+                Value<int?> paceSeconds = const Value.absent(),
+                Value<double?> paceProgress = const Value.absent(),
               }) => ReadingSessionsCompanion(
                 id: id,
                 bookId: bookId,
@@ -3784,6 +3939,8 @@ class $$ReadingSessionsTableTableManager
                 endedAt: endedAt,
                 engagedSeconds: engagedSeconds,
                 sample: sample,
+                paceSeconds: paceSeconds,
+                paceProgress: paceProgress,
               ),
           createCompanionCallback:
               ({
@@ -3793,6 +3950,8 @@ class $$ReadingSessionsTableTableManager
                 required DateTime endedAt,
                 required int engagedSeconds,
                 Value<bool> sample = const Value.absent(),
+                Value<int?> paceSeconds = const Value.absent(),
+                Value<double?> paceProgress = const Value.absent(),
               }) => ReadingSessionsCompanion.insert(
                 id: id,
                 bookId: bookId,
@@ -3800,6 +3959,8 @@ class $$ReadingSessionsTableTableManager
                 endedAt: endedAt,
                 engagedSeconds: engagedSeconds,
                 sample: sample,
+                paceSeconds: paceSeconds,
+                paceProgress: paceProgress,
               ),
           withReferenceMapper: (p0) => p0
               .map(

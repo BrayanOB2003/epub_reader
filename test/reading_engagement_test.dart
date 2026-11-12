@@ -162,6 +162,124 @@ void main() {
       isFalse,
     );
   });
+  group('pace', () {
+    const hrefs = ['cover.xhtml', 'toc.xhtml', 'c1.xhtml', 'c2.xhtml', 'c3.xhtml'];
+
+    ReadingSpot at(String href, double progression) => readingSpotFromLocator(
+      Locator(
+        href: href,
+        type: 'application/xhtml+xml',
+        locations: Locations(progression: progression),
+      ),
+      hrefs: hrefs,
+    );
+
+    test('steady page turns set the pace', () {
+      final clock = _Clock();
+      final engagement = _engagement(clock);
+      engagement.onSpot(at('c1.xhtml', 0));
+      clock.elapsed = const Duration(minutes: 1);
+      engagement.onSpot(at('c1.xhtml', 0.5));
+      clock.elapsed = const Duration(minutes: 2);
+      engagement.onSpot(at('c2.xhtml', 0));
+
+      expect(engagement.paceTime, const Duration(minutes: 2));
+      expect(engagement.paceProgress, closeTo(0.2, 1e-9));
+    });
+
+    test('opening a book far along and reading on measures only the reading', () {
+      final clock = _Clock();
+      final engagement = _engagement(clock);
+      engagement.onSpot(at('c3.xhtml', 0.5));
+      clock.elapsed = const Duration(minutes: 1);
+      engagement.onSpot(at('c3.xhtml', 0.6));
+
+      expect(engagement.paceTime, const Duration(minutes: 1));
+      expect(engagement.paceProgress, closeTo(0.02, 1e-9));
+    });
+
+    test('flipping past the front matter stays out of the pace', () {
+      final clock = _Clock();
+      final engagement = _engagement(clock);
+      engagement.onSpot(at('cover.xhtml', 0));
+      clock.elapsed = const Duration(seconds: 2);
+      engagement.onSpot(at('toc.xhtml', 0));
+      clock.elapsed = const Duration(seconds: 4);
+      engagement.onSpot(at('c1.xhtml', 0));
+      clock.elapsed = const Duration(seconds: 64);
+      engagement.onSpot(at('c1.xhtml', 0.5));
+
+      expect(engagement.engaged, const Duration(seconds: 64));
+      expect(engagement.paceTime, const Duration(minutes: 1));
+      expect(engagement.paceProgress, closeTo(0.1, 1e-9));
+    });
+
+    test('a jump over files, a step back, or a page left open is left out', () {
+      final clock = _Clock();
+      final engagement = _engagement(clock);
+      engagement.onSpot(at('toc.xhtml', 0));
+      clock.elapsed = const Duration(seconds: 30);
+      engagement.onSpot(at('c3.xhtml', 0));
+      clock.elapsed = const Duration(seconds: 60);
+      engagement.onSpot(at('c2.xhtml', 0.9));
+      clock.elapsed = const Duration(minutes: 7);
+      engagement.onSpot(at('c3.xhtml', 0.1));
+
+      expect(engagement.paceTime, Duration.zero);
+      expect(engagement.paceProgress, 0);
+    });
+
+    test('a move the app makes is not reading, even to the next file', () {
+      final clock = _Clock();
+      final engagement = _engagement(clock);
+      engagement.onSpot(at('c1.xhtml', 0.1));
+      clock.elapsed = const Duration(seconds: 40);
+      engagement.expectJump();
+      engagement.onSpot(at('c2.xhtml', 0));
+      clock.elapsed = const Duration(seconds: 80);
+      engagement.onSpot(at('c2.xhtml', 0.5));
+
+      expect(engagement.engaged, const Duration(seconds: 80));
+      expect(engagement.paceTime, const Duration(seconds: 40));
+      expect(engagement.paceProgress, closeTo(0.1, 1e-9));
+    });
+
+    test('a cancelled move leaves the next page turn counted', () {
+      final clock = _Clock();
+      final engagement = _engagement(clock);
+      engagement.onSpot(at('c1.xhtml', 0));
+      engagement.expectJump();
+      engagement.jumpCancelled();
+      clock.elapsed = const Duration(seconds: 30);
+      engagement.onSpot(at('c1.xhtml', 0.5));
+
+      expect(engagement.paceTime, const Duration(seconds: 30));
+    });
+
+    test('in scroll mode short stops still count', () {
+      final clock = _Clock();
+      final engagement = _engagement(clock)..scroll = true;
+      engagement.onSpot(at('c1.xhtml', 0));
+      for (var step = 1; step <= 10; step++) {
+        clock.elapsed = Duration(seconds: 2 * step);
+        engagement.onSpot(at('c1.xhtml', step / 100));
+      }
+
+      expect(engagement.paceTime, const Duration(seconds: 20));
+      expect(engagement.paceProgress, closeTo(0.02, 1e-9));
+    });
+
+    test('a spot without the reading order sets no pace', () {
+      final clock = _Clock();
+      final engagement = _engagement(clock);
+      engagement.onSpot(_spot(0));
+      clock.elapsed = const Duration(minutes: 1);
+      engagement.onSpot(_spot(0.5));
+
+      expect(engagement.engaged, const Duration(minutes: 1));
+      expect(engagement.paceTime, Duration.zero);
+    });
+  });
 }
 
 ReadingEngagement _engagement(_Clock clock) {

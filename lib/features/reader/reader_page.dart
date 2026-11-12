@@ -10,6 +10,7 @@ import 'package:epub_reader/features/analytics/app_analytics.dart';
 import 'package:epub_reader/features/library/data/book_repository.dart';
 import 'package:epub_reader/features/habits/reading_engagement.dart';
 import 'package:epub_reader/features/habits/reading_estimate.dart';
+import 'package:epub_reader/features/habits/reading_time.dart';
 import 'package:epub_reader/features/notifications/reading_notifications.dart';
 import 'package:epub_reader/features/profile/reader_profile_store.dart';
 import 'package:epub_reader/features/reader/chapter_finish_dialog.dart';
@@ -136,7 +137,7 @@ class _ReaderPageState extends ConsumerState<ReaderPage>
           ),
         );
       }
-      _engagement = ReadingEngagement();
+      _engagement = ReadingEngagement()..scroll = _scroll;
       await _engine.prepareLocator();
       _locatorSubscription = _engine.onLocator.listen(_onLocator);
       if (!mounted) {
@@ -171,6 +172,16 @@ class _ReaderPageState extends ConsumerState<ReaderPage>
     );
   }
 
+  /// The reading order the pace is measured on. A PDF or a fixed-layout book
+  /// has no estimate, so it measures nothing.
+  List<String> get _paceHrefs {
+    if (_pdf || _fixedLayout) return const [];
+    return [
+      for (final link in _publication?.readingOrder ?? const <Link>[])
+        link.href,
+    ];
+  }
+
   void _onLocator(Locator locator) {
     if (!_highlightsPainted) {
       _highlightsPainted = true;
@@ -190,7 +201,7 @@ class _ReaderPageState extends ConsumerState<ReaderPage>
     }
     _saveTimer?.cancel();
     _saveTimer = Timer(const Duration(milliseconds: 400), _persist);
-    _engagement?.onSpot(readingSpotFromLocator(locator));
+    _engagement?.onSpot(readingSpotFromLocator(locator, hrefs: _paceHrefs));
     _syncEngagement();
   }
 
@@ -224,7 +235,9 @@ class _ReaderPageState extends ConsumerState<ReaderPage>
     final locator = publication.locatorFromLink(link);
     if (locator == null || !mounted) return false;
     _textSelected = false;
+    _engagement?.expectJump();
     final moved = await _engine.goToLocator(locator);
+    if (!moved) _engagement?.jumpCancelled();
     if (!mounted) return false;
     if (moved) setState(() => _chromeVisible = false);
     return moved;
@@ -275,6 +288,7 @@ class _ReaderPageState extends ConsumerState<ReaderPage>
       return;
     }
     setState(() => _scroll = !_scroll);
+    _engagement?.scroll = _scroll;
     await _commitPreferences();
   }
 
@@ -601,25 +615,26 @@ class _ReaderPageState extends ConsumerState<ReaderPage>
       contents: publication.tableOfContents,
       href: locator.href,
     );
-    final seconds = await _secondsRead();
+    final tally = await _readingTally();
     if (!mounted) return ReadingEstimate.none;
     return estimateReading(
-      engagedSeconds: seconds,
+      secondsPerBook: tally.secondsPerBook(progress),
       progress: progress,
       chapterStart: span?.start,
       chapterEnd: span?.end,
     );
   }
 
-  Future<int> _secondsRead() async {
-    final stored = await _repository.engagedSecondsForBook(widget.bookId);
-    final openId = _readingSessionId;
-    return engagedSecondsNow(
-      storedSeconds: stored,
-      openSessionSeconds: openId == null
-          ? null
-          : await _repository.readingSessionSeconds(openId),
-      liveSeconds: _engagement?.engagedSeconds ?? 0,
+  Future<ReadingTally> _readingTally() async {
+    final sessions = await _repository.readingSessionsForBook(widget.bookId);
+    final engagement = _engagement;
+    return bookReadingTally(
+      sessions,
+      openSessionId: _readingSessionId,
+      live: engagement != null,
+      liveSeconds: engagement?.engagedSeconds ?? 0,
+      livePaceSeconds: engagement?.paceSeconds ?? 0,
+      livePaceProgress: engagement?.paceProgress ?? 0,
     );
   }
 
@@ -638,12 +653,16 @@ class _ReaderPageState extends ConsumerState<ReaderPage>
             startedAt: startedAt,
             endedAt: engagement.endedAt ?? endedAt,
             engagedSeconds: engagement.engagedSeconds,
+            paceSeconds: engagement.paceSeconds,
+            paceProgress: engagement.paceProgress,
           );
         } else {
           await _repository.updateReadingSession(
             id: existing,
             endedAt: engagement.endedAt ?? endedAt,
             engagedSeconds: engagement.engagedSeconds,
+            paceSeconds: engagement.paceSeconds,
+            paceProgress: engagement.paceProgress,
           );
         }
       } catch (_) {}
@@ -725,7 +744,9 @@ class _ReaderPageState extends ConsumerState<ReaderPage>
       _showMessage(AppLocalizations.of(context).chapterFailed);
       return;
     }
+    _engagement?.expectJump();
     final moved = await _engine.goToLocator(locator);
+    if (!moved) _engagement?.jumpCancelled();
     if (!mounted) return;
     if (!moved) {
       _showMessage(AppLocalizations.of(context).chapterFailed);
