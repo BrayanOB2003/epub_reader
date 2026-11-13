@@ -395,7 +395,7 @@ class _ReaderPageState extends ConsumerState<ReaderPage>
   }
 
   Future<void> _paintQuoteHighlights() async {
-    if (_pdf || _fixedLayout || !mounted) return;
+    if (_fixedLayout || !mounted) return;
     try {
       final quotes = await _repository.quotesForBook(widget.bookId);
       if (!mounted) return;
