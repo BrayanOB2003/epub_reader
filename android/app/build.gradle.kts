@@ -21,6 +21,8 @@ if (keystorePropertiesFile.exists()) {
 android {
     namespace = "com.somosliora.app"
     compileSdk = flutter.compileSdkVersion
+    // flutter_readium's PDF reader (androidx.pdf) needs an SDK with extension level 19.
+    compileSdkExtension = 19
     ndkVersion = flutter.ndkVersion
 
     compileOptions {
@@ -37,7 +39,7 @@ android {
         applicationId = "com.somosliora.app"
         // You can update the following values to match your application needs.
         // For more information, see: https://flutter.dev/to/review-gradle-config.
-        minSdk = 24
+        minSdk = 28
         targetSdk = flutter.targetSdkVersion
         versionCode = flutter.versionCode
         versionName = flutter.versionName
