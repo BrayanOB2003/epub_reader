@@ -9,6 +9,11 @@ on:
 permissions:
   contents: read
 
+# Un push nuevo a test cancela el build anterior que siga en curso.
+concurrency:
+  group: firebase-android-${{ github.ref }}
+  cancel-in-progress: true
+
 env:
   FIREBASE_PROJECT_ID: epub-reader-6a972
   FIREBASE_ANDROID_APP_ID: "1:969465994480:android:ab8c7310f649e4ea85f635"
@@ -38,6 +43,8 @@ jobs:
         with:
           distribution: temurin
           java-version: "17"
+          # Cachea ~/.gradle (dependencias y wrapper) entre runs.
+          cache: gradle
 
       - name: Setup Flutter
         uses: subosito/flutter-action@v2
@@ -117,7 +124,9 @@ jobs:
           echo "versionCode del build: ${CI_BUILD_NUMBER} (base=${BASE_CODE}, run=${GITHUB_RUN_NUMBER})"
 
       - name: Build Android APK (release)
-        run: flutter build apk --release --build-number="${CI_BUILD_NUMBER}"
+        # Solo arm64: cubre los dispositivos de testers y evita compilar Dart AOT
+        # tres veces (arm, arm64, x64). Para emuladores x86_64 anadir android-x64.
+        run: flutter build apk --release --target-platform android-arm64 --build-number="${CI_BUILD_NUMBER}"
 
       - name: Install Ruby and Fastlane
         uses: ruby/setup-ruby@v1
