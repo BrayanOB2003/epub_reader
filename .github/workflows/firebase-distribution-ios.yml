@@ -9,6 +9,11 @@ on:
 permissions:
   contents: read
 
+# Un push nuevo a test cancela el build anterior que siga en curso.
+concurrency:
+  group: firebase-ios-${{ github.ref }}
+  cancel-in-progress: true
+
 env:
   FIREBASE_PROJECT_ID: epub-reader-6a972
   FIREBASE_IOS_APP_ID: "1:969465994480:ios:665f555c3d432fb585f635"
@@ -92,8 +97,11 @@ jobs:
           echo "CI_BUILD_NUMBER=${CI_BUILD_NUMBER}" >> "$GITHUB_ENV"
           echo "Build number de iOS: ${CI_BUILD_NUMBER} (base=${BASE_CODE}, run=${GITHUB_RUN_NUMBER})"
 
-      - name: Pre-build iOS (Release, sin firmar)
-        run: flutter build ios --release --no-codesign --build-number="${CI_BUILD_NUMBER}"
+      # Solo genera la configuracion de Flutter (Generated.xcconfig, build number).
+      # La compilacion real la hace una sola vez build_app de fastlane; antes se
+      # compilaba dos veces (aqui y en el archive) y costaba 8-14 min extra.
+      - name: Configurar iOS (Release, sin compilar)
+        run: flutter build ios --release --config-only --no-codesign --build-number="${CI_BUILD_NUMBER}"
 
       - name: Install Ruby and Fastlane
         uses: ruby/setup-ruby@v1
@@ -116,8 +124,6 @@ jobs:
           time xcodebuild -resolvePackageDependencies -workspace Runner.xcworkspace -scheme Runner -configuration Release > "$RUNNER_TEMP/resolve.log" 2>&1 || { tail -40 "$RUNNER_TEMP/resolve.log"; exit 1; }
           echo "== showBuildSettings (1ra vez, en frio) =="
           time xcodebuild -showBuildSettings -workspace Runner.xcworkspace -scheme Runner -configuration Release > "$RUNNER_TEMP/settings.log" 2>&1 || { tail -40 "$RUNNER_TEMP/settings.log"; exit 1; }
-          echo "== showBuildSettings (2da vez, en caliente) =="
-          time xcodebuild -showBuildSettings -workspace Runner.xcworkspace -scheme Runner -configuration Release > /dev/null 2>&1
           grep -E "^\s+(PRODUCT_BUNDLE_IDENTIFIER|MARKETING_VERSION|CURRENT_PROJECT_VERSION) =" "$RUNNER_TEMP/settings.log" | sort -u | head -5
 
       - name: Build and Distribute iOS
