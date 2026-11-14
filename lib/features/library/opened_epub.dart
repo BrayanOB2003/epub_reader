@@ -7,6 +7,7 @@ import 'package:epub_reader/features/analytics/analytics_events.dart';
 import 'package:epub_reader/features/analytics/app_analytics.dart';
 import 'package:epub_reader/features/library/data/epub_importer.dart';
 import 'package:epub_reader/features/library/data/epub_metadata.dart';
+import 'package:epub_reader/features/library/data/pdf_describer.dart';
 import 'package:epub_reader/features/notifications/notification_prompt.dart';
 import 'package:epub_reader/features/onboarding/onboarding_controller.dart';
 import 'package:epub_reader/features/profile/reader_profile_store.dart';
@@ -177,6 +178,13 @@ class _OpenedEpubBindingState extends ConsumerState<OpenedEpubBinding> {
       );
       if (!mounted) return;
       _showMessage(_message(AppLocalizations.of(context), error));
+    } on PdfReadException {
+      await analytics.logBookAdded(
+        source: bookSourceOpened,
+        result: bookResultInvalid,
+      );
+      if (!mounted) return;
+      _showMessage(AppLocalizations.of(context).pdfUnreadable);
     } catch (_, stack) {
       await analytics.recordUnexpected('open_epub_failed', stack);
       if (!mounted) return;
@@ -209,8 +217,9 @@ class _OpenedEpubBindingState extends ConsumerState<OpenedEpubBinding> {
   }
 
   void _showMessage(String message) {
-    ScaffoldMessenger.maybeOf(context)
-        ?.showSnackBar(SnackBar(content: Text(message)));
+    ScaffoldMessenger.maybeOf(
+      context,
+    )?.showSnackBar(SnackBar(content: Text(message)));
   }
 
   String _message(AppLocalizations l10n, EpubFormatException error) {

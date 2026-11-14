@@ -20,6 +20,16 @@ double stepReaderFontSize(double current, {required bool larger}) {
   return next.clamp(readerFontSizeMin, readerFontSizeMax);
 }
 
+PDFPreferences pdfReaderPreferences({required bool scroll}) {
+  return PDFPreferences(
+    layout: scroll ? PDFLayout.scrollVertical : PDFLayout.paginated,
+    fit: PDFFit.page,
+  );
+}
+
+bool publicationIsPdf(Publication publication) =>
+    publication.conformsToReadiumPDF;
+
 EPUBPreferences readerPreferences({
   required bool dark,
   required bool scroll,

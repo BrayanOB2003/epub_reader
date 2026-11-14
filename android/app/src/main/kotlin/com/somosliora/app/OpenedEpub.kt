@@ -136,7 +136,8 @@ internal object OpenedEpubCapture {
                 character == '_' || character == ' '
         }
         val safe = cleaned.ifBlank { "book.epub" }
-        val withExtension = if (safe.endsWith(".epub", ignoreCase = true)) {
+        val lower = safe.lowercase()
+        val withExtension = if (lower.endsWith(".epub") || lower.endsWith(".pdf")) {
             safe
         } else {
             "$safe.epub"

@@ -7,6 +7,7 @@ import 'package:epub_reader/app/schedule_widgets.dart';
 import 'package:epub_reader/core/database/app_database.dart';
 import 'package:epub_reader/features/library/data/epub_importer.dart';
 import 'package:epub_reader/features/library/data/epub_metadata.dart';
+import 'package:epub_reader/features/library/data/pdf_describer.dart';
 import 'package:epub_reader/features/profile/reader_profile_store.dart';
 import 'package:epub_reader/features/profile/reading_routine.dart';
 import 'package:epub_reader/l10n/app_localizations.dart';
@@ -55,6 +56,13 @@ class _HomePageState extends ConsumerState<HomePage> {
       );
       if (!mounted) return;
       _showMessage(_epubMessage(l10n, error));
+    } on PdfReadException {
+      await analytics.logBookAdded(
+        source: bookSourceImport,
+        result: bookResultInvalid,
+      );
+      if (!mounted) return;
+      _showMessage(l10n.pdfUnreadable);
     } catch (_, stack) {
       await analytics.recordUnexpected('import_failed', stack);
       if (!mounted) return;

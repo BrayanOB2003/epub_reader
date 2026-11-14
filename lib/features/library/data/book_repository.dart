@@ -51,22 +51,10 @@ class BookRepository {
     return _database.select(_database.readingSessions).get();
   }
 
-  Future<int> engagedSecondsForBook(int bookId) async {
-    final rows = await (_database.select(
+  Future<List<ReadingSession>> readingSessionsForBook(int bookId) {
+    return (_database.select(
       _database.readingSessions,
     )..where((table) => table.bookId.equals(bookId))).get();
-    var total = 0;
-    for (final row in rows) {
-      total += row.engagedSeconds;
-    }
-    return total;
-  }
-
-  Future<int?> readingSessionSeconds(int id) async {
-    final row = await (_database.select(
-      _database.readingSessions,
-    )..where((table) => table.id.equals(id))).getSingleOrNull();
-    return row?.engagedSeconds;
   }
 
   Stream<List<ReadingSession>> watchReadingSessions() {
@@ -293,6 +281,8 @@ class BookRepository {
     required DateTime startedAt,
     required DateTime endedAt,
     required int engagedSeconds,
+    int? paceSeconds,
+    double? paceProgress,
     bool sample = false,
   }) {
     return _database
@@ -303,6 +293,8 @@ class BookRepository {
             startedAt: startedAt,
             endedAt: endedAt,
             engagedSeconds: engagedSeconds,
+            paceSeconds: Value(paceSeconds),
+            paceProgress: Value(paceProgress),
             sample: Value(sample),
           ),
         );
@@ -312,6 +304,8 @@ class BookRepository {
     required int id,
     required DateTime endedAt,
     required int engagedSeconds,
+    int? paceSeconds,
+    double? paceProgress,
   }) {
     return (_database.update(
       _database.readingSessions,
@@ -319,6 +313,8 @@ class BookRepository {
       ReadingSessionsCompanion(
         endedAt: Value(endedAt),
         engagedSeconds: Value(engagedSeconds),
+        paceSeconds: Value(paceSeconds),
+        paceProgress: Value(paceProgress),
       ),
     );
   }

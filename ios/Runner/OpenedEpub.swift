@@ -16,7 +16,8 @@ final class OpenedEpubRelay: NSObject, FlutterStreamHandler {
 
   @discardableResult
   func handle(url: URL) -> Bool {
-    guard url.pathExtension.lowercased() == "epub" else { return false }
+    let ext = url.pathExtension.lowercased()
+    guard ext == "epub" || ext == "pdf" else { return false }
     DispatchQueue.global(qos: .userInitiated).async {
       let accessed = url.startAccessingSecurityScopedResource()
       let copied = self.copy(url)
@@ -89,6 +90,8 @@ final class OpenedEpubRelay: NSObject, FlutterStreamHandler {
     let allowed = CharacterSet.alphanumerics.union(CharacterSet(charactersIn: "._- "))
     let cleaned = String(base.unicodeScalars.filter { allowed.contains($0) })
     let name = cleaned.isEmpty ? "book.epub" : cleaned
-    return name.lowercased().hasSuffix(".epub") ? name : "\(name).epub"
+    let ext = (name as NSString).pathExtension.lowercased()
+    if ext == "epub" || ext == "pdf" { return name }
+    return "\(name).epub"
   }
 }

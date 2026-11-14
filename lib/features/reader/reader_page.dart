@@ -10,6 +10,7 @@ import 'package:epub_reader/features/analytics/app_analytics.dart';
 import 'package:epub_reader/features/library/data/book_repository.dart';
 import 'package:epub_reader/features/habits/reading_engagement.dart';
 import 'package:epub_reader/features/habits/reading_estimate.dart';
+import 'package:epub_reader/features/habits/reading_time.dart';
 import 'package:epub_reader/features/notifications/reading_notifications.dart';
 import 'package:epub_reader/features/profile/reader_profile_store.dart';
 import 'package:epub_reader/features/reader/chapter_finish_dialog.dart';
@@ -65,6 +66,7 @@ class _ReaderPageState extends ConsumerState<ReaderPage>
   var _scroll = false;
   var _fontSize = readerFontSizeDefault;
   var _fixedLayout = false;
+  var _pdf = false;
   var _textSelected = false;
   DateTime? _lastPageTurn;
   String? _error;
@@ -118,19 +120,25 @@ class _ReaderPageState extends ConsumerState<ReaderPage>
     try {
       _initialLocator = await _locatorForOpening(book);
       final publication = await _engine.open(book.filePath);
-      final fixedLayout = publicationIsFixed(publication);
+      final pdf = publicationIsPdf(publication);
+      final fixedLayout = !pdf && publicationIsFixed(publication);
       _dark = book.darkMode;
       _scroll = book.scrollMode;
       _fontSize = book.fontSize.clamp(readerFontSizeMin, readerFontSizeMax);
-      await _engine.setPreferences(
-        readerPreferences(
-          dark: _dark,
-          scroll: _scroll,
-          fixedLayout: fixedLayout,
-          fontSize: _fontSize,
-        ),
-      );
-      _engagement = ReadingEngagement();
+      if (pdf) {
+        await _engine.setPdfPreferences(pdfReaderPreferences(scroll: _scroll));
+      } else {
+        await _engine.setPreferences(
+          readerPreferences(
+            dark: _dark,
+            scroll: _scroll,
+            fixedLayout: fixedLayout,
+            fontSize: _fontSize,
+          ),
+        );
+      }
+      _engagement = ReadingEngagement()..scroll = _scroll;
+      await _engine.prepareLocator();
       _locatorSubscription = _engine.onLocator.listen(_onLocator);
       if (!mounted) {
         _engagement?.abandon();
@@ -140,6 +148,7 @@ class _ReaderPageState extends ConsumerState<ReaderPage>
       setState(() {
         _book = book;
         _publication = publication;
+        _pdf = pdf;
         _fixedLayout = fixedLayout;
         _progress = _bookProgress(_initialLocator) ?? book.progress;
         _loading = false;
@@ -163,6 +172,16 @@ class _ReaderPageState extends ConsumerState<ReaderPage>
     );
   }
 
+  /// The reading order the pace is measured on. A PDF or a fixed-layout book
+  /// has no estimate, so it measures nothing.
+  List<String> get _paceHrefs {
+    if (_pdf || _fixedLayout) return const [];
+    return [
+      for (final link in _publication?.readingOrder ?? const <Link>[])
+        link.href,
+    ];
+  }
+
   void _onLocator(Locator locator) {
     if (!_highlightsPainted) {
       _highlightsPainted = true;
@@ -182,22 +201,31 @@ class _ReaderPageState extends ConsumerState<ReaderPage>
     }
     _saveTimer?.cancel();
     _saveTimer = Timer(const Duration(milliseconds: 400), _persist);
-    _engagement?.onSpot(readingSpotFromLocator(locator));
+    _engagement?.onSpot(readingSpotFromLocator(locator, hrefs: _paceHrefs));
     _syncEngagement();
   }
 
   Future<void> _openContents() async {
     final publication = _publication;
     if (publication == null || !mounted) return;
+    final l10n = AppLocalizations.of(context);
     final roots = contentsTree(
-      tableOfContents: publication.tableOfContents,
-      readingOrder: publication.readingOrder,
+      tableOfContents: readerContents(
+        tableOfContents: publication.tableOfContents,
+        readingOrder: publication.readingOrder,
+        pdfPages: publication.pageListOrGenerated,
+        pdf: _pdf,
+        pageLabel: l10n.pdfPage,
+      ),
+      readingOrder: const [],
     );
     await showDialog<void>(
       context: context,
       builder: (context) => ContentsDialog(
         roots: roots,
-        currentHref: _latestLocator?.href,
+        currentHref: _pdf
+            ? pdfContentsHref(_latestLocator)
+            : _latestLocator?.href,
         onOpen: (link) => _openChapter(publication, link),
       ),
     );
@@ -207,7 +235,9 @@ class _ReaderPageState extends ConsumerState<ReaderPage>
     final locator = publication.locatorFromLink(link);
     if (locator == null || !mounted) return false;
     _textSelected = false;
+    _engagement?.expectJump();
     final moved = await _engine.goToLocator(locator);
+    if (!moved) _engagement?.jumpCancelled();
     if (!mounted) return false;
     if (moved) setState(() => _chromeVisible = false);
     return moved;
@@ -222,14 +252,18 @@ class _ReaderPageState extends ConsumerState<ReaderPage>
   Future<void> _applyPreferences() async {
     _engagement?.preferencesChanged();
     try {
-      await _engine.setPreferences(
-        readerPreferences(
-          dark: _dark,
-          scroll: _scroll,
-          fixedLayout: _fixedLayout,
-          fontSize: _fontSize,
-        ),
-      );
+      if (_pdf) {
+        await _engine.setPdfPreferences(pdfReaderPreferences(scroll: _scroll));
+      } else {
+        await _engine.setPreferences(
+          readerPreferences(
+            dark: _dark,
+            scroll: _scroll,
+            fixedLayout: _fixedLayout,
+            fontSize: _fontSize,
+          ),
+        );
+      }
     } catch (_) {
       if (mounted) {
         _showMessage(AppLocalizations.of(context).preferencesFailed);
@@ -238,6 +272,7 @@ class _ReaderPageState extends ConsumerState<ReaderPage>
   }
 
   Future<void> _toggleDark() async {
+    if (_pdf) return;
     if (_fixedLayout) {
       _showMessage(AppLocalizations.of(context).fixedColor);
       return;
@@ -248,16 +283,17 @@ class _ReaderPageState extends ConsumerState<ReaderPage>
   }
 
   Future<void> _toggleScroll() async {
-    if (_fixedLayout) {
+    if (_fixedLayout && !_pdf) {
       _showMessage(AppLocalizations.of(context).fixedPages);
       return;
     }
     setState(() => _scroll = !_scroll);
+    _engagement?.scroll = _scroll;
     await _commitPreferences();
   }
 
   Future<void> _changeFontSize({required bool larger}) async {
-    if (_fixedLayout) {
+    if (_pdf || _fixedLayout) {
       _showMessage(AppLocalizations.of(context).fixedSize);
       return;
     }
@@ -268,7 +304,7 @@ class _ReaderPageState extends ConsumerState<ReaderPage>
   }
 
   Future<void> _resetFontSize() async {
-    if (_fixedLayout) {
+    if (_pdf || _fixedLayout) {
       _showMessage(AppLocalizations.of(context).fixedSize);
       return;
     }
@@ -466,6 +502,12 @@ class _ReaderPageState extends ConsumerState<ReaderPage>
     _showMessage(l10n.quoteDeleted);
   }
 
+  Future<void> _releaseEngine() async {
+    try {
+      await _engine.close();
+    } catch (_) {}
+  }
+
   Future<void> _persist() async {
     final locator = _latestLocator;
     if (locator == null) return;
@@ -557,7 +599,7 @@ class _ReaderPageState extends ConsumerState<ReaderPage>
   }
 
   Future<ReadingEstimate> _readingEstimate() async {
-    if (_fixedLayout) return ReadingEstimate.none;
+    if (_pdf || _fixedLayout) return ReadingEstimate.none;
     final publication = _publication;
     final locator = _latestLocator ?? _initialLocator;
     if (publication == null || locator == null) return ReadingEstimate.none;
@@ -573,25 +615,26 @@ class _ReaderPageState extends ConsumerState<ReaderPage>
       contents: publication.tableOfContents,
       href: locator.href,
     );
-    final seconds = await _secondsRead();
+    final tally = await _readingTally();
     if (!mounted) return ReadingEstimate.none;
     return estimateReading(
-      engagedSeconds: seconds,
+      secondsPerBook: tally.secondsPerBook(progress),
       progress: progress,
       chapterStart: span?.start,
       chapterEnd: span?.end,
     );
   }
 
-  Future<int> _secondsRead() async {
-    final stored = await _repository.engagedSecondsForBook(widget.bookId);
-    final openId = _readingSessionId;
-    return engagedSecondsNow(
-      storedSeconds: stored,
-      openSessionSeconds: openId == null
-          ? null
-          : await _repository.readingSessionSeconds(openId),
-      liveSeconds: _engagement?.engagedSeconds ?? 0,
+  Future<ReadingTally> _readingTally() async {
+    final sessions = await _repository.readingSessionsForBook(widget.bookId);
+    final engagement = _engagement;
+    return bookReadingTally(
+      sessions,
+      openSessionId: _readingSessionId,
+      live: engagement != null,
+      liveSeconds: engagement?.engagedSeconds ?? 0,
+      livePaceSeconds: engagement?.paceSeconds ?? 0,
+      livePaceProgress: engagement?.paceProgress ?? 0,
     );
   }
 
@@ -610,12 +653,16 @@ class _ReaderPageState extends ConsumerState<ReaderPage>
             startedAt: startedAt,
             endedAt: engagement.endedAt ?? endedAt,
             engagedSeconds: engagement.engagedSeconds,
+            paceSeconds: engagement.paceSeconds,
+            paceProgress: engagement.paceProgress,
           );
         } else {
           await _repository.updateReadingSession(
             id: existing,
             endedAt: engagement.endedAt ?? endedAt,
             engagedSeconds: engagement.engagedSeconds,
+            paceSeconds: engagement.paceSeconds,
+            paceProgress: engagement.paceProgress,
           );
         }
       } catch (_) {}
@@ -668,7 +715,7 @@ class _ReaderPageState extends ConsumerState<ReaderPage>
     }
     _lastPageTurn = now;
     if (_chromeVisible) setState(() => _chromeVisible = false);
-    if (_scroll) {
+    if (_scroll && !_pdf) {
       await _turnChapter(forward: forward);
       return;
     }
@@ -697,7 +744,9 @@ class _ReaderPageState extends ConsumerState<ReaderPage>
       _showMessage(AppLocalizations.of(context).chapterFailed);
       return;
     }
+    _engagement?.expectJump();
     final moved = await _engine.goToLocator(locator);
+    if (!moved) _engagement?.jumpCancelled();
     if (!mounted) return;
     if (!moved) {
       _showMessage(AppLocalizations.of(context).chapterFailed);
@@ -722,13 +771,13 @@ class _ReaderPageState extends ConsumerState<ReaderPage>
       );
     }
     unawaited(_locatorSubscription?.cancel());
-    unawaited(_engine.close());
+    unawaited(_releaseEngine());
     super.dispose();
   }
 
   @override
   Widget build(BuildContext context) {
-    final pageColor = _dark && !_fixedLayout
+    final pageColor = _dark && !_fixedLayout && !_pdf
         ? readerDarkBackground
         : readerLightBackground;
     return PopScope(
@@ -872,15 +921,16 @@ class _ReaderPageState extends ConsumerState<ReaderPage>
                               onPressed: _openContents,
                               icon: const Icon(Icons.format_list_bulleted),
                             ),
-                            IconButton(
-                              tooltip: _fixedLayout
-                                  ? l10n.fixedColorShort
-                                  : (_dark ? l10n.lightMode : l10n.darkMode),
-                              onPressed: _toggleDark,
-                              icon: Icon(
-                                _dark ? Icons.light_mode : Icons.dark_mode,
+                            if (!_pdf)
+                              IconButton(
+                                tooltip: _fixedLayout
+                                    ? l10n.fixedColorShort
+                                    : (_dark ? l10n.lightMode : l10n.darkMode),
+                                onPressed: _toggleDark,
+                                icon: Icon(
+                                  _dark ? Icons.light_mode : Icons.dark_mode,
+                                ),
                               ),
-                            ),
                             IconButton(
                               tooltip: _fixedLayout
                                   ? l10n.fixedPagesShort
@@ -890,27 +940,29 @@ class _ReaderPageState extends ConsumerState<ReaderPage>
                                 _scroll ? Icons.menu_book : Icons.swap_vert,
                               ),
                             ),
-                            IconButton(
-                              tooltip: _fixedLayout
-                                  ? l10n.fixedSizeShort
-                                  : l10n.smallerText,
-                              onPressed: () => _changeFontSize(larger: false),
-                              icon: const Icon(Icons.text_decrease),
-                            ),
-                            IconButton(
-                              tooltip: _fixedLayout
-                                  ? l10n.fixedSizeShort
-                                  : l10n.originalSize,
-                              onPressed: _resetFontSize,
-                              icon: const _OriginalFontMark(),
-                            ),
-                            IconButton(
-                              tooltip: _fixedLayout
-                                  ? l10n.fixedSizeShort
-                                  : l10n.largerText,
-                              onPressed: () => _changeFontSize(larger: true),
-                              icon: const Icon(Icons.text_increase),
-                            ),
+                            if (!_pdf) ...[
+                              IconButton(
+                                tooltip: _fixedLayout
+                                    ? l10n.fixedSizeShort
+                                    : l10n.smallerText,
+                                onPressed: () => _changeFontSize(larger: false),
+                                icon: const Icon(Icons.text_decrease),
+                              ),
+                              IconButton(
+                                tooltip: _fixedLayout
+                                    ? l10n.fixedSizeShort
+                                    : l10n.originalSize,
+                                onPressed: _resetFontSize,
+                                icon: const _OriginalFontMark(),
+                              ),
+                              IconButton(
+                                tooltip: _fixedLayout
+                                    ? l10n.fixedSizeShort
+                                    : l10n.largerText,
+                                onPressed: () => _changeFontSize(larger: true),
+                                icon: const Icon(Icons.text_increase),
+                              ),
+                            ],
                           ],
                           const Spacer(),
                           IconButton(

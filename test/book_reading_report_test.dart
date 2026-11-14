@@ -123,7 +123,6 @@ void main() {
   test('pace is minutes per 10 percent and weeks of recent reading', () {
     final now = DateTime(2026, 10, 13, 18);
     final pace = bookReadingPace(
-      engagedSeconds: 60 * 60,
       progress: 0.5,
       sessions: [
         _session(
@@ -156,7 +155,6 @@ void main() {
 
   test('a short span is counted in sittings, not weeks', () {
     final pace = bookReadingPace(
-      engagedSeconds: 45 * 60,
       progress: 0.25,
       sessions: [
         _session(
@@ -188,7 +186,6 @@ void main() {
 
   test('a week of light reading stays under a week', () {
     final pace = bookReadingPace(
-      engagedSeconds: 60 * 60,
       progress: 0.95,
       sessions: [
         _session(
@@ -220,7 +217,6 @@ void main() {
   test('one day of sessions has no horizon', () {
     final day = DateTime(2026, 10, 13, 20);
     final pace = bookReadingPace(
-      engagedSeconds: 60 * 60,
       progress: 0.5,
       sessions: [
         _session(id: 1, bookId: 1, startedAt: day, seconds: 20 * 60),
@@ -247,7 +243,6 @@ void main() {
 
   test('a short visit shows only the time already read', () {
     final pace = bookReadingPace(
-      engagedSeconds: 90,
       progress: 0.5,
       sessions: [
         _session(
@@ -509,6 +504,61 @@ void main() {
     expect(find.textContaining('Faltan'), findsNothing);
     expect(find.textContaining('ritmo'), findsNothing);
   });
+
+  test('a lost history and a jump ahead do not make the book look short', () {
+    // Sessions were lost; the book reopened at 60 % and was read on for
+    // 12 minutes, 3 % of the book.
+    final pace = bookReadingPace(
+      progress: 0.63,
+      sessions: [
+        _session(
+          id: 1,
+          bookId: 1,
+          startedAt: DateTime(2026, 10, 13, 20),
+          seconds: 12 * 60,
+          paceSeconds: 12 * 60,
+          paceProgress: 0.03,
+        ),
+      ],
+      now: DateTime(2026, 10, 13, 21),
+    );
+
+    expect(pace.minutesPerTenPercent, 40);
+    expect(pace.remainingMinutes, 150);
+  });
+
+  test('the open session is counted once, as it stands now', () {
+    final tally = bookReadingTally(
+      [
+        _session(
+          id: 1,
+          bookId: 1,
+          startedAt: DateTime(2026, 10, 12, 20),
+          seconds: 500,
+          paceSeconds: 400,
+          paceProgress: 0.02,
+        ),
+        _session(
+          id: 2,
+          bookId: 1,
+          startedAt: DateTime(2026, 10, 13, 20),
+          seconds: 30,
+          paceSeconds: 20,
+          paceProgress: 0.001,
+        ),
+      ],
+      openSessionId: 2,
+      live: true,
+      liveSeconds: 40,
+      livePaceSeconds: 35,
+      livePaceProgress: 0.002,
+    );
+
+    expect(tally.engagedSeconds, 540);
+    expect(tally.paceSeconds, 435);
+    expect(tally.paceProgress, closeTo(0.022, 1e-9));
+    expect(tally.untracked, isFalse);
+  });
 }
 
 Widget _app(Widget child) {
@@ -545,6 +595,8 @@ ReadingSession _session({
   required int bookId,
   required DateTime startedAt,
   required int seconds,
+  int? paceSeconds,
+  double? paceProgress,
 }) {
   return ReadingSession(
     id: id,
@@ -553,5 +605,7 @@ ReadingSession _session({
     endedAt: startedAt.add(Duration(seconds: seconds)),
     engagedSeconds: seconds,
     sample: false,
+    paceSeconds: paceSeconds,
+    paceProgress: paceProgress,
   );
 }

@@ -1,11 +1,13 @@
 import 'dart:io';
 
 import 'package:archive/archive.dart';
-import 'package:drift/drift.dart' hide isNotNull;
+import 'package:drift/drift.dart' hide isNotNull, isNull;
 import 'package:drift/native.dart';
 import 'package:epub_reader/core/database/app_database.dart';
 import 'package:epub_reader/features/library/data/book_repository.dart';
+import 'package:epub_reader/features/library/data/book_format.dart';
 import 'package:epub_reader/features/library/data/epub_importer.dart';
+import 'package:epub_reader/features/library/data/pdf_describer.dart';
 import 'package:flutter_test/flutter_test.dart';
 import 'package:path/path.dart' as p;
 
@@ -179,6 +181,96 @@ void main() {
     expect(coverFile.existsSync(), isFalse);
   });
 
+  test('stores a pdf with the cover from its first page', () async {
+    final database = AppDatabase(NativeDatabase.memory());
+    final documents = await Directory.systemTemp.createTemp('epub_reader_pdf');
+    addTearDown(() async {
+      await database.close();
+      if (documents.existsSync()) await documents.delete(recursive: true);
+    });
+
+    final cover = Uint8List.fromList(const [1, 2, 3, 4]);
+    final describer = _FakePdfDescriber(
+      const PdfDescription(
+        title: 'El informe',
+        author: 'Ada Lovelace',
+        bookUid: 'pdf-1',
+        coverBytes: null,
+      ),
+    );
+    describer.cover = cover;
+    final repository = BookRepository(
+      database,
+      documentsDirectory: () async => documents,
+    );
+    final importer = EpubImporter(
+      repository,
+      documentsDirectory: () async => documents,
+      pdfDescriber: describer,
+    );
+    final bytes = Uint8List.fromList('%PDF-1.4\n'.codeUnits);
+
+    expect(looksLikePdf(bytes), isTrue);
+    expect(
+      (await importer.importBytes(bytes, fallbackTitle: 'informe')).outcome,
+      ImportOutcome.imported,
+    );
+    expect(
+      (await importer.importBytes(bytes, fallbackTitle: 'informe')).outcome,
+      ImportOutcome.alreadyInLibrary,
+    );
+
+    final books = await database.select(database.books).get();
+    expect(books, hasLength(1));
+    expect(books.single.title, 'El informe');
+    expect(books.single.author, 'Ada Lovelace');
+    expect(books.single.bookUid, 'pdf-1');
+    expect(books.single.coverBytes, cover);
+    expect(books.single.filePath, endsWith('.pdf'));
+    expect(describer.calls, 1);
+  });
+
+  test(
+    'a pdf stays in the library when the reader engine is missing',
+    () async {
+      final database = AppDatabase(NativeDatabase.memory());
+      final documents = await Directory.systemTemp.createTemp(
+        'epub_reader_pdf_desktop',
+      );
+      addTearDown(() async {
+        await database.close();
+        if (documents.existsSync()) await documents.delete(recursive: true);
+      });
+
+      final repository = BookRepository(
+        database,
+        documentsDirectory: () async => documents,
+      );
+      final importer = EpubImporter(
+        repository,
+        documentsDirectory: () async => documents,
+        pdfDescriber: _ThrowingPdfDescriber(
+          Exception('publicationCover() has not been implemented.'),
+        ),
+      );
+
+      final result = await importer.importBytes(
+        Uint8List.fromList('%PDF-1.4\n'.codeUnits),
+        fallbackTitle: 'Notas',
+      );
+      expect(result.outcome, ImportOutcome.imported);
+
+      final books = await database.select(database.books).get();
+      expect(books.single.title, 'Notas');
+      expect(books.single.filePath, endsWith('.pdf'));
+      expect(books.single.coverBytes, isNull);
+      expect(
+        File(p.join(documents.path, books.single.filePath)).existsSync(),
+        isTrue,
+      );
+    },
+  );
+
   test('finds a book whose stored path belongs to an old container', () async {
     final database = AppDatabase(NativeDatabase.memory());
     final documents = await Directory.systemTemp.createTemp(
@@ -191,10 +283,12 @@ void main() {
 
     await Directory(p.join(documents.path, 'books')).create();
     await Directory(p.join(documents.path, 'covers')).create();
-    await File(p.join(documents.path, 'books', 'sample.epub'))
-        .writeAsBytes([1, 2, 3]);
-    await File(p.join(documents.path, 'covers', 'sample.jpg'))
-        .writeAsBytes([4, 5, 6]);
+    await File(
+      p.join(documents.path, 'books', 'sample.epub'),
+    ).writeAsBytes([1, 2, 3]);
+    await File(
+      p.join(documents.path, 'covers', 'sample.jpg'),
+    ).writeAsBytes([4, 5, 6]);
 
     const staleRoot =
         '/private/var/containers/Application/OLD-CONTAINER/Documents';
@@ -224,6 +318,43 @@ void main() {
     expect(stored.filePath, p.join('books', 'sample.epub'));
     expect(stored.coverPath, p.join('covers', 'sample.jpg'));
   });
+}
+
+class _ThrowingPdfDescriber implements PdfDescriber {
+  _ThrowingPdfDescriber(this.error);
+
+  final Object error;
+
+  @override
+  Future<PdfDescription> describe(
+    String absolutePath, {
+    required String fallbackTitle,
+  }) {
+    throw error;
+  }
+}
+
+class _FakePdfDescriber implements PdfDescriber {
+  _FakePdfDescriber(this.description);
+
+  PdfDescription description;
+  Uint8List? cover;
+  var calls = 0;
+
+  @override
+  Future<PdfDescription> describe(
+    String absolutePath, {
+    required String fallbackTitle,
+  }) async {
+    calls++;
+    expect(absolutePath, endsWith('.pdf'));
+    return PdfDescription(
+      title: description.title,
+      author: description.author,
+      bookUid: description.bookUid,
+      coverBytes: cover,
+    );
+  }
 }
 
 Uint8List _sampleEpub(Uint8List cover) {

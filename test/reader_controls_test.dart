@@ -141,6 +141,15 @@ void main() {
     );
   });
 
+  test('pdf reading uses pages or a vertical scroll', () {
+    final pages = pdfReaderPreferences(scroll: false);
+    final scroll = pdfReaderPreferences(scroll: true);
+
+    expect(pages.layout, PDFLayout.paginated);
+    expect(pages.fit, PDFFit.page);
+    expect(scroll.layout, PDFLayout.scrollVertical);
+  });
+
   test('light and dark themes set text colors only for reflowable books', () {
     final light = readerPreferences(
       dark: false,

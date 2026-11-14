@@ -45,6 +45,7 @@
                 <data android:mimeType="application/epub+zip"/>
                 <data android:mimeType="application/epub"/>
                 <data android:mimeType="application/x-epub+zip"/>
+                <data android:mimeType="application/pdf"/>
             </intent-filter>
             <!-- Some file managers send a generic type and only the .epub path. -->
             <intent-filter>
@@ -56,14 +57,24 @@
                 <data android:mimeType="*/*"/>
                 <data android:pathPattern=".*\\.epub"/>
                 <data android:pathPattern=".*\\.EPUB"/>
+                <data android:pathPattern=".*\\.pdf"/>
+                <data android:pathPattern=".*\\.PDF"/>
                 <data android:pathPattern=".*\\..*\\.epub"/>
                 <data android:pathPattern=".*\\..*\\.EPUB"/>
+                <data android:pathPattern=".*\\..*\\.pdf"/>
+                <data android:pathPattern=".*\\..*\\.PDF"/>
                 <data android:pathPattern=".*\\..*\\..*\\.epub"/>
                 <data android:pathPattern=".*\\..*\\..*\\.EPUB"/>
+                <data android:pathPattern=".*\\..*\\..*\\.pdf"/>
+                <data android:pathPattern=".*\\..*\\..*\\.PDF"/>
                 <data android:pathPattern=".*\\..*\\..*\\..*\\.epub"/>
                 <data android:pathPattern=".*\\..*\\..*\\..*\\.EPUB"/>
+                <data android:pathPattern=".*\\..*\\..*\\..*\\.pdf"/>
+                <data android:pathPattern=".*\\..*\\..*\\..*\\.PDF"/>
                 <data android:pathPattern=".*\\..*\\..*\\..*\\..*\\.epub"/>
                 <data android:pathPattern=".*\\..*\\..*\\..*\\..*\\.EPUB"/>
+                <data android:pathPattern=".*\\..*\\..*\\..*\\..*\\.pdf"/>
+                <data android:pathPattern=".*\\..*\\..*\\..*\\..*\\.PDF"/>
             </intent-filter>
         </activity>
         <!-- Don't delete the meta-data below.

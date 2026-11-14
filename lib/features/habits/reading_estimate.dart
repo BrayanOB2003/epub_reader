@@ -4,7 +4,8 @@ import 'package:flutter_readium/flutter_readium.dart';
 /// Below this, the pace is a guess and nothing is shown.
 const readingEstimateMinSeconds = 120;
 
-/// Below this, a little time stretches into an implausible pace.
+/// Below this much of the book read, a little time stretches into an
+/// implausible pace.
 const readingEstimateMinProgress = 0.02;
 
 /// Closing the book offers to stay when the chapter has this long left, or less.
@@ -30,15 +31,60 @@ class ReadingEstimate {
   static const none = ReadingEstimate();
 }
 
-/// Seconds already read, counting the open session once.
-int engagedSecondsNow({
-  required int storedSeconds,
-  required int? openSessionSeconds,
-  required int liveSeconds,
-}) {
-  if (openSessionSeconds == null) return storedSeconds + liveSeconds;
-  final earlier = storedSeconds - openSessionSeconds;
-  return (earlier < 0 ? 0 : earlier) + liveSeconds;
+/// Reading time for one book, and the part of it that sets the pace.
+///
+/// Sessions written before the pace was measured page by page count in
+/// [engagedSeconds] only, and mark the tally [untracked].
+class ReadingTally {
+  const ReadingTally({
+    this.engagedSeconds = 0,
+    this.paceSeconds = 0,
+    this.paceProgress = 0,
+    this.untracked = false,
+  });
+
+  final int engagedSeconds;
+
+  /// Seconds of steady forward reading. Jumps, skimmed pages and pages left
+  /// open past the cap stay out.
+  final int paceSeconds;
+
+  /// Book fraction read in [paceSeconds].
+  final double paceProgress;
+
+  /// True when some of [engagedSeconds] has no pace of its own.
+  final bool untracked;
+
+  ReadingTally plus({
+    required int engagedSeconds,
+    int? paceSeconds,
+    double? paceProgress,
+  }) {
+    final tracked = paceSeconds != null && paceProgress != null;
+    return ReadingTally(
+      engagedSeconds: this.engagedSeconds + engagedSeconds,
+      paceSeconds: this.paceSeconds + (tracked ? paceSeconds : 0),
+      paceProgress: this.paceProgress + (tracked ? paceProgress : 0),
+      untracked: untracked || !tracked,
+    );
+  }
+
+  /// Seconds the whole book takes at this pace, or null while too little is
+  /// known. [progress] is where the reader stands now.
+  ///
+  /// The measured pace wins once it holds enough. Until then a book with
+  /// older sessions falls back to all its time over where it stands, which
+  /// a skipped stretch makes look faster than it is.
+  double? secondsPerBook(double progress) {
+    if (paceSeconds >= readingEstimateMinSeconds &&
+        paceProgress >= readingEstimateMinProgress) {
+      return paceSeconds / paceProgress;
+    }
+    if (!untracked) return null;
+    if (engagedSeconds < readingEstimateMinSeconds) return null;
+    if (progress < readingEstimateMinProgress) return null;
+    return engagedSeconds / progress;
+  }
 }
 
 /// Nearest minute under 10, nearest 5 minutes from there up.
@@ -55,18 +101,18 @@ int? readingMinutes(int seconds) {
 }
 
 /// [progress], [chapterStart] and [chapterEnd] share one scale from 0 to 1.
+/// [secondsPerBook] comes from [ReadingTally.secondsPerBook].
 /// A missing chapter bound leaves [ReadingEstimate.chapterMinutes] empty.
 ReadingEstimate estimateReading({
-  required int engagedSeconds,
+  required double? secondsPerBook,
   required double progress,
   double? chapterStart,
   double? chapterEnd,
 }) {
-  if (engagedSeconds < readingEstimateMinSeconds) return ReadingEstimate.none;
-  if (progress < readingEstimateMinProgress || progress >= 1) {
+  final pace = secondsPerBook;
+  if (pace == null || pace <= 0 || progress < 0 || progress >= 1) {
     return ReadingEstimate.none;
   }
-  final pace = engagedSeconds / progress;
   final bookMinutes = readingMinutes((pace * (1 - progress)).round());
   int? chapterMinutes;
   final start = chapterStart;
