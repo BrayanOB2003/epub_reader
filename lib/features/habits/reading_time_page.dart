@@ -1,5 +1,6 @@
 import 'package:epub_reader/app/providers.dart';
 import 'package:epub_reader/core/database/app_database.dart';
+import 'package:epub_reader/app/schedule_theme.dart';
 import 'package:epub_reader/app/schedule_widgets.dart';
 import 'package:epub_reader/features/analytics/analytics_events.dart';
 import 'package:epub_reader/features/habits/book_reading_block.dart';
@@ -81,6 +82,7 @@ class ReadingTimePage extends ConsumerWidget {
                   : () => context.push(
                       readingRoute(report.book.id, readingSourceLibrary),
                     ),
+              onAllBooks: () => context.pushNamed('time-books'),
             );
           },
         ),
@@ -99,6 +101,7 @@ class _HabitLog extends StatefulWidget {
     required this.plans,
     required this.report,
     required this.onRead,
+    required this.onAllBooks,
   });
 
   final String title;
@@ -109,6 +112,7 @@ class _HabitLog extends StatefulWidget {
   final List<MonthPlanVersion> plans;
   final BookReadingReport? report;
   final VoidCallback? onRead;
+  final VoidCallback onAllBooks;
 
   @override
   State<_HabitLog> createState() => _HabitLogState();
@@ -160,6 +164,35 @@ class _HabitLogState extends State<_HabitLog> {
         ),
         if (report != null && onRead != null)
           BookReadingBlock(report: report, logRow: true, onRead: onRead),
+        if (report != null) _AllBooksLink(onTap: widget.onAllBooks),
+      ],
+    );
+  }
+}
+
+class _AllBooksLink extends StatelessWidget {
+  const _AllBooksLink({required this.onTap});
+
+  final VoidCallback onTap;
+
+  @override
+  Widget build(BuildContext context) {
+    final colors = ScheduleColors.of(context);
+    return Column(
+      crossAxisAlignment: CrossAxisAlignment.stretch,
+      children: [
+        const ScheduleRule(),
+        TextButton(
+          onPressed: onTap,
+          style: TextButton.styleFrom(
+            foregroundColor: colors.station,
+            minimumSize: const Size(48, 48),
+            padding: const EdgeInsets.symmetric(horizontal: 20),
+            tapTargetSize: MaterialTapTargetSize.shrinkWrap,
+            alignment: Alignment.centerLeft,
+          ),
+          child: Text(AppLocalizations.of(context).allReadingBooks),
+        ),
       ],
     );
   }

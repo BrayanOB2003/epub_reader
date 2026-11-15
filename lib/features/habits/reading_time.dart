@@ -123,7 +123,6 @@ List<BookReadingReport> bookReadingReports({
         sessions: record.sessions.length,
         quotes: quotes[record.bookId] ?? 0,
         pace: bookReadingPace(
-          engagedSeconds: record.engagedSeconds,
           progress: book.progress,
           sessions: record.sessions,
           now: now,
@@ -151,38 +150,55 @@ BookReadingReport? currentBookReading({
   return reports.first;
 }
 
-/// Remaining time and pace share [estimateReading]. The horizon uses only
-/// recent sessions of this book, and stays empty until several of them fall
-/// on more than one day.
+/// A book's stored sessions, with the open one ([openSessionId]) replaced
+/// by what it holds now.
+ReadingTally bookReadingTally(
+  Iterable<ReadingSession> sessions, {
+  int? openSessionId,
+  int liveSeconds = 0,
+  int livePaceSeconds = 0,
+  double livePaceProgress = 0,
+  bool live = false,
+}) {
+  var tally = const ReadingTally();
+  for (final session in sessions) {
+    if (session.id == openSessionId) continue;
+    tally = tally.plus(
+      engagedSeconds: session.engagedSeconds,
+      paceSeconds: session.paceSeconds,
+      paceProgress: session.paceProgress,
+    );
+  }
+  if (!live) return tally;
+  return tally.plus(
+    engagedSeconds: liveSeconds,
+    paceSeconds: livePaceSeconds,
+    paceProgress: livePaceProgress,
+  );
+}
+
+/// Remaining time and pace share [estimateReading]. [sessions] are all of
+/// this book's sessions. The horizon uses only recent ones, and stays empty
+/// until several of them fall on more than one day.
 BookReadingPace bookReadingPace({
-  required int engagedSeconds,
   required double progress,
   required List<ReadingSession> sessions,
   required DateTime now,
 }) {
+  final secondsPerBook = bookReadingTally(sessions).secondsPerBook(progress);
   final remaining = estimateReading(
-    engagedSeconds: engagedSeconds,
+    secondsPerBook: secondsPerBook,
     progress: progress,
   ).bookMinutes;
   return BookReadingPace(
     remainingMinutes: remaining,
-    minutesPerTenPercent: _minutesPerTenPercent(
-      engagedSeconds: engagedSeconds,
-      progress: progress,
-    ),
+    minutesPerTenPercent: secondsPerBook == null
+        ? null
+        : readingMinutes((secondsPerBook * 0.1).round()),
     horizon: remaining == null
         ? null
         : _horizon(remainingMinutes: remaining, sessions: sessions, now: now),
   );
-}
-
-int? _minutesPerTenPercent({
-  required int engagedSeconds,
-  required double progress,
-}) {
-  if (engagedSeconds < readingEstimateMinSeconds) return null;
-  if (progress < readingEstimateMinProgress || progress >= 1) return null;
-  return readingMinutes((engagedSeconds / progress * 0.1).round());
 }
 
 ReadingHorizon? _horizon({

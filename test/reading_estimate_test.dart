@@ -4,12 +4,12 @@ import 'package:flutter_test/flutter_test.dart';
 
 void main() {
   test('the book and the chapter share one pace', () {
-    final early = estimateReading(engagedSeconds: 90, progress: 0.5);
+    final early = estimateReading(secondsPerBook: null, progress: 0.5);
     expect(early.bookMinutes, isNull);
     expect(early.chapterMinutes, isNull);
 
     final estimate = estimateReading(
-      engagedSeconds: 20 * 60,
+      secondsPerBook: 40 * 60,
       progress: 0.5,
       chapterStart: 0.4,
       chapterEnd: 0.6,
@@ -19,7 +19,7 @@ void main() {
     expect(estimate.chapterAlmostDone, isTrue);
 
     final longer = estimateReading(
-      engagedSeconds: 20 * 60,
+      secondsPerBook: 40 * 60,
       progress: 0.5,
       chapterStart: 0.2,
       chapterEnd: 0.8,
@@ -35,23 +35,48 @@ void main() {
     expect(readingMinutes(13 * 60), 15);
   });
 
-  test('the open session is counted once', () {
-    expect(
-      engagedSecondsNow(
-        storedSeconds: 500,
-        openSessionSeconds: null,
-        liveSeconds: 40,
-      ),
-      540,
+  test('the measured pace ignores where the book was opened', () {
+    // Reopened at 60 %: 10 minutes read, 4 % of the book covered.
+    const tally = ReadingTally(
+      engagedSeconds: 10 * 60,
+      paceSeconds: 10 * 60,
+      paceProgress: 0.04,
     );
+    expect(tally.secondsPerBook(0.6), 250 * 60);
     expect(
-      engagedSecondsNow(
-        storedSeconds: 500,
-        openSessionSeconds: 30,
-        liveSeconds: 40,
-      ),
-      510,
+      estimateReading(
+        secondsPerBook: tally.secondsPerBook(0.6),
+        progress: 0.6,
+      ).bookMinutes,
+      100,
     );
+  });
+
+  test('too little measured pace shows nothing on a new book', () {
+    const tally = ReadingTally(
+      engagedSeconds: 10 * 60,
+      paceSeconds: 10 * 60,
+      paceProgress: 0.01,
+    );
+    expect(tally.secondsPerBook(0.6), isNull);
+  });
+
+  test('older sessions fall back to all the time over the position', () {
+    final tally = const ReadingTally().plus(engagedSeconds: 20 * 60);
+    expect(tally.untracked, isTrue);
+    expect(tally.secondsPerBook(0.5), 40 * 60);
+    expect(tally.secondsPerBook(0.01), isNull);
+
+    final short = const ReadingTally().plus(engagedSeconds: 90);
+    expect(short.secondsPerBook(0.5), isNull);
+  });
+
+  test('once measured, the pace wins over older sessions', () {
+    final tally = const ReadingTally()
+        .plus(engagedSeconds: 5 * 60)
+        .plus(engagedSeconds: 10 * 60, paceSeconds: 8 * 60, paceProgress: 0.04);
+    expect(tally.engagedSeconds, 15 * 60);
+    expect(tally.secondsPerBook(0.6), 200 * 60);
   });
 
   test('a chapter is the run of files between two index entries', () {

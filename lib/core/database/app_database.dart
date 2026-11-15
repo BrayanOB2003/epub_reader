@@ -92,6 +92,13 @@ class ReadingSessions extends Table {
 
   /// True when the session was written by "Lecturas de ejemplo".
   BoolColumn get sample => boolean().withDefault(const Constant(false))();
+
+  /// Seconds of steady forward reading, the part that sets the pace.
+  /// Null for sessions written before the pace was measured page by page.
+  IntColumn get paceSeconds => integer().nullable()();
+
+  /// Book fraction read in [paceSeconds], on the reading-order scale.
+  RealColumn get paceProgress => real().nullable()();
 }
 
 /// One row each time the goal, the days, or the hour actually change.
@@ -133,7 +140,7 @@ class AppDatabase extends _$AppDatabase {
   AppDatabase(super.e);
 
   @override
-  int get schemaVersion => 14;
+  int get schemaVersion => 15;
 
   @override
   MigrationStrategy get migration {
@@ -189,6 +196,16 @@ class AppDatabase extends _$AppDatabase {
         }
         if (from < 14) {
           await migrator.addColumn(readingSessions, readingSessions.sample);
+        }
+        if (from < 15) {
+          await migrator.addColumn(
+            readingSessions,
+            readingSessions.paceSeconds,
+          );
+          await migrator.addColumn(
+            readingSessions,
+            readingSessions.paceProgress,
+          );
         }
       },
     );

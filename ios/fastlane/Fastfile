@@ -175,6 +175,10 @@ platform :ios do
       export_method: "ad-hoc",
       output_directory: "../build/ios/ipa",
       output_name: "Liora.ipa",
+      # Los paquetes SPM ya se resolvieron en el paso de calentamiento.
+      skip_package_dependencies_resolution: true,
+      # El indice de codigo solo sirve al IDE; en CI solo cuesta tiempo.
+      xcargs: "COMPILER_INDEX_STORE_ENABLE=NO",
       export_options: {
         provisioningProfiles: {
           ENV.fetch("IOS_BUNDLE_ID") => profile_name

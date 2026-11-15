@@ -443,10 +443,6 @@ _BookSort _bookLine({
     for (final session in sessions)
       if (session.bookId == book.id) session,
   ];
-  final allSeconds = all.fold<int>(
-    0,
-    (total, session) => total + session.engagedSeconds,
-  );
   return _BookSort(
     MonthBookLine(
       bookId: book.id,
@@ -458,7 +454,6 @@ _BookSort _bookLine({
       horizon: finished
           ? null
           : bookReadingPace(
-              engagedSeconds: allSeconds,
               progress: book.progress,
               sessions: all,
               now: now,
