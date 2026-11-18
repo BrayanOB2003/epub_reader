@@ -45,6 +45,22 @@ android {
         versionName = flutter.versionName
     }
 
+    // store: app de Play (applicationId original).
+    // beta: builds de Firebase App Distribution. Otro applicationId para que se
+    // instale aparte de la app de la tienda sin pisarla.
+    flavorDimensions += "env"
+    productFlavors {
+        create("store") {
+            dimension = "env"
+            resValue("string", "app_name", "Liora")
+        }
+        create("beta") {
+            dimension = "env"
+            applicationIdSuffix = ".beta"
+            resValue("string", "app_name", "Liora Beta")
+        }
+    }
+
     signingConfigs {
         create("release") {
             if (keystorePropertiesFile.exists()) {

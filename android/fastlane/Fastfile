@@ -13,7 +13,7 @@ def repo_root
 end
 
 def store_aab_path
-  File.join(repo_root, "build", "app", "outputs", "bundle", "release", "app-release.aab")
+  File.join(repo_root, "build", "app", "outputs", "bundle", "storeRelease", "app-store-release.aab")
 end
 
 def play_package_name
@@ -116,7 +116,7 @@ platform :android do
     firebase_app_distribution(
       app: ENV.fetch("FIREBASE_ANDROID_APP_ID"),
       android_artifact_type: "APK",
-      android_artifact_path: "../build/app/outputs/flutter-apk/app-release.apk",
+      android_artifact_path: "../build/app/outputs/flutter-apk/app-beta-release.apk",
       service_credentials_file: ENV.fetch("GOOGLE_APPLICATION_CREDENTIALS"),
       groups: ENV.fetch("FIREBASE_TESTER_GROUPS"),
       release_notes_file: ENV["FIREBASE_RELEASE_NOTES_FILE"]

@@ -16,7 +16,7 @@ concurrency:
 
 env:
   FIREBASE_PROJECT_ID: epub-reader-6a972
-  FIREBASE_ANDROID_APP_ID: "1:969465994480:android:ab8c7310f649e4ea85f635"
+  FIREBASE_ANDROID_APP_ID: "1:969465994480:android:efb90733d6d6ab2485f635"
   FIREBASE_TESTER_GROUPS: ANDROID
 
 jobs:
@@ -126,7 +126,7 @@ jobs:
       - name: Build Android APK (release)
         # Solo arm64: cubre los dispositivos de testers y evita compilar Dart AOT
         # tres veces (arm, arm64, x64). Para emuladores x86_64 anadir android-x64.
-        run: flutter build apk --release --target-platform android-arm64 --build-number="${CI_BUILD_NUMBER}"
+        run: flutter build apk --release --flavor beta --target-platform android-arm64 --build-number="${CI_BUILD_NUMBER}"
 
       - name: Install Ruby and Fastlane
         uses: ruby/setup-ruby@v1
