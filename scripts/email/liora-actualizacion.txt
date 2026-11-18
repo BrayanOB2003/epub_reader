@@ -1,19 +1,22 @@
 Remitente: Liora <support@somosliora.app>
-Asunto: Liora · Ya puedes importar un PDF
+Asunto: Liora · Tus PDF, como un libro
 
 Liora
-7 de noviembre
+14 de noviembre
 
-Ya puedes importar un PDF
+Tus PDF, como un libro
 Si pruebas Liora, o si me escribiste por Ayuda.
 
-Gracias por probar Liora y por escribirme cuando algo no funcionaba. Te cuento qué hay de nuevo.
+Gracias por seguir leyendo con Liora. Te cuento qué cambió desde la última nota.
 
-En Biblioteca
-Importar abre un PDF de tu teléfono, igual que un EPUB.
+En tus PDF
+Ya puedes seleccionar texto y guardar citas, igual que en un EPUB. Las páginas se pasan como en un libro, y con doble toque haces zoom.
 
-Errores reportados
-Revisé los que me contaron por Ayuda y ya quedaron resueltos.
+Al pasar página
+Ahora se siente más suave y natural.
+
+Tiempo que te falta
+El aviso de cuánto te queda del capítulo o del libro ahora es más acertado.
 
 Si me escribiste
 Si esto era lo que me contaste, ya está en la app. Si sigue igual, responde a este correo y lo reviso.
@@ -21,7 +24,7 @@ Si esto era lo que me contaste, ya está en la app. Si sigue igual, responde a e
 Actualizar en Google Play
 https://play.google.com/store/apps/details?id=com.somosliora.app
 
-Si lees en iPhone, todavía no publiqué Liora en el App Store. Con esta nota te dejo al día.
+Esta versión funciona en Android 9 o más reciente. Si lees en iPhone, todavía no publiqué Liora en el App Store. Con esta nota te dejo al día.
 
 Liora
 Privacidad: https://www.somosliora.app/es/privacy

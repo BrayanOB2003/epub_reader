@@ -476,10 +476,10 @@ jobs:
       - name: Create signed Android App Bundle
         if: ${{ inputs.mode != 'submit_tested' && steps.android-preflight.outputs.build_required != 'false' }}
         run: |
-          flutter build appbundle --release \
+          flutter build appbundle --release --flavor store \
             --build-name="$APP_VERSION" \
             --build-number="$CI_BUILD_NUMBER"
-          jarsigner -verify build/app/outputs/bundle/release/app-release.aab
+          jarsigner -verify build/app/outputs/bundle/storeRelease/app-store-release.aab
 
       - name: Download release information
         if: ${{ inputs.mode != 'submit_tested' && steps.android-preflight.outputs.build_required != 'false' }}
@@ -494,7 +494,7 @@ jobs:
         with:
           name: android-store-${{ env.APP_VERSION }}-${{ env.CI_BUILD_NUMBER }}
           path: |
-            build/app/outputs/bundle/release/app-release.aab
+            build/app/outputs/bundle/storeRelease/app-store-release.aab
             release-info/BUILD_INFO.json
           retention-days: 90
           if-no-files-found: error

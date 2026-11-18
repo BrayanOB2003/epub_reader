@@ -79,3 +79,6 @@ app.*.map.json
 # impeccable-ignore-end
 # Informacion de release generada por el workflow Store Release.
 /release-info/
+
+# Lista de testers (datos personales, no publicar)
+scripts/email/testers.txt
